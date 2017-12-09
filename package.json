@@ -1,0 +1,41 @@
+{
+	"name": "on-change",
+	"version": "0.0.0",
+	"description": "Watch an object or array for changes",
+	"license": "MIT",
+	"repository": "sindresorhus/on-change",
+	"author": {
+		"name": "Sindre Sorhus",
+		"email": "sindresorhus@gmail.com",
+		"url": "sindresorhus.com"
+	},
+	"engines": {
+		"node": ">=6"
+	},
+	"scripts": {
+		"test": "xo && ava"
+	},
+	"files": [
+		"index.js"
+	],
+	"keywords": [
+		"on",
+		"change",
+		"watch",
+		"object",
+		"array",
+		"changes",
+		"observe",
+		"watcher",
+		"observer",
+		"proxy",
+		"proxies",
+		"es2015",
+		"event",
+		"listener"
+	],
+	"devDependencies": {
+		"ava": "*",
+		"xo": "*"
+	}
+}
