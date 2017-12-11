@@ -32,7 +32,7 @@ const object = {
 
 let i = 0;
 const watchedObject = onChange(object, () => {
-	console.log('Object changed:', i);
+	console.log('Object changed:', ++i);
 });
 
 watchedObject.foo = true;
