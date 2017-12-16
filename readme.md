@@ -4,7 +4,7 @@
 
 It works recursively, so it will even detect if you modify a deep property like `obj.a.b[0].c = true`.
 
-Uses the [`Proxy` API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
+Uses the [`Proxy` API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) so careful with the [browser support](https://caniuse.com/proxy).
 
 
 ## Install
@@ -115,6 +115,7 @@ foo.a = 10;
 
 - [known](https://github.com/sindresorhus/known) - Allow only access to known object properties *(Uses `Proxy` too)*
 - [negative-array](https://github.com/sindresorhus/negative-array) - Negative array index support `array[-1]` *(Uses `Proxy` too)*
+- [statux](https://github.com/franciscop/state) - Similar project that listens to a state tree. Also has persistence and history.
 
 
 ## License
