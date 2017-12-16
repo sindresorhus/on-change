@@ -39,5 +39,15 @@
 		"ava": "*",
 		"matcha": "^0.7.0",
 		"xo": "*"
-	}
+	},
+	"xo": {
+		"overrides": [
+		  {
+			"files": "bench/bench.js",
+			"rules": {
+			  "no-undef": "off"
+			}
+		  }
+		]
+	  }
 }
