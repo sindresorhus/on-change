@@ -115,7 +115,7 @@ foo.a = 10;
 
 - [known](https://github.com/sindresorhus/known) - Allow only access to known object properties *(Uses `Proxy` too)*
 - [negative-array](https://github.com/sindresorhus/negative-array) - Negative array index support `array[-1]` *(Uses `Proxy` too)*
-- [statux](https://github.com/franciscop/state) - Similar project that listens to a state tree. Also has persistence and history.
+- [statux](https://github.com/franciscop/state) - State manager *(Uses `Proxy` too)*
 
 
 ## License
