@@ -4,7 +4,7 @@
 
 It works recursively, so it will even detect if you modify a deep property like `obj.a.b[0].c = true`.
 
-Uses the [`Proxy` API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) so careful with the [browser support](https://caniuse.com/proxy).
+Uses the [`Proxy` API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
 
 
 ## Install
