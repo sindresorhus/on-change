@@ -13,7 +13,8 @@
 		"node": ">=6"
 	},
 	"scripts": {
-		"test": "xo && ava"
+		"test": "xo && ava",
+		"bench": "matcha bench/bench.js"
 	},
 	"files": [
 		"index.js"
@@ -36,6 +37,17 @@
 	],
 	"devDependencies": {
 		"ava": "*",
+		"matcha": "^0.7.0",
 		"xo": "*"
-	}
+	},
+	"xo": {
+		"overrides": [
+		  {
+			"files": "bench/bench.js",
+			"rules": {
+			  "no-undef": "off"
+			}
+		  }
+		]
+	  }
 }
