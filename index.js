@@ -34,7 +34,7 @@ module.exports = (object, onChange) => {
 		apply(target, thisArg, argumentsList) {
 			if (BLACKLIST.includes(target.name)) {
 				blocked = true;
-				const result = target.call(thisArg, argumentsList);
+				const result = Reflect.apply(target, thisArg, argumentsList);
 				onChange();
 				blocked = false;
 				return result;
