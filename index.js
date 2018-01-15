@@ -32,17 +32,14 @@ module.exports = (object, onChange) => {
 			return Reflect.deleteProperty(target, property);
 		},
 		apply(target, thisArg, argumentsList) {
-			let fn = target;
 			if (BLACKLIST.includes(target.name)) {
 				blocked = true;
-				fn = () => {
-					const result = target.call(thisArg, argumentsList);
-					blocked = false;
-					return result;
-				};
+				const result = target.call(thisArg, argumentsList);
 				onChange();
+				blocked = false;
+				return result;
 			}
-			return Reflect.apply(fn, thisArg, argumentsList);
+			return Reflect.apply(target, thisArg, argumentsList);
 		}
 	};
 
