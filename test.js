@@ -58,10 +58,19 @@ test('works with an array too', t => {
 	t.is(callCount, 2);
 
 	array.sort();
-	t.is(callCount, 6);
+	t.is(callCount, 3);
 
 	array.pop();
-	t.is(callCount, 8);
+	t.is(callCount, 4);
+
+	array[2] = false;
+	t.is(callCount, 5);
+
+	array.reverse();
+	t.is(callCount, 6);
+
+	array.reverse();
+	t.is(callCount, 7);
 });
 
 // https://github.com/sindresorhus/on-change/issues/14
