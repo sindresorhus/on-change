@@ -63,3 +63,12 @@ test('works with an array too', t => {
 	array.pop();
 	t.is(callCount, 8);
 });
+
+// https://github.com/sindresorhus/on-change/issues/14
+test.failing('Array#splice works', t => {
+	const array = onChange([1, 2, 3], () => {});
+
+	t.notThrows(() => {
+		array.splice(0, 1);
+	});
+});
