@@ -5,7 +5,7 @@ module.exports = (object, onChange) => {
 		get(target, property, receiver) {
 			try {
 				return new Proxy(target[property], handler);
-			} catch (err) {
+			} catch (_) {
 				return Reflect.get(target, property, receiver);
 			}
 		},

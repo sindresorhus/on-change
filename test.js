@@ -1,5 +1,5 @@
 import test from 'ava';
-import m from '.';
+import onChange from '.';
 
 test('main', t => {
 	const fixture = {
@@ -14,7 +14,7 @@ test('main', t => {
 
 	let callCount = 0;
 
-	const object = m(fixture, () => {
+	const object = onChange(fixture, () => {
 		callCount++;
 	});
 
@@ -46,7 +46,7 @@ test('works with an array too', t => {
 
 	let callCount = 0;
 
-	const array = m(fixture, () => {
+	const array = onChange(fixture, () => {
 		callCount++;
 	});
 
