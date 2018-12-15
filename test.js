@@ -1,5 +1,5 @@
 import test from 'ava';
-import m from '.';
+import onChange from '.';
 
 test('main', t => {
 	const fixture = {
@@ -14,7 +14,7 @@ test('main', t => {
 
 	let callCount = 0;
 
-	const object = m(fixture, () => {
+	const object = onChange(fixture, () => {
 		callCount++;
 	});
 
@@ -46,7 +46,7 @@ test('works with an array too', t => {
 
 	let callCount = 0;
 
-	const array = m(fixture, () => {
+	const array = onChange(fixture, () => {
 		callCount++;
 	});
 
@@ -71,4 +71,22 @@ test('works with an array too', t => {
 
 	array.reverse();
 	t.is(callCount, 7);
+});
+
+// https://github.com/sindresorhus/on-change/issues/14
+test.failing('Array#splice works', t => {
+	const array = onChange([1, 2, 3], () => {});
+
+	t.notThrows(() => {
+		array.splice(0, 1);
+	});
+});
+
+test.cb('the change handler is called after the change is done', t => {
+	const object = onChange({x: 0}, () => {
+		t.is(object.x, 1);
+		t.end();
+	});
+
+	object.x = 1;
 });

@@ -36,8 +36,8 @@
 		"listener"
 	],
 	"devDependencies": {
-		"ava": "*",
+		"ava": "^0.25.0",
 		"matcha": "^0.7.0",
-		"xo": "*"
+		"xo": "^0.23.0"
 	}
 }

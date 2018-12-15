@@ -15,21 +15,27 @@ module.exports = (object, onChange) => {
 		get(target, property, receiver) {
 			try {
 				return new Proxy(target[property], handler);
-			} catch (err) {
+			} catch (_) {
 				return Reflect.get(target, property, receiver);
 			}
 		},
 		defineProperty(target, property, descriptor) {
+			const result = Reflect.defineProperty(target, property, descriptor);
+
 			if (!blocked) {
 				onChange();
 			}
-			return Reflect.defineProperty(target, property, descriptor);
+
+			return result;
 		},
 		deleteProperty(target, property) {
+			const result = Reflect.deleteProperty(target, property);
+
 			if (!blocked) {
 				onChange();
 			}
-			return Reflect.deleteProperty(target, property);
+
+			return result;
 		},
 		apply(target, thisArg, argumentsList) {
 			if (BLACKLIST.includes(target.name)) {
