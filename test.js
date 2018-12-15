@@ -72,3 +72,12 @@ test.failing('Array#splice works', t => {
 		array.splice(0, 1);
 	});
 });
+
+test.cb('the change handler is called after the change is done', t => {
+	const object = onChange({x: 0}, () => {
+		t.is(object.x, 1);
+		t.end();
+	});
+
+	object.x = 1;
+});

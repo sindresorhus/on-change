@@ -10,12 +10,14 @@ module.exports = (object, onChange) => {
 			}
 		},
 		defineProperty(target, property, descriptor) {
+			const result = Reflect.defineProperty(target, property, descriptor);
 			onChange();
-			return Reflect.defineProperty(target, property, descriptor);
+			return result;
 		},
 		deleteProperty(target, property) {
+			const result = Reflect.deleteProperty(target, property);
 			onChange();
-			return Reflect.deleteProperty(target, property);
+			return result;
 		}
 	};
 
