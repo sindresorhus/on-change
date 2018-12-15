@@ -1,6 +1,6 @@
 'use strict';
 
-const BLACKLIST = [
+const blacklist = [
 	'sort',
 	'reverse',
 	'splice',
@@ -9,8 +9,10 @@ const BLACKLIST = [
 	'shift',
 	'push'
 ];
+
 module.exports = (object, onChange) => {
-	let blocked = false;
+	let isBlocked = false;
+
 	const handler = {
 		get(target, property, receiver) {
 			try {
@@ -22,7 +24,7 @@ module.exports = (object, onChange) => {
 		defineProperty(target, property, descriptor) {
 			const result = Reflect.defineProperty(target, property, descriptor);
 
-			if (!blocked) {
+			if (!isBlocked) {
 				onChange();
 			}
 
@@ -31,20 +33,21 @@ module.exports = (object, onChange) => {
 		deleteProperty(target, property) {
 			const result = Reflect.deleteProperty(target, property);
 
-			if (!blocked) {
+			if (!isBlocked) {
 				onChange();
 			}
 
 			return result;
 		},
 		apply(target, thisArg, argumentsList) {
-			if (BLACKLIST.includes(target.name)) {
-				blocked = true;
+			if (blacklist.includes(target.name)) {
+				isBlocked = true;
 				const result = Reflect.apply(target, thisArg, argumentsList);
 				onChange();
-				blocked = false;
+				isBlocked = false;
 				return result;
 			}
+
 			return Reflect.apply(target, thisArg, argumentsList);
 		}
 	};
