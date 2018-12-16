@@ -49,9 +49,8 @@ test('works with an array too', t => {
 	const array = onChange(fixture, () => {
 		callCount++;
 	});
-
 	array[0] = 'a';
-	t.deepEqual(array, ['a', 2, {a: false}]);
+	t.is(array[0], 'a');
 	t.is(callCount, 1);
 
 	array[2].a = true;
@@ -71,15 +70,10 @@ test('works with an array too', t => {
 
 	array.reverse();
 	t.is(callCount, 7);
-});
 
-// https://github.com/sindresorhus/on-change/issues/14
-test.failing('Array#splice works', t => {
-	const array = onChange([1, 2, 3], () => {});
-
-	t.notThrows(() => {
-		array.splice(0, 1);
-	});
+	array.splice(fixture, 1);
+	t.is(array.length, 2);
+	t.is(callCount, 8);
 });
 
 test.cb('the change handler is called after the change is done', t => {

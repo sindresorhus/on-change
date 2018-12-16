@@ -1,24 +1,29 @@
 'use strict';
 
-const blacklist = [
-	'sort',
-	'reverse',
-	'splice',
-	'pop',
-	'unshift',
-	'shift',
-	'push'
-];
-
 module.exports = (object, onChange) => {
 	let isBlocked = false;
+	let interceptedFunctionName = null;
 
 	const handler = {
 		get(target, property, receiver) {
+			const descriptors = Reflect.getOwnPropertyDescriptor(target, property);
+			const value = Reflect.get(target, property, receiver);
+
+			// Preserve invariants
+			if (descriptors && descriptors.configurable === false) {
+				if (descriptors.writable === false) {
+					return value;
+				}
+			}
+
+			if (typeof value === 'function' && interceptedFunctionName === null) {
+				interceptedFunctionName = property;
+			}
+
 			try {
-				return new Proxy(target[property], handler);
+				return new Proxy(value, handler);
 			} catch (_) {
-				return Reflect.get(target, property, receiver);
+				return value;
 			}
 		},
 		defineProperty(target, property, descriptor) {
@@ -40,11 +45,13 @@ module.exports = (object, onChange) => {
 			return result;
 		},
 		apply(target, thisArg, argumentsList) {
-			if (blacklist.includes(target.name)) {
+			const functionName = target.name;
+			if (interceptedFunctionName === functionName) {
 				isBlocked = true;
 				const result = Reflect.apply(target, thisArg, argumentsList);
 				onChange();
 				isBlocked = false;
+				interceptedFunctionName = null;
 				return result;
 			}
 
