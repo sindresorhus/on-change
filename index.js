@@ -1,50 +1,68 @@
 'use strict';
 
-const blacklist = [
-	'sort',
-	'reverse',
-	'splice',
-	'pop',
-	'unshift',
-	'shift',
-	'push'
-];
-
 module.exports = (object, onChange) => {
-	let isBlocked = false;
+	let inApply = false;
+	let changed = false;
+
+	function handleChange() {
+		if (!inApply) {
+			onChange();
+		} else if (!changed) {
+			changed = true;
+		}
+	}
 
 	const handler = {
 		get(target, property, receiver) {
-			try {
-				return new Proxy(target[property], handler);
-			} catch (_) {
-				return Reflect.get(target, property, receiver);
+			const descriptor = Reflect.getOwnPropertyDescriptor(target, property);
+			const value = Reflect.get(target, property, receiver);
+
+			// Preserve invariants
+			if (descriptor && !descriptor.configurable) {
+				if (descriptor.set && !descriptor.get) {
+					return undefined;
+				}
+				if (descriptor.writable === false) {
+					return value;
+				}
 			}
+
+			try {
+				return new Proxy(value, handler);
+			} catch (_) {
+				return value;
+			}
+		},
+		set(target, property, value) {
+			const result = Reflect.set(target, property, value);
+
+			handleChange();
+
+			return result;
 		},
 		defineProperty(target, property, descriptor) {
 			const result = Reflect.defineProperty(target, property, descriptor);
 
-			if (!isBlocked) {
-				onChange();
-			}
+			handleChange();
 
 			return result;
 		},
 		deleteProperty(target, property) {
 			const result = Reflect.deleteProperty(target, property);
 
-			if (!isBlocked) {
-				onChange();
-			}
+			handleChange();
 
 			return result;
 		},
 		apply(target, thisArg, argumentsList) {
-			if (blacklist.includes(target.name)) {
-				isBlocked = true;
+			if (!inApply) {
+				inApply = true;
 				const result = Reflect.apply(target, thisArg, argumentsList);
-				onChange();
-				isBlocked = false;
+				if (changed) {
+					onChange();
+				}
+				inApply = false;
+				changed = false;
 				return result;
 			}
 
