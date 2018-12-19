@@ -1,5 +1,11 @@
 'use strict';
 
+function isPrimitive(value) {
+	return value === null || (typeof value !== 'object' && typeof value !== 'function');
+}
+
+const proxyTarget = Symbol('ProxyTarget');
+
 module.exports = (object, onChange) => {
 	let inApply = false;
 	let changed = false;
@@ -36,8 +42,12 @@ module.exports = (object, onChange) => {
 
 	const handler = {
 		get(target, property, receiver) {
+			if (property === proxyTarget) {
+				return target;
+			}
+
 			const value = Reflect.get(target, property, receiver);
-			if (value === null || (typeof value !== 'object' && typeof value !== 'function')) {
+			if (isPrimitive(value)) {
 				return value;
 			}
 
@@ -54,10 +64,16 @@ module.exports = (object, onChange) => {
 
 			return new Proxy(value, handler);
 		},
-		set(target, property, value) {
+		set(target, property, value, receiver) {
+			if (value[proxyTarget] !== undefined) {
+				value = value[proxyTarget];
+			}
+			const previous = Reflect.get(target, property, value, receiver);
 			const result = Reflect.set(target, property, value);
 
-			handleChange();
+			if (previous !== value) {
+				handleChange();
+			}
 
 			return result;
 		},

@@ -39,6 +39,14 @@ test('main', t => {
 	object.bar.a.c[2] = 5;
 	t.is(object.bar.a.c[2], 5);
 	t.is(callCount, 6);
+
+	object.bar.a.c[2] = 5;
+	t.is(callCount, 6);
+
+	// Unwrap proxies on assignment
+	const prev = fixture.bar.a;
+	object.bar.a = object.bar.a; // eslint-disable-line no-self-assign
+	t.is(fixture.bar.a, prev);
 });
 
 test('works with an array too', t => {
