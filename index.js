@@ -14,10 +14,13 @@ module.exports = (object, onChange) => {
 
 	const handler = {
 		get(target, property, receiver) {
-			const descriptor = Reflect.getOwnPropertyDescriptor(target, property);
 			const value = Reflect.get(target, property, receiver);
+			if (value === null || (typeof value !== 'object' && typeof value !== 'function')) {
+				return value;
+			}
 
 			// Preserve invariants
+			const descriptor = Reflect.getOwnPropertyDescriptor(target, property);
 			if (descriptor && !descriptor.configurable) {
 				if (descriptor.set && !descriptor.get) {
 					return undefined;
@@ -26,10 +29,8 @@ module.exports = (object, onChange) => {
 					return value;
 				}
 			}
-			if (value !== null && (typeof value === 'object' || typeof value === 'function')) {
-				return new Proxy(value, handler);
-			}
-			return value;
+
+			return new Proxy(value, handler);
 		},
 		set(target, property, value) {
 			const result = Reflect.set(target, property, value);
