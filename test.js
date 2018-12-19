@@ -50,35 +50,43 @@ test('works with an array too', t => {
 		callCount++;
 	});
 	array[0] = 'a';
-	t.deepEqual(array, ['a', 2, {a: false}]);
+	t.deepEqual(fixture, ['a', 2, {a: false}]);
+	t.deepEqual(array, fixture);
 	t.is(callCount, 1);
 
 	array[2].a = true;
-	t.deepEqual(array, ['a', 2, {a: true}]);
+	t.deepEqual(fixture, ['a', 2, {a: true}]);
+	t.deepEqual(array, fixture);
 	t.is(callCount, 2);
 
 	array.sort();
-	t.deepEqual(array, [2, {a: true}, 'a']);
+	t.deepEqual(fixture, [2, {a: true}, 'a']);
+	t.deepEqual(array, fixture);
 	t.is(callCount, 3);
 
 	array.pop();
-	t.deepEqual(array, [2, {a: true}]);
+	t.deepEqual(fixture, [2, {a: true}]);
+	t.deepEqual(array, fixture);
 	t.is(callCount, 4);
 
 	array[2] = false;
-	t.deepEqual(array, [2, {a: true}, false]);
+	t.deepEqual(fixture, [2, {a: true}, false]);
+	t.deepEqual(array, fixture);
 	t.is(callCount, 5);
 
 	array.reverse();
-	t.deepEqual(array, [false, {a: true}, 2]);
+	t.deepEqual(fixture, [false, {a: true}, 2]);
+	t.deepEqual(array, fixture);
 	t.is(callCount, 6);
 
 	array.reverse();
-	t.deepEqual(array, [2, {a: true}, false]);
+	t.deepEqual(fixture, [2, {a: true}, false]);
+	t.deepEqual(array, fixture);
 	t.is(callCount, 7);
 
 	array.splice(1, 1, 'a', 'b');
-	t.deepEqual(array, [2, 'a', 'b', false]);
+	t.deepEqual(fixture, [2, 'a', 'b', false]);
+	t.deepEqual(array, fixture);
 	t.is(callCount, 8);
 });
 
