@@ -26,12 +26,10 @@ module.exports = (object, onChange) => {
 					return value;
 				}
 			}
-
-			try {
+			if (value !== null && (typeof value === 'object' || typeof value === 'function')) {
 				return new Proxy(value, handler);
-			} catch (_) {
-				return value;
 			}
+			return value;
 		},
 		set(target, property, value) {
 			const result = Reflect.set(target, property, value);
