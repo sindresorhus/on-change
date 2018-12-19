@@ -1,72 +1,99 @@
-/* globals suite set bench */
+/* globals suite set bench before */
 'use strict';
 const onChange = require('..');
 
-const save = (object, initial = 0) => {
-	let i = object[initial];
-	while (i < 1000) {
-		i++;
-	}
-};
+const save = () => {};
 
-suite('onChange', () => {
+suite('on-change', () => {
 	set('mintime', 5000);
 
-	bench('on-change', () => {
-		const foo = onChange({
+	let val = 0;
+
+	before(() => {
+		this.object = onChange({
 			a: 0,
 			b: 0,
 			c: 0,
-			d: 0
-		}, () => save(foo, 'a'));
-
-		foo.a = 1;
-		foo.b = 2;
-		foo.c = 3;
-		foo.d = 4;
+			d: 0,
+			subObj: {a: 0}
+		}, save);
+		this.array = onChange([0, 0, 0, 0], save);
 	});
 
-	bench('native', () => {
-		const foo = {
-			a: 0,
-			b: 0,
-			c: 0,
-			d: 0
-		};
+	bench('object read', () => {
+		this.object.a === val++; // eslint-disable-line no-unused-expressions
+	});
 
-		foo.a = 1;
-		save(foo, 'a');
-		foo.b = 2;
-		save(foo, 'a');
-		foo.c = 3;
-		save(foo, 'a');
-		foo.d = 4;
-		save(foo, 'a');
+	bench('nested read', () => {
+		this.object.subObj.a === val++; // eslint-disable-line no-unused-expressions
+	});
+
+	bench('array read', () => {
+		this.array[0] === val++; // eslint-disable-line no-unused-expressions
+	});
+
+	bench('object write', () => {
+		this.object.a = val++;
+		this.object.b = val++;
+		this.object.c = val++;
+		this.object.d = val++;
+	});
+
+	bench('array write', () => {
+		this.array[0] = val++;
+		this.array[1] = val++;
+		this.array[2] = val++;
+		this.array[3] = val++;
 	});
 });
 
-suite('bench with an array too', () => {
+suite('native', () => {
 	set('mintime', 5000);
 
-	bench('on-change', () => {
-		const foo = onChange([0, 0, 0, 0], () => save(foo));
+	let val = 0;
 
-		foo[0] = 1;
-		foo[1] = 2;
-		foo[2] = 3;
-		foo[3] = 4;
+	before(() => {
+		this.object = {
+			a: 0,
+			b: 0,
+			c: 0,
+			d: 0,
+			subObj: {a: 0}
+		};
+		this.array = [0, 0, 0, 0];
 	});
 
-	bench('native', () => {
-		const foo = [0, 0, 0, 0];
+	bench('object read', () => {
+		this.object.a === val++; // eslint-disable-line no-unused-expressions
+	});
 
-		foo[0] = 1;
-		save(foo);
-		foo[1] = 2;
-		save(foo);
-		foo[2] = 3;
-		save(foo);
-		foo[3] = 4;
-		save(foo);
+	bench('nested read', () => {
+		this.object.subObj.a === val++; // eslint-disable-line no-unused-expressions
+	});
+
+	bench('array read', () => {
+		this.array[0] === val++; // eslint-disable-line no-unused-expressions
+	});
+
+	bench('object write', () => {
+		this.object.a = val++;
+		save();
+		this.object.b = val++;
+		save();
+		this.object.c = val++;
+		save();
+		this.object.d = val++;
+		save();
+	});
+
+	bench('array write', () => {
+		this.array[0] = val++;
+		save();
+		this.array[1] = val++;
+		save();
+		this.array[2] = val++;
+		save();
+		this.array[3] = val++;
+		save();
 	});
 });
