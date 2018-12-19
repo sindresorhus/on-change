@@ -3,6 +3,7 @@
 module.exports = (object, onChange) => {
 	let inApply = false;
 	let changed = false;
+	const propCache = new WeakMap();
 
 	function handleChange() {
 		if (!inApply) {
@@ -10,6 +11,27 @@ module.exports = (object, onChange) => {
 		} else if (!changed) {
 			changed = true;
 		}
+	}
+
+	function getOwnPropertyDescriptor(target, property) {
+		if (!propCache.has(target)) {
+			propCache.set(target, new Map());
+		}
+		const props = propCache.get(target);
+		if (props.has(property)) {
+			return props.get(property);
+		}
+		const prop = Reflect.getOwnPropertyDescriptor(target, property);
+		props.set(property, prop);
+		return prop;
+	}
+
+	function invalidateCachedDescriptor(target, property) {
+		if (!propCache.has(target)) {
+			return;
+		}
+		const props = propCache.get(target);
+		props.delete(property);
 	}
 
 	const handler = {
@@ -20,7 +42,7 @@ module.exports = (object, onChange) => {
 			}
 
 			// Preserve invariants
-			const descriptor = Reflect.getOwnPropertyDescriptor(target, property);
+			const descriptor = getOwnPropertyDescriptor(target, property);
 			if (descriptor && !descriptor.configurable) {
 				if (descriptor.set && !descriptor.get) {
 					return undefined;
@@ -41,6 +63,7 @@ module.exports = (object, onChange) => {
 		},
 		defineProperty(target, property, descriptor) {
 			const result = Reflect.defineProperty(target, property, descriptor);
+			invalidateCachedDescriptor(target, property);
 
 			handleChange();
 
@@ -48,6 +71,7 @@ module.exports = (object, onChange) => {
 		},
 		deleteProperty(target, property) {
 			const result = Reflect.deleteProperty(target, property);
+			invalidateCachedDescriptor(target, property);
 
 			handleChange();
 
