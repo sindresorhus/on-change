@@ -30,6 +30,7 @@ test('main', t => {
 	t.is(callCount, 3);
 
 	delete object.foo;
+	t.is(object.foo, undefined);
 	t.is(callCount, 4);
 
 	object.bar.a.b = 1;
@@ -47,6 +48,16 @@ test('main', t => {
 	const prev = fixture.bar.a;
 	object.bar.a = object.bar.a; // eslint-disable-line no-self-assign
 	t.is(fixture.bar.a, prev);
+
+	// Support null assignment
+	object.bar.a.c[2] = null;
+	t.is(object.bar.a.c[2], null);
+	t.is(callCount, 7);
+
+	// Support undefined assignment
+	object.bar.a.c[2] = undefined;
+	t.is(object.bar.a.c[2], undefined);
+	t.is(callCount, 8);
 });
 
 test('works with an array too', t => {

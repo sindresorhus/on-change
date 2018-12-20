@@ -65,7 +65,7 @@ module.exports = (object, onChange) => {
 			return new Proxy(value, handler);
 		},
 		set(target, property, value, receiver) {
-			if (value[proxyTarget] !== undefined) {
+			if (value && value[proxyTarget] !== undefined) {
 				value = value[proxyTarget];
 			}
 			const previous = Reflect.get(target, property, value, receiver);
