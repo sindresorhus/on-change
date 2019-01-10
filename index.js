@@ -1,8 +1,6 @@
 'use strict';
 
-function isPrimitive(value) {
-	return value === null || (typeof value !== 'object' && typeof value !== 'function');
-}
+const isPrimitive = value => value === null || (typeof value !== 'object' && typeof value !== 'function');
 
 const proxyTarget = Symbol('ProxyTarget');
 
@@ -11,34 +9,38 @@ module.exports = (object, onChange) => {
 	let changed = false;
 	const propCache = new WeakMap();
 
-	function handleChange() {
+	const handleChange = () => {
 		if (!inApply) {
 			onChange();
 		} else if (!changed) {
 			changed = true;
 		}
-	}
+	};
 
-	function getOwnPropertyDescriptor(target, property) {
+	const getOwnPropertyDescriptor = (target, property) => {
 		if (!propCache.has(target)) {
 			propCache.set(target, new Map());
 		}
+
 		const props = propCache.get(target);
 		if (props.has(property)) {
 			return props.get(property);
 		}
+
 		const prop = Reflect.getOwnPropertyDescriptor(target, property);
 		props.set(property, prop);
-		return prop;
-	}
 
-	function invalidateCachedDescriptor(target, property) {
+		return prop;
+	};
+
+	const invalidateCachedDescriptor = (target, property) => {
 		if (!propCache.has(target)) {
 			return;
 		}
+
 		const props = propCache.get(target);
 		props.delete(property);
-	}
+	};
 
 	const handler = {
 		get(target, property, receiver) {
@@ -57,6 +59,7 @@ module.exports = (object, onChange) => {
 				if (descriptor.set && !descriptor.get) {
 					return undefined;
 				}
+
 				if (descriptor.writable === false) {
 					return value;
 				}
@@ -64,10 +67,12 @@ module.exports = (object, onChange) => {
 
 			return new Proxy(value, handler);
 		},
+
 		set(target, property, value, receiver) {
 			if (value && value[proxyTarget] !== undefined) {
 				value = value[proxyTarget];
 			}
+
 			const previous = Reflect.get(target, property, value, receiver);
 			const result = Reflect.set(target, property, value);
 
@@ -77,6 +82,7 @@ module.exports = (object, onChange) => {
 
 			return result;
 		},
+
 		defineProperty(target, property, descriptor) {
 			const result = Reflect.defineProperty(target, property, descriptor);
 			invalidateCachedDescriptor(target, property);
@@ -85,6 +91,7 @@ module.exports = (object, onChange) => {
 
 			return result;
 		},
+
 		deleteProperty(target, property) {
 			const result = Reflect.deleteProperty(target, property);
 			invalidateCachedDescriptor(target, property);
@@ -93,15 +100,20 @@ module.exports = (object, onChange) => {
 
 			return result;
 		},
+
 		apply(target, thisArg, argumentsList) {
 			if (!inApply) {
 				inApply = true;
+
 				const result = Reflect.apply(target, thisArg, argumentsList);
+
 				if (changed) {
 					onChange();
 				}
+
 				inApply = false;
 				changed = false;
+
 				return result;
 			}
 
