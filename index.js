@@ -65,6 +65,10 @@ module.exports = (object, onChange) => {
 				}
 			}
 
+			if (property === 'constructor') {
+				return value;
+			}
+
 			return new Proxy(value, handler);
 		},
 

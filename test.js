@@ -19,6 +19,7 @@ test('main', t => {
 	});
 
 	object.foo = true;
+	t.is(object.constructor, Object);
 	t.is(callCount, 1);
 
 	Object.defineProperty(object, 'newProp', {
