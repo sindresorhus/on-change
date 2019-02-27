@@ -49,7 +49,7 @@ module.exports = (object, onChange) => {
 			}
 
 			const value = Reflect.get(target, property, receiver);
-			if (isPrimitive(value)) {
+			if (isPrimitive(value) || property === 'constructor') {
 				return value;
 			}
 
@@ -63,10 +63,6 @@ module.exports = (object, onChange) => {
 				if (descriptor.writable === false) {
 					return value;
 				}
-			}
-
-			if (property === 'constructor') {
-				return value;
 			}
 
 			return new Proxy(value, handler);
