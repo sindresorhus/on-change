@@ -49,7 +49,7 @@ module.exports = (object, onChange) => {
 			}
 
 			const value = Reflect.get(target, property, receiver);
-			if (isPrimitive(value)) {
+			if (isPrimitive(value) || property === 'constructor') {
 				return value;
 			}
 
