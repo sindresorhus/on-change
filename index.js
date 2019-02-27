@@ -14,7 +14,7 @@ const concatPath = (path, property) => {
 
 const proxyTarget = Symbol('ProxyTarget');
 
-module.exports = (object, onChange) => {
+module.exports = (object, onChange, isShallow) => {
 	let inApply = false;
 	let changed = false;
 	const propCache = new WeakMap();
@@ -72,6 +72,10 @@ module.exports = (object, onChange) => {
 				if (descriptor.writable === false) {
 					return value;
 				}
+			}
+
+			if (isShallow) {
+				return value;
 			}
 
 			pathCache.set(value, concatPath(pathCache.get(target), property));
