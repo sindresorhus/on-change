@@ -2,44 +2,53 @@
 
 const isPrimitive = value => value === null || (typeof value !== 'object' && typeof value !== 'function');
 
+const concatPath = (path, property) => {
+	if (property && property.toString) {
+		if (path) {
+			path += '.';
+		}
+		path += property.toString();
+	}
+	return path;
+};
+
 const proxyTarget = Symbol('ProxyTarget');
 
 module.exports = (object, onChange) => {
 	let inApply = false;
 	let changed = false;
 	const propCache = new WeakMap();
+	const pathCache = new WeakMap();
 
-	const handleChange = () => {
+	const handleChange = (path, property, previous, value) => {
 		if (!inApply) {
-			onChange();
+			onChange.call(proxy, concatPath(path, property), previous, value);
 		} else if (!changed) {
 			changed = true;
 		}
 	};
 
 	const getOwnPropertyDescriptor = (target, property) => {
-		if (!propCache.has(target)) {
-			propCache.set(target, new Map());
+		let props = propCache.get(target);
+
+		if (!props) {
+			propCache.set(target, props = new Map());
 		}
 
-		const props = propCache.get(target);
-		if (props.has(property)) {
-			return props.get(property);
+		let prop = props.get(property);
+		if (!prop) {
+			props.set(property, prop = Reflect.getOwnPropertyDescriptor(target, property));
 		}
-
-		const prop = Reflect.getOwnPropertyDescriptor(target, property);
-		props.set(property, prop);
 
 		return prop;
 	};
 
 	const invalidateCachedDescriptor = (target, property) => {
-		if (!propCache.has(target)) {
-			return;
-		}
-
 		const props = propCache.get(target);
-		props.delete(property);
+
+		if (props) {
+			props.delete(property);
+		}
 	};
 
 	const handler = {
@@ -65,6 +74,7 @@ module.exports = (object, onChange) => {
 				}
 			}
 
+			pathCache.set(value, concatPath(pathCache.get(target), property));
 			return new Proxy(value, handler);
 		},
 
@@ -73,11 +83,11 @@ module.exports = (object, onChange) => {
 				value = value[proxyTarget];
 			}
 
-			const previous = Reflect.get(target, property, value, receiver);
+			const previous = Reflect.get(target, property, receiver);
 			const result = Reflect.set(target, property, value);
 
 			if (previous !== value) {
-				handleChange();
+				handleChange(pathCache.get(target), property, previous, value);
 			}
 
 			return result;
@@ -87,16 +97,17 @@ module.exports = (object, onChange) => {
 			const result = Reflect.defineProperty(target, property, descriptor);
 			invalidateCachedDescriptor(target, property);
 
-			handleChange();
+			handleChange(pathCache.get(target), property, undefined, descriptor.value);
 
 			return result;
 		},
 
 		deleteProperty(target, property) {
+			const previous = Reflect.get(target, property);
 			const result = Reflect.deleteProperty(target, property);
 			invalidateCachedDescriptor(target, property);
 
-			handleChange();
+			handleChange(pathCache.get(target), property, previous);
 
 			return result;
 		},
@@ -121,5 +132,8 @@ module.exports = (object, onChange) => {
 		}
 	};
 
-	return new Proxy(object, handler);
+	pathCache.set(object, '');
+	const proxy = new Proxy(object, handler);
+
+	return proxy;
 };
