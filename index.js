@@ -31,13 +31,17 @@ module.exports = (object, onChange) => {
 	const getOwnPropertyDescriptor = (target, property) => {
 		let props = propCache.get(target);
 
-		if (!props) {
-			propCache.set(target, props = new Map());
+		if (props) {
+			return props;
 		}
+
+		props = new Map();
+		propCache.set(target, props);
 
 		let prop = props.get(property);
 		if (!prop) {
-			props.set(property, prop = Reflect.getOwnPropertyDescriptor(target, property));
+			prop = Reflect.getOwnPropertyDescriptor(target, property);
+			props.set(property, prop);
 		}
 
 		return prop;
