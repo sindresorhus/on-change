@@ -169,28 +169,28 @@ test('the callback should provide the original proxied object, the path to the c
 	let returnedPrevious;
 	let returnedValue;
 
-	const proxy = onChange(originalObject, function (path, previous, value) {
+	const proxy = onChange(originalObject, function (path, value, previous) {
 		returnedObject = this;
 		returnedPath = path;
-		returnedPrevious = previous;
 		returnedValue = value;
+		returnedPrevious = previous;
 	});
 
 	proxy.x.y[0].z = 1;
 	t.is(returnedObject, proxy);
 	t.is(returnedPath, 'x.y.0.z');
-	t.is(returnedPrevious, 0);
 	t.is(returnedValue, 1);
+	t.is(returnedPrevious, 0);
 
 	proxy.x.y[0].new = 1;
 	t.is(returnedObject, proxy);
 	t.is(returnedPath, 'x.y.0.new');
-	t.is(returnedPrevious, undefined);
 	t.is(returnedValue, 1);
+	t.is(returnedPrevious, undefined);
 
 	delete proxy.x.y[0].new;
 	t.is(returnedObject, proxy);
 	t.is(returnedPath, 'x.y.0.new');
-	t.is(returnedPrevious, 1);
 	t.is(returnedValue, undefined);
+	t.is(returnedPrevious, 1);
 });

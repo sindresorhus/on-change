@@ -22,7 +22,7 @@ module.exports = (object, onChange) => {
 
 	const handleChange = (path, property, previous, value) => {
 		if (!inApply) {
-			onChange.call(proxy, concatPath(path, property), previous, value);
+			onChange.call(proxy, concatPath(path, property), value, previous);
 		} else if (!changed) {
 			changed = true;
 		}
