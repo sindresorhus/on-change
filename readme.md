@@ -61,8 +61,8 @@ Type: `Function`
 
 Function that gets called anytime the object changes. Provides three args: 
 1. A path to the value that was changed
-2. The previous value at the path
-3. The new value at the path
+2. The new value at the path
+3. The previous value at the path
 
 Context (this) is set to the original object passed to onChange (with Proxy)
 
