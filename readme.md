@@ -31,7 +31,7 @@ const object = {
 };
 
 let i = 0;
-const watchedObject = onChange(object, function(path, value, previousValue) {
+const watchedObject = onChange(object, function (path, value, previousValue) {
 	console.log('Object changed:', ++i);
 	console.log('this:', this);
 	console.log('path:', path);
