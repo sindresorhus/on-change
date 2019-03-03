@@ -13,11 +13,12 @@
 		"node": ">=6"
 	},
 	"scripts": {
-		"test": "xo && ava",
+		"test": "xo && ava && tsd-check",
 		"bench": "matcha bench/bench.js"
 	},
 	"files": [
-		"index.js"
+		"index.js",
+		"index.d.ts"
 	],
 	"keywords": [
 		"on",
@@ -38,6 +39,7 @@
 	"devDependencies": {
 		"ava": "^1.0.1",
 		"matcha": "^0.7.0",
-		"xo": "^0.23.0"
+		"tsd-check": "^0.3.0",
+		"xo": "^0.24.0"
 	}
 }
