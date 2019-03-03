@@ -4,7 +4,7 @@ const isPrimitive = value => value === null || (typeof value !== 'object' && typ
 
 const proxyTarget = Symbol('ProxyTarget');
 
-module.exports = (object, onChange) => {
+const onChange = (object, onChange) => {
 	let inApply = false;
 	let changed = false;
 	const propCache = new WeakMap();
@@ -123,3 +123,6 @@ module.exports = (object, onChange) => {
 
 	return new Proxy(object, handler);
 };
+
+module.exports = onChange;
+module.exports.default = onChange;
