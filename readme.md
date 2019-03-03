@@ -59,12 +59,15 @@ Object to watch for changes.
 
 Type: `Function`
 
-Function that gets called anytime the object changes. Provides three args: 
-1. A path to the value that was changed
-2. The new value at the path
-3. The previous value at the path
+Function that gets called anytime the object changes.
 
-Context (this) is set to the original object passed to onChange (with Proxy)
+The function receives three arguments: 
+1. A path to the value that was changed.
+2. The new value at the path.
+3. The previous value at the path.
+
+The context (this) is set to the original object passed to `onChange` (with Proxy).
+
 
 ## Use-case
 
