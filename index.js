@@ -7,8 +7,10 @@ const concatPath = (path, property) => {
 		if (path) {
 			path += '.';
 		}
+
 		path += property.toString();
 	}
+
 	return path;
 };
 
