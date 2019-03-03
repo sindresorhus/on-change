@@ -154,3 +154,45 @@ test.cb('the change handler is called after the change is done', t => {
 
 	object.x = 1;
 });
+
+test('the callback should provide the original proxied object, the path to the changed value, the previous value at path, and the new value at path', t => {
+	const originalObject = {
+		x: {
+			y: [
+				{
+					z: 0
+				}
+			]
+		}
+	};
+
+	let returnedObject;
+	let returnedPath;
+	let returnedPrevious;
+	let returnedValue;
+
+	const proxy = onChange(originalObject, function (path, value, previous) {
+		returnedObject = this;
+		returnedPath = path;
+		returnedValue = value;
+		returnedPrevious = previous;
+	});
+
+	proxy.x.y[0].z = 1;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y.0.z');
+	t.is(returnedValue, 1);
+	t.is(returnedPrevious, 0);
+
+	proxy.x.y[0].new = 1;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y.0.new');
+	t.is(returnedValue, 1);
+	t.is(returnedPrevious, undefined);
+
+	delete proxy.x.y[0].new;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y.0.new');
+	t.is(returnedValue, undefined);
+	t.is(returnedPrevious, 1);
+});

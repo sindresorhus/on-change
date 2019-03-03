@@ -7,5 +7,5 @@
  */
 export default function onChange<ObjectType extends {[key: string]: unknown}>(
 	object: ObjectType,
-	onChange: () => void
+	onChange: (this: ObjectType, path: string, value: unknown, previousValue: unknown) => void
 ): ObjectType;
