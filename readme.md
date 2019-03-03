@@ -31,12 +31,12 @@ const object = {
 };
 
 let i = 0;
-const watchedObject = onChange(object, function(path, value, previous) {
+const watchedObject = onChange(object, function(path, value, previousValue) {
 	console.log('Object changed:', ++i);
 	console.log('this:', this);
 	console.log('path:', path);
 	console.log('value:', value);
-	console.log('previous:', previous);
+	console.log('previousValue:', previousValue);
 });
 
 watchedObject.foo = true;
@@ -53,7 +53,7 @@ watchedObject.foo = true;
 //   }'
 //=> 'path: "foo"'
 //=> 'value: true'
-//=> 'previous: false'
+//=> 'previousValue: false'
 
 watchedObject.a.b[0].c = true;
 //=> 'Object changed: 2'
@@ -69,7 +69,7 @@ watchedObject.a.b[0].c = true;
 //   }'
 //=> 'path: "a.b.0.c"'
 //=> 'value: true'
-//=> 'previous: false'
+//=> 'previousValue: false'
 ```
 
 
@@ -92,7 +92,7 @@ Type: `Function`
 Function that gets called anytime the object changes.
 
 The function receives three arguments: 
-1. A path to the value that was changed (a change to "c" in the above example would return "a.b.0.c").
+1. A path to the value that was changed. A change to `c` in the above example would return `a.b.0.c`.
 2. The new value at the path.
 3. The previous value at the path.
 
