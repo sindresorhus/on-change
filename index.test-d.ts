@@ -12,7 +12,9 @@ const object = {
 	}
 };
 
-const watchedObject = onChange(object, () => {});
+const watchedObject = onChange(object, function () {
+	expectType<typeof object>(this);
+});
 expectType<typeof object>(watchedObject);
 
 watchedObject.foo = true;
