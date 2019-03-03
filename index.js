@@ -14,7 +14,7 @@ const concatPath = (path, property) => {
 
 const proxyTarget = Symbol('ProxyTarget');
 
-module.exports = (object, onChange) => {
+const onChange = (object, onChange) => {
 	let inApply = false;
 	let changed = false;
 	const propCache = new WeakMap();
@@ -141,3 +141,6 @@ module.exports = (object, onChange) => {
 
 	return proxy;
 };
+
+module.exports = onChange;
+module.exports.default = onChange;
