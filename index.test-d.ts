@@ -19,3 +19,10 @@ expectType<typeof object>(watchedObject);
 
 watchedObject.foo = true;
 watchedObject.a.b[0].c = true;
+
+const watchedObjectShallow = onChange(object, function () {
+	expectType<typeof object>(this);
+});
+expectType<typeof object>(watchedObjectShallow);
+
+watchedObject.foo = true;

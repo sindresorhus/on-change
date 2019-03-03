@@ -196,3 +196,49 @@ test('the callback should provide the original proxied object, the path to the c
 	t.is(returnedValue, undefined);
 	t.is(returnedPrevious, 1);
 });
+
+test('should not call the callback for nested items if isShallow is true', t => {
+	const originalObject = {
+		x: {
+			y: [{
+				z: 0
+			}]
+		}
+	};
+
+	let returnedObject;
+	let returnedPath;
+	let returnedPrevious;
+	let returnedValue;
+
+	const proxy = onChange(originalObject, function (path, value, previous) {
+		returnedObject = this;
+		returnedPath = path;
+		returnedPrevious = previous;
+		returnedValue = value;
+	}, true);
+
+	proxy.a = 1;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'a');
+	t.is(returnedPrevious, undefined);
+	t.is(returnedValue, 1);
+
+	proxy.x.new = 1;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'a');
+	t.is(returnedPrevious, undefined);
+	t.is(returnedValue, 1);
+
+	proxy.x.y[0].new = 1;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'a');
+	t.is(returnedPrevious, undefined);
+	t.is(returnedValue, 1);
+
+	proxy.a = 2;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'a');
+	t.is(returnedPrevious, 1);
+	t.is(returnedValue, 2);
+});

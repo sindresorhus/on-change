@@ -47,6 +47,49 @@ suite('on-change', () => {
 	});
 });
 
+suite('on-change shallow', () => {
+	set('mintime', 5000);
+
+	let val = 0;
+
+	before(() => {
+		this.object = onChange({
+			a: 0,
+			b: 0,
+			c: 0,
+			d: 0,
+			subObj: {a: 0}
+		}, save, true);
+		this.array = onChange([0, 0, 0, 0], save, true);
+	});
+
+	bench('object read', () => {
+		this.object.a === val++; // eslint-disable-line no-unused-expressions
+	});
+
+	bench('nested read', () => {
+		this.object.subObj.a === val++; // eslint-disable-line no-unused-expressions
+	});
+
+	bench('array read', () => {
+		this.array[0] === val++; // eslint-disable-line no-unused-expressions
+	});
+
+	bench('object write', () => {
+		this.object.a = val++;
+		this.object.b = val++;
+		this.object.c = val++;
+		this.object.d = val++;
+	});
+
+	bench('array write', () => {
+		this.array[0] = val++;
+		this.array[1] = val++;
+		this.array[2] = val++;
+		this.array[3] = val++;
+	});
+});
+
 suite('native', () => {
 	set('mintime', 5000);
 
