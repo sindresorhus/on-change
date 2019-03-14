@@ -3,7 +3,7 @@
  *
  * @param object - Object to watch for changes.
  * @param onChange - Function that gets called anytime the object changes.
- * @param [isShallow] - Function that gets called anytime the object changes.
+ * @param [isShallow=false] - If true then deep changes will not trigger the callback, only changes to the immediate properties of the original object
  * @returns A version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
  */
 export default function onChange<ObjectType extends {[key: string]: unknown}>(
