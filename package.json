@@ -13,7 +13,7 @@
 		"node": ">=6"
 	},
 	"scripts": {
-		"test": "xo && ava && tsd-check",
+		"test": "xo && ava && tsd",
 		"bench": "matcha bench/bench.js"
 	},
 	"files": [
@@ -37,9 +37,9 @@
 		"listener"
 	],
 	"devDependencies": {
-		"ava": "^1.0.1",
+		"ava": "^1.4.1",
 		"matcha": "^0.7.0",
-		"tsd-check": "^0.3.0",
+		"tsd": "^0.7.1",
 		"xo": "^0.24.0"
 	}
 }
