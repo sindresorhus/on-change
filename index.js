@@ -145,4 +145,5 @@ const onChange = (object, onChange) => {
 };
 
 module.exports = onChange;
+// TODO: Remove this for the next major release
 module.exports.default = onChange;
