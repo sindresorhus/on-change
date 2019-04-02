@@ -1,5 +1,5 @@
-import {expectType} from 'tsd-check';
-import onChange from '.';
+import {expectType} from 'tsd';
+import onChange = require('.');
 
 const object = {
 	foo: false,
