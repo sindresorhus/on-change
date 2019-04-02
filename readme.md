@@ -75,7 +75,7 @@ watchedObject.a.b[0].c = true;
 
 ## API
 
-### onChange(object, onChange, [isShallow])
+### onChange(object, onChange, [options])
 
 Returns a version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
 
@@ -99,13 +99,15 @@ The function receives three arguments:
 The context (this) is set to the original object passed to `onChange` (with Proxy).
 
 
-#### isShallow
+#### options
 
-Type: `Boolean`
+Type: `Object`
 
-Default: false
+- ##### options.isShallow
 
-If true then deep changes will not trigger the callback, only changes to the immediate properties of the original object
+  Type: 'boolean'
+
+  If set to true then deep changes will not trigger the callback, only changes to the immediate properties of the original object.
 
 
 ## Use-case

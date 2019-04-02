@@ -16,7 +16,7 @@ const concatPath = (path, property) => {
 
 const proxyTarget = Symbol('ProxyTarget');
 
-const onChange = (object, onChange, isShallow = false) => {
+const onChange = (object, onChange, options = {}) => {
 	let inApply = false;
 	let changed = false;
 	const propCache = new WeakMap();
@@ -64,7 +64,7 @@ const onChange = (object, onChange, isShallow = false) => {
 			}
 
 			const value = Reflect.get(target, property, receiver);
-			if (isPrimitive(value) || property === 'constructor' || isShallow === true) {
+			if (isPrimitive(value) || property === 'constructor' || options.isShallow === true) {
 				return value;
 			}
 

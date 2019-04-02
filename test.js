@@ -216,7 +216,9 @@ test('should not call the callback for nested items if isShallow is true', t => 
 		returnedPath = path;
 		returnedPrevious = previous;
 		returnedValue = value;
-	}, true);
+	}, {
+		isShallow: true
+	});
 
 	proxy.a = 1;
 	t.is(returnedObject, proxy);
