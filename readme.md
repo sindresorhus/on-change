@@ -75,13 +75,13 @@ watchedObject.a.b[0].c = true;
 
 ## API
 
-### onChange(object, onChange)
+### onChange(object, onChange, [options])
 
 Returns a version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
 
 #### object
 
-Type: `Object`
+Type: `object`
 
 Object to watch for changes.
 
@@ -97,6 +97,17 @@ The function receives three arguments:
 3. The previous value at the path.
 
 The context (this) is set to the original object passed to `onChange` (with Proxy).
+
+#### options
+
+Type: `object`
+
+##### isShallow
+
+Type: `boolean`<br>
+Default: `false`
+
+Deep changes will not trigger the callback. Only changes to the immediate properties of the original object.
 
 
 ## Use-case

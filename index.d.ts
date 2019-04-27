@@ -1,3 +1,36 @@
+declare namespace onChange {
+	interface Options {
+		/**
+		Deep changes will not trigger the callback. Only changes to the immediate properties of the original object.
+
+		@default false
+
+		@example
+		```
+		import onChange = require('on-change');
+
+		const object = {
+			a: {
+				b: false
+			}
+		};
+
+		let i = 0;
+		const watchedObject = onChange(object, () => {
+			console.log('Object changed:', ++i);
+		}, {isShallow: true});
+
+		watchedObject.a.b = true;
+		// Nothing happens
+
+		watchedObject.a = true;
+		//=> 'Object changed: 1'
+		```
+		*/
+		readonly isShallow?: boolean;
+	}
+}
+
 declare const onChange: {
 	/**
 	Watch an object or array for changes. It works recursively, so it will even detect if you modify a deep property like `obj.a.b[0].c = true`.
@@ -70,7 +103,8 @@ declare const onChange: {
 			path: string,
 			value: unknown,
 			previousValue: unknown
-		) => void
+		) => void,
+		options?: onChange.Options
 	): ObjectType;
 
 	// TODO: Remove this for the next major release, refactor the whole definition to:
