@@ -81,7 +81,7 @@ Returns a version of `object` that is watched. It's the exact same object, just 
 
 #### object
 
-Type: `Object`
+Type: `object`
 
 Object to watch for changes.
 
@@ -98,16 +98,16 @@ The function receives three arguments:
 
 The context (this) is set to the original object passed to `onChange` (with Proxy).
 
-
 #### options
 
-Type: `Object`
+Type: `object`
 
-- ##### options.isShallow
+##### isShallow
 
-  Type: 'boolean'
+Type: `boolean`<br>
+Default: `false`
 
-  If set to true then deep changes will not trigger the callback, only changes to the immediate properties of the original object.
+Deep changes will not trigger the callback. Only changes to the immediate properties of the original object.
 
 
 ## Use-case
