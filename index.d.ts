@@ -1,33 +1,34 @@
-interface options {
-	/**
-	 If set to true then deep changes will not trigger the callback, only changes to the immediate properties of the original object.
-	 @example
-	 ```
-	 const onChange = require('on-change');
+declare namespace onChange {
+	interface Options {
+		/**
+		Deep changes will not trigger the callback. Only changes to the immediate properties of the original object.
 
-	 const options = {
-		isShallow: true
-	 };
+		@default false
 
-	 const object = {
-		a: {
-			b: false
-		}
-	 };
+		@example
+		```
+		import onChange = require('on-change');
 
-	 let i = 0;
-	 const watchedObject = onChange(object, function () {
-		console.log('Object changed:', ++i);
-	 }, options);
+		const object = {
+			a: {
+				b: false
+			}
+		};
 
-	 watchedObject.a.b = true;
-	 // nothing happens
+		let i = 0;
+		const watchedObject = onChange(object, () => {
+			console.log('Object changed:', ++i);
+		}, {isShallow: true});
 
-	 watchedObject.a = true;
-	 //=> 'Object changed: 1'
-	 ```
-	 */
-	isShallow?: boolean;
+		watchedObject.a.b = true;
+		// Nothing happens
+
+		watchedObject.a = true;
+		//=> 'Object changed: 1'
+		```
+		*/
+		readonly isShallow?: boolean;
+	}
 }
 
 declare const onChange: {
@@ -36,7 +37,6 @@ declare const onChange: {
 
 	@param object - Object to watch for changes.
 	@param onChange - Function that gets called anytime the object changes.
-	@param options
 	@returns A version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
 
 	@example
@@ -104,7 +104,7 @@ declare const onChange: {
 			value: unknown,
 			previousValue: unknown
 		) => void,
-		options?: options
+		options?: onChange.Options
 	): ObjectType;
 
 	// TODO: Remove this for the next major release, refactor the whole definition to:
