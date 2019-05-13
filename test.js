@@ -1,6 +1,8 @@
 import test from 'ava';
 import onChange from '.';
 
+const testValues = [null, undefined, 'string', true, /regexp/, new Date(), NaN, Infinity];
+
 test('main', t => {
 	const fixture = {
 		foo: false,
@@ -50,15 +52,11 @@ test('main', t => {
 	object.bar.a = object.bar.a; // eslint-disable-line no-self-assign
 	t.is(fixture.bar.a, prev);
 
-	// Support null assignment
-	object.bar.a.c[2] = null;
-	t.is(object.bar.a.c[2], null);
-	t.is(callCount, 7);
-
-	// Support undefined assignment
-	object.bar.a.c[2] = undefined;
-	t.is(object.bar.a.c[2], undefined);
-	t.is(callCount, 8);
+	testValues.forEach((value, index) => {
+		object.bar.a.c[2] = value;
+		t.is(object.bar.a.c[2], value);
+		t.is(callCount, 7 + index);
+	});
 });
 
 test('works with an array too', t => {

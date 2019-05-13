@@ -1,6 +1,12 @@
 'use strict';
 
-const isPrimitive = value => value === null || (typeof value !== 'object' && typeof value !== 'function');
+const isPrimitive = value => {
+	const type = typeof value;
+	return value === null ||
+		value instanceof Date ||
+		value instanceof RegExp ||
+		(type !== 'object' && type !== 'function');
+};
 
 const concatPath = (path, property) => {
 	if (property && property.toString) {
