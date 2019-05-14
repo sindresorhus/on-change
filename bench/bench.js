@@ -59,8 +59,8 @@ suite('on-change shallow', () => {
 			c: 0,
 			d: 0,
 			subObj: {a: 0}
-		}, save, true);
-		this.array = onChange([0, 0, 0, 0], save, true);
+		}, save, {isShallow: true});
+		this.array = onChange([0, 0, 0, 0], save, {isShallow: true});
 	});
 
 	bench('object read', () => {
