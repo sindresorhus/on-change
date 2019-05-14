@@ -24,7 +24,7 @@ const onChange = (object, onChange, options = {}) => {
 
 	const handleChange = (path, property, previous, value) => {
 		if (!inApply) {
-			onChange.call(proxy, concatPath(path, property), value, previous);
+			onChange(concatPath(path, property), value, previous);
 		} else if (!changed) {
 			changed = true;
 		}
@@ -122,14 +122,16 @@ const onChange = (object, onChange, options = {}) => {
 			if (!inApply) {
 				inApply = true;
 
+				const path = pathCache.get(target);
+				const previous = options.clone ? options.clone(thisArg) : undefined;
 				const result = Reflect.apply(target, thisArg, argumentsList);
 
-				if (changed) {
-					onChange();
-				}
-
 				inApply = false;
-				changed = false;
+
+				if (changed) {
+					handleChange(path.substring(0, path.lastIndexOf('.')), '', previous, thisArg);
+					changed = false;
+				}
 
 				return result;
 			}
@@ -140,6 +142,7 @@ const onChange = (object, onChange, options = {}) => {
 
 	pathCache.set(object, '');
 	const proxy = new Proxy(object, handler);
+	onChange = onChange.bind(proxy);
 
 	return proxy;
 };
