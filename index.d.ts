@@ -29,7 +29,7 @@ declare namespace onChange {
 		*/
 		readonly isShallow?: boolean;
 		/**
-		 A function that should return a clone of a value. Enables the "previous" value in the onChange callback when array methods are called.
+		A function that should return a clone of a value. Enables the "previous" value in the onChange callback when array methods are called.
 		*/
 		readonly clone?: Function;
 	}
