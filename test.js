@@ -1,6 +1,21 @@
 import test from 'ava';
 import onChange from '.';
 
+const testValues = [
+	null,
+	undefined,
+	'string',
+	new RegExp('regExp1'),
+	RegExp('regExp2'), // eslint-disable-line unicorn/new-for-builtins
+	/regExp3/,
+	true,
+	false,
+	1,
+	Number(2),
+	new Number(3), // eslint-disable-line no-new-wrappers, unicorn/new-for-builtins
+	Infinity
+];
+
 test('main', t => {
 	const fixture = {
 		foo: false,
@@ -34,31 +49,64 @@ test('main', t => {
 	t.is(object.foo, undefined);
 	t.is(callCount, 4);
 
-	object.bar.a.b = 1;
-	t.is(object.bar.a.b, 1);
-	t.is(callCount, 5);
-
-	object.bar.a.c[2] = 5;
-	t.is(object.bar.a.c[2], 5);
-	t.is(callCount, 6);
-
-	object.bar.a.c[2] = 5;
-	t.is(callCount, 6);
-
 	// Unwrap proxies on assignment
 	const prev = fixture.bar.a;
 	object.bar.a = object.bar.a; // eslint-disable-line no-self-assign
 	t.is(fixture.bar.a, prev);
+});
 
-	// Support null assignment
-	object.bar.a.c[2] = null;
-	t.is(object.bar.a.c[2], null);
-	t.is(callCount, 7);
+testValues.forEach((value, index) => {
+	test(`should handle '${value}' (testValues[${index}])`, t => {
+		const fixture = {
+			a: 0,
+			b: [1, 2, 0]
+		};
 
-	// Support undefined assignment
-	object.bar.a.c[2] = undefined;
-	t.is(object.bar.a.c[2], undefined);
-	t.is(callCount, 8);
+		let callCount = 0;
+
+		const object = onChange(fixture, () => {
+			callCount++;
+		});
+
+		object.a = value;
+		t.is(object.a, value);
+		t.is(callCount, 1);
+
+		object.a = value;
+		t.is(callCount, 1);
+
+		object.b[2] = value;
+		t.is(object.b[2], value);
+		t.is(callCount, 2);
+
+		object.b[2] = value;
+		t.is(callCount, 2);
+	});
+});
+
+test('Dates', t => {
+	let callCount = 0;
+	const object = onChange({
+		a: 0
+	}, () => {
+		callCount++;
+	});
+
+	const date = new Date();
+
+	object.a = date;
+	t.true(object.a instanceof Date);
+	t.is(object.a.valueOf(), date.valueOf());
+	t.is(callCount, 1);
+
+	object.a.setSeconds(32);
+	t.is(callCount, 2);
+
+	object.a.setHours(5);
+	t.is(callCount, 3);
+
+	object.a.setHours(5);
+	t.is(callCount, 3);
 });
 
 test('works with an array too', t => {
