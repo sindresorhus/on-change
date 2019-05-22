@@ -25,6 +25,7 @@ const onChange = (object, onChange, options = {}) => {
 	let changed = false;
 	const propCache = new WeakMap();
 	const pathCache = new WeakMap();
+	const proxyCache = new WeakMap();
 
 	const handleChange = (path, property, previous, value) => {
 		if (!inApply) {
@@ -88,7 +89,13 @@ const onChange = (object, onChange, options = {}) => {
 			}
 
 			pathCache.set(value, concatPath(pathCache.get(target), property));
-			return new Proxy(value, handler);
+			let proxy = proxyCache.get(value);
+			if (proxy === undefined) {
+				proxy = new Proxy(value, handler);
+				proxyCache.set(value, proxy);
+			}
+
+			return proxy;
 		},
 
 		set(target, property, value, receiver) {
