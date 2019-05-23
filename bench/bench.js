@@ -4,7 +4,7 @@ const onChange = require('..');
 
 const save = () => {};
 
-const commonBench = function() {
+const commonBench = function () {
 	set('mintime', 5000);
 
 	let val = 0;
