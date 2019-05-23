@@ -4,11 +4,56 @@ const onChange = require('..');
 
 const save = () => {};
 
-suite('on-change', () => {
+const commonBench = function() {
 	set('mintime', 5000);
 
 	let val = 0;
 
+	bench('object read', () => {
+		this.object.a === val++; // eslint-disable-line no-unused-expressions
+	});
+
+	bench('nested read', () => {
+		this.object.subObj.a === val++; // eslint-disable-line no-unused-expressions
+	});
+
+	bench('array read', () => {
+		this.array[0] === val++; // eslint-disable-line no-unused-expressions
+	});
+
+	bench('object write', () => {
+		this.object.a = val++;
+	});
+
+	bench('array write', () => {
+		this.array[0] = val++;
+	});
+
+	bench('array write in apply', () => {
+		this.array.some((value, index) => {
+			this.array[index] = val++;
+			return true;
+		});
+	});
+
+	bench('array push', () => {
+		this.array.push(val++);
+	});
+
+	bench('array pop', () => {
+		this.array.pop() === val++; // eslint-disable-line no-unused-expressions
+	});
+
+	bench('array unshift', () => {
+		this.array.unshift(val++);
+	});
+
+	bench('array shift', () => {
+		this.array.shift() === val++; // eslint-disable-line no-unused-expressions
+	});
+};
+
+suite('on-change', () => {
 	before(() => {
 		this.object = onChange({
 			a: 0,
@@ -17,41 +62,14 @@ suite('on-change', () => {
 			d: 0,
 			subObj: {a: 0}
 		}, save);
+
 		this.array = onChange([0, 0, 0, 0], save);
 	});
 
-	bench('object read', () => {
-		this.object.a === val++; // eslint-disable-line no-unused-expressions
-	});
-
-	bench('nested read', () => {
-		this.object.subObj.a === val++; // eslint-disable-line no-unused-expressions
-	});
-
-	bench('array read', () => {
-		this.array[0] === val++; // eslint-disable-line no-unused-expressions
-	});
-
-	bench('object write', () => {
-		this.object.a = val++;
-		this.object.b = val++;
-		this.object.c = val++;
-		this.object.d = val++;
-	});
-
-	bench('array write', () => {
-		this.array[0] = val++;
-		this.array[1] = val++;
-		this.array[2] = val++;
-		this.array[3] = val++;
-	});
+	commonBench.call(this);
 });
 
 suite('on-change shallow', () => {
-	set('mintime', 5000);
-
-	let val = 0;
-
 	before(() => {
 		this.object = onChange({
 			a: 0,
@@ -60,41 +78,14 @@ suite('on-change shallow', () => {
 			d: 0,
 			subObj: {a: 0}
 		}, save, {isShallow: true});
+
 		this.array = onChange([0, 0, 0, 0], save, {isShallow: true});
 	});
 
-	bench('object read', () => {
-		this.object.a === val++; // eslint-disable-line no-unused-expressions
-	});
-
-	bench('nested read', () => {
-		this.object.subObj.a === val++; // eslint-disable-line no-unused-expressions
-	});
-
-	bench('array read', () => {
-		this.array[0] === val++; // eslint-disable-line no-unused-expressions
-	});
-
-	bench('object write', () => {
-		this.object.a = val++;
-		this.object.b = val++;
-		this.object.c = val++;
-		this.object.d = val++;
-	});
-
-	bench('array write', () => {
-		this.array[0] = val++;
-		this.array[1] = val++;
-		this.array[2] = val++;
-		this.array[3] = val++;
-	});
+	commonBench.call(this);
 });
 
 suite('native', () => {
-	set('mintime', 5000);
-
-	let val = 0;
-
 	before(() => {
 		this.object = {
 			a: 0,
@@ -103,40 +94,9 @@ suite('native', () => {
 			d: 0,
 			subObj: {a: 0}
 		};
+
 		this.array = [0, 0, 0, 0];
 	});
 
-	bench('object read', () => {
-		this.object.a === val++; // eslint-disable-line no-unused-expressions
-	});
-
-	bench('nested read', () => {
-		this.object.subObj.a === val++; // eslint-disable-line no-unused-expressions
-	});
-
-	bench('array read', () => {
-		this.array[0] === val++; // eslint-disable-line no-unused-expressions
-	});
-
-	bench('object write', () => {
-		this.object.a = val++;
-		save();
-		this.object.b = val++;
-		save();
-		this.object.c = val++;
-		save();
-		this.object.d = val++;
-		save();
-	});
-
-	bench('array write', () => {
-		this.array[0] = val++;
-		save();
-		this.array[1] = val++;
-		save();
-		this.array[2] = val++;
-		save();
-		this.array[3] = val++;
-		save();
-	});
+	commonBench.call(this);
 });
