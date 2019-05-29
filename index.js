@@ -61,7 +61,7 @@ const onChange = (object, onChange, options = {}) => {
 			return;
 		}
 
-		if (applyPrevious && previous !== undefined && value !== undefined && property !== 'length') {
+		if (inApply && previous !== undefined && value !== undefined && property !== 'length') {
 			let item = applyPrevious;
 
 			if (path !== applyPath) {
@@ -193,7 +193,7 @@ const onChange = (object, onChange, options = {}) => {
 				}
 
 				if (Array.isArray(thisArg)) {
-					applyPrevious = thisArg[proxyTarget].slice();
+					applyPrevious = shallowClone(thisArg[proxyTarget]);
 				}
 
 				applyPath = pathCache.get(target);

@@ -5,7 +5,7 @@ const onChange = require('..');
 const save = () => {};
 
 const commonBench = function () {
-	set('mintime', 5000);
+	set('mintime', 500);
 
 	let val = 0;
 
@@ -36,50 +36,71 @@ const commonBench = function () {
 		});
 	});
 
-	bench('array push', () => {
+	bench('array push + pop', () => {
 		this.array.push(val++);
+		this.array.pop();
 	});
 
-	bench('array pop', () => {
-		this.array.pop() === val++; // eslint-disable-line no-unused-expressions
-	});
-
-	bench('array unshift', () => {
+	bench('array unshift + shift', () => {
 		this.array.unshift(val++);
-	});
-
-	bench('array shift', () => {
-		this.array.shift() === val++; // eslint-disable-line no-unused-expressions
+		this.array.shift();
 	});
 };
 
+const buildArray = length => {
+	const array = [];
+	array.length = length;
+	return array.fill(0);
+};
+
+const buildObject = length => {
+	let prop;
+	const object = {
+		subObj: {a: 0}
+	};
+
+	for (let index = 0; index < length; index++) {
+		prop = String.fromCharCode((index % 26) + 97);
+		object[prop.repeat(Math.ceil((index + 1) / 26))] = 0;
+	}
+
+	return object;
+};
+
+const SMALL = 10;
+const LARGE = 100000;
+
 suite('on-change', () => {
 	before(() => {
-		this.object = onChange({
-			a: 0,
-			b: 0,
-			c: 0,
-			d: 0,
-			subObj: {a: 0}
-		}, save);
-
-		this.array = onChange([0, 0, 0, 0], save);
+		this.object = onChange(buildObject(SMALL), save);
+		this.array = onChange(buildArray(SMALL), save);
 	});
 
 	commonBench.call(this);
 });
 
-suite('on-change shallow', () => {
+suite('on-change, large objects', () => {
 	before(() => {
-		this.object = onChange({
-			a: 0,
-			b: 0,
-			c: 0,
-			d: 0,
-			subObj: {a: 0}
-		}, save, {isShallow: true});
+		this.object = onChange(buildObject(LARGE), save);
+		this.array = onChange(buildArray(LARGE), save);
+	});
 
-		this.array = onChange([0, 0, 0, 0], save, {isShallow: true});
+	commonBench.call(this);
+});
+
+suite('on-change, isShallow', () => {
+	before(() => {
+		this.object = onChange(buildObject(SMALL), save, {isShallow: true});
+		this.array = onChange(buildArray(SMALL), save, {isShallow: true});
+	});
+
+	commonBench.call(this);
+});
+
+suite('on-change, isShallow, large objects', () => {
+	before(() => {
+		this.object = onChange(buildObject(LARGE), save, {isShallow: true});
+		this.array = onChange(buildArray(LARGE), save, {isShallow: true});
 	});
 
 	commonBench.call(this);
@@ -87,15 +108,17 @@ suite('on-change shallow', () => {
 
 suite('native', () => {
 	before(() => {
-		this.object = {
-			a: 0,
-			b: 0,
-			c: 0,
-			d: 0,
-			subObj: {a: 0}
-		};
+		this.object = buildObject(SMALL);
+		this.array = buildArray(SMALL);
+	});
 
-		this.array = [0, 0, 0, 0];
+	commonBench.call(this);
+});
+
+suite('native, large objects', () => {
+	before(() => {
+		this.object = buildObject(LARGE);
+		this.array = buildArray(LARGE);
 	});
 
 	commonBench.call(this);
