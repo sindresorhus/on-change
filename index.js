@@ -2,6 +2,10 @@
 
 const isPrimitive = value => value === null || (typeof value !== 'object' && typeof value !== 'function');
 
+const isBuiltinWithoutMutableMethods = value => value instanceof RegExp || value instanceof Number;
+
+const isBuiltinWithMutableMethods = value => value instanceof Date;
+
 const concatPath = (path, property) => {
 	if (property && property.toString) {
 		if (path) {
@@ -65,7 +69,12 @@ const onChange = (object, onChange, options = {}) => {
 			}
 
 			const value = Reflect.get(target, property, receiver);
-			if (isPrimitive(value) || property === 'constructor' || options.isShallow === true) {
+			if (
+				isPrimitive(value) ||
+				isBuiltinWithoutMutableMethods(value) ||
+				property === 'constructor' ||
+				options.isShallow === true
+			) {
 				return value;
 			}
 
@@ -126,12 +135,23 @@ const onChange = (object, onChange, options = {}) => {
 		},
 
 		apply(target, thisArg, argumentsList) {
+			const compare = isBuiltinWithMutableMethods(thisArg);
+			let previous;
+
+			if (compare) {
+				thisArg = thisArg[proxyTarget];
+			}
+
 			if (!inApply) {
 				inApply = true;
 
+				if (compare) {
+					previous = thisArg.valueOf();
+				}
+
 				const result = Reflect.apply(target, thisArg, argumentsList);
 
-				if (changed) {
+				if (changed || (compare && previous !== thisArg.valueOf())) {
 					onChange();
 				}
 
