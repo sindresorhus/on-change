@@ -55,7 +55,7 @@ test('main', t => {
 	t.is(fixture.bar.a, prev);
 });
 
-testValues.forEach((value, index) => {
+for (const [index, value] of testValues.entries()) {
 	test(`should handle '${value}' (testValues[${index}])`, t => {
 		const fixture = {
 			a: 0,
@@ -82,9 +82,9 @@ testValues.forEach((value, index) => {
 		object.b[2] = value;
 		t.is(callCount, 2);
 	});
-});
+}
 
-test('Dates', t => {
+test('dates', t => {
 	let callCount = 0;
 	const object = onChange({
 		a: 0
