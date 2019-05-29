@@ -68,10 +68,12 @@ const onChange = (object, onChange, options = {}) => {
 			}
 
 			const value = Reflect.get(target, property, receiver);
-			if (isPrimitive(value) ||
+			if (
+				isPrimitive(value) ||
 				isBuiltinWithoutMutableMethods(value) ||
 				property === 'constructor' ||
-				options.isShallow === true) {
+				options.isShallow === true
+			) {
 				return value;
 			}
 
