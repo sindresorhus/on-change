@@ -167,6 +167,7 @@ foo.a = 10;
 - [introspected](https://github.com/WebReflection/introspected) - Never-ending Proxy with multiple observers *(Uses `Proxy` too)*
 
 
-## License
+## Maintainers
 
-MIT © [Sindre Sorhus](https://sindresorhus.com)
+- [Sindre Sorhus](https://github.com/sindresorhus)
+- [Darren Wright](https://github.com/DarrenPaulWright)
