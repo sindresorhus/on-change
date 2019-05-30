@@ -214,6 +214,7 @@ test('the callback should provide the original proxied object, the path to the c
 		}
 	};
 
+	let callCount = 0;
 	let returnedObject;
 	let returnedPath;
 	let returnedPrevious;
@@ -224,25 +225,92 @@ test('the callback should provide the original proxied object, the path to the c
 		returnedPath = path;
 		returnedValue = value;
 		returnedPrevious = previous;
+		callCount++;
 	});
 
 	proxy.x.y[0].z = 1;
 	t.is(returnedObject, proxy);
 	t.is(returnedPath, 'x.y.0.z');
-	t.is(returnedValue, 1);
 	t.is(returnedPrevious, 0);
+	t.is(returnedValue, 1);
+	t.is(callCount, 1);
 
 	proxy.x.y[0].new = 1;
 	t.is(returnedObject, proxy);
 	t.is(returnedPath, 'x.y.0.new');
-	t.is(returnedValue, 1);
 	t.is(returnedPrevious, undefined);
+	t.is(returnedValue, 1);
+	t.is(callCount, 2);
 
 	delete proxy.x.y[0].new;
 	t.is(returnedObject, proxy);
 	t.is(returnedPath, 'x.y.0.new');
-	t.is(returnedValue, undefined);
 	t.is(returnedPrevious, 1);
+	t.is(returnedValue, undefined);
+	t.is(callCount, 3);
+
+	proxy.x.y.push('pushed');
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPrevious, [{z: 1}]);
+	t.deepEqual(returnedValue, [{z: 1}, 'pushed']);
+	t.is(callCount, 4);
+
+	proxy.x.y.pop();
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPrevious, [{z: 1}, 'pushed']);
+	t.deepEqual(returnedValue, [{z: 1}]);
+	t.is(callCount, 5);
+
+	proxy.x.y.unshift('unshifted');
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPrevious, [{z: 1}]);
+	t.deepEqual(returnedValue, ['unshifted', {z: 1}]);
+	t.is(callCount, 6);
+
+	proxy.x.y.shift();
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPrevious, ['unshifted', {z: 1}]);
+	t.deepEqual(returnedValue, [{z: 1}]);
+	t.is(callCount, 7);
+
+	proxy.x.y = proxy.x.y.concat([{z: 3}, {z: 2}]);
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPrevious, [{z: 1}]);
+	t.deepEqual(returnedValue, [{z: 1}, {z: 3}, {z: 2}]);
+	t.is(callCount, 8);
+
+	proxy.x.y.sort((a, b) => a.z - b.z);
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPrevious, [{z: 1}, {z: 3}, {z: 2}]);
+	t.deepEqual(returnedValue, [{z: 1}, {z: 2}, {z: 3}]);
+	t.is(callCount, 9);
+
+	proxy.x.y.reverse();
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPrevious, [{z: 1}, {z: 2}, {z: 3}]);
+	t.deepEqual(returnedValue, [{z: 3}, {z: 2}, {z: 1}]);
+	t.is(callCount, 10);
+
+	proxy.x.y.forEach(item => item.z++);
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPrevious, [{z: 3}, {z: 2}, {z: 1}]);
+	t.deepEqual(returnedValue, [{z: 4}, {z: 3}, {z: 2}]);
+	t.is(callCount, 11);
+
+	proxy.x.y.splice(1, 2);
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPrevious, [{z: 4}, {z: 3}, {z: 2}]);
+	t.deepEqual(returnedValue, [{z: 4}]);
+	t.is(callCount, 12);
 });
 
 test('should not call the callback for nested items if isShallow is true', t => {

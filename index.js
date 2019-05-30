@@ -1,5 +1,7 @@
 'use strict';
 
+const PATH_SEPARATOR = '.';
+
 const isPrimitive = value => value === null || (typeof value !== 'object' && typeof value !== 'function');
 
 const isBuiltinWithoutMutableMethods = value => value instanceof RegExp || value instanceof Number;
@@ -9,7 +11,7 @@ const isBuiltinWithMutableMethods = value => value instanceof Date;
 const concatPath = (path, property) => {
 	if (property && property.toString) {
 		if (path) {
-			path += '.';
+			path += PATH_SEPARATOR;
 		}
 
 		path += property.toString();
@@ -18,21 +20,63 @@ const concatPath = (path, property) => {
 	return path;
 };
 
+const walkPath = (path, callback) => {
+	let index;
+
+	while (path) {
+		index = path.indexOf(PATH_SEPARATOR);
+
+		if (index === -1) {
+			index = path.length;
+		}
+
+		callback(path.slice(0, index));
+
+		path = path.slice(index + 1);
+	}
+};
+
+const shallowClone = value => {
+	if (Array.isArray(value)) {
+		return value.slice();
+	}
+
+	return Object.assign({}, value);
+};
+
 const proxyTarget = Symbol('ProxyTarget');
 
 const onChange = (object, onChange, options = {}) => {
 	let inApply = false;
 	let changed = false;
+	let applyPath;
+	let applyPrevious;
 	const propCache = new WeakMap();
 	const pathCache = new WeakMap();
 	const proxyCache = new WeakMap();
 
 	const handleChange = (path, property, previous, value) => {
 		if (!inApply) {
-			onChange.call(proxy, concatPath(path, property), value, previous);
-		} else if (!changed) {
-			changed = true;
+			onChange(concatPath(path, property), value, previous);
+			return;
 		}
+
+		if (inApply && previous !== undefined && value !== undefined && property !== 'length') {
+			let item = applyPrevious;
+
+			if (path !== applyPath) {
+				path = path.replace(applyPath, '').slice(1);
+
+				walkPath(path, key => {
+					item[key] = shallowClone(item[key]);
+					item = item[key];
+				});
+			}
+
+			item[property] = previous;
+		}
+
+		changed = true;
 	};
 
 	const getOwnPropertyDescriptor = (target, property) => {
@@ -106,7 +150,7 @@ const onChange = (object, onChange, options = {}) => {
 			}
 
 			const previous = Reflect.get(target, property, receiver);
-			const result = Reflect.set(target, property, value);
+			const result = Reflect.set(target[proxyTarget] || target, property, value);
 
 			if (previous !== value) {
 				handleChange(pathCache.get(target), property, previous, value);
@@ -136,7 +180,6 @@ const onChange = (object, onChange, options = {}) => {
 
 		apply(target, thisArg, argumentsList) {
 			const compare = isBuiltinWithMutableMethods(thisArg);
-			let previous;
 
 			if (compare) {
 				thisArg = thisArg[proxyTarget];
@@ -146,17 +189,24 @@ const onChange = (object, onChange, options = {}) => {
 				inApply = true;
 
 				if (compare) {
-					previous = thisArg.valueOf();
+					applyPrevious = thisArg.valueOf();
 				}
 
+				if (Array.isArray(thisArg)) {
+					applyPrevious = shallowClone(thisArg[proxyTarget]);
+				}
+
+				applyPath = pathCache.get(target);
+				applyPath = applyPath.slice(0, applyPath.lastIndexOf(PATH_SEPARATOR));
 				const result = Reflect.apply(target, thisArg, argumentsList);
 
-				if (changed || (compare && previous !== thisArg.valueOf())) {
-					onChange();
-				}
-
 				inApply = false;
-				changed = false;
+
+				if (changed || (compare && applyPrevious !== thisArg.valueOf())) {
+					handleChange(applyPath, '', applyPrevious, thisArg);
+					applyPrevious = null;
+					changed = false;
+				}
 
 				return result;
 			}
@@ -167,6 +217,7 @@ const onChange = (object, onChange, options = {}) => {
 
 	pathCache.set(object, '');
 	const proxy = new Proxy(object, handler);
+	onChange = onChange.bind(proxy);
 
 	return proxy;
 };
