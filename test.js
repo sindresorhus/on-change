@@ -92,7 +92,7 @@ test('dates', t => {
 		callCount++;
 	});
 
-	const date = new Date();
+	const date = new Date('1/1/2001');
 
 	object.a = date;
 	t.true(object.a instanceof Date);
