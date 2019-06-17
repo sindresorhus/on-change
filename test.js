@@ -456,3 +456,64 @@ test('should allow nested proxied objects', t => {
 	t.is(returnedValue2, 2);
 	t.is(callCount2, 2);
 });
+
+test('should be able to mutate itself', t => {
+	const method = proxy => {
+		proxy.x++;
+	};
+
+	const originalObject = {
+		x: 0,
+		method
+	};
+
+	let callCount = 0;
+	let returnedObject;
+	let returnedPath;
+	let returnedPrevious;
+	let returnedValue;
+
+	let proxy = onChange(originalObject, function (path, value, previous) {
+		returnedObject = this;
+		returnedPath = path;
+		returnedValue = value;
+		returnedPrevious = previous;
+		callCount++;
+	});
+
+	proxy.method(proxy);
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, '');
+	t.deepEqual(returnedPrevious, {
+		x: 0,
+		method
+	});
+	t.deepEqual(returnedValue.x, 1);
+	t.is(callCount, 1);
+
+	class TestClass {
+		method() {
+			this.x++;
+		}
+	}
+
+	const testClass = new TestClass();
+	testClass.x = 0;
+
+	proxy = onChange(testClass, function (path, value, previous) {
+		returnedObject = this;
+		returnedPath = path;
+		returnedValue = value;
+		returnedPrevious = previous;
+		callCount++;
+	});
+
+	proxy.method();
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, '');
+	t.deepEqual(returnedPrevious, {
+		x: 0
+	});
+	t.deepEqual(returnedValue.x, 1);
+	t.is(callCount, 2);
+});

@@ -60,7 +60,7 @@ const onChange = (object, onChange, options = {}) => {
 			return;
 		}
 
-		if (inApply && previous !== undefined && value !== undefined && property !== 'length') {
+		if (inApply && applyPrevious && previous !== undefined && value !== undefined && property !== 'length') {
 			let item = applyPrevious;
 
 			if (path !== applyPath) {
@@ -191,7 +191,7 @@ const onChange = (object, onChange, options = {}) => {
 					applyPrevious = thisArg.valueOf();
 				}
 
-				if (Array.isArray(thisArg)) {
+				if (Array.isArray(thisArg) || Object.prototype.toString.call(thisArg) === '[object Object]') {
 					applyPrevious = shallowClone(thisArg[proxyTarget]);
 				}
 
