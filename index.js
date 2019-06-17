@@ -199,7 +199,7 @@ const onChange = (object, onChange, options = {}) => {
 				applyPath = pathCache.get(target);
 				const firstPathPart = applyPath.lastIndexOf(PATH_SEPARATOR);
 				if (firstPathPart !== -1) {
-					applyPath = applyPath.slice(0, applyPath.lastIndexOf(PATH_SEPARATOR));
+					applyPath = applyPath.slice(0, firstPathPart);
 				}
 
 				const result = Reflect.apply(target, thisArg, argumentsList);
