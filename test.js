@@ -371,3 +371,88 @@ test('should not call the callback for nested items if isShallow is true', t => 
 	t.is(returnedPrevious, 1);
 	t.is(returnedValue, 2);
 });
+
+test('should allow nested proxied objects', t => {
+	const object1 = {
+		x: {
+			y: [
+				{
+					z: 0
+				}
+			]
+		}
+	};
+	const object2 = {
+		a: {
+			b: [
+				{
+					c: 0
+				}
+			]
+		}
+	};
+
+	let callCount1 = 0;
+	let returnedObject1;
+	let returnedPath1;
+	let returnedPrevious1;
+	let returnedValue1;
+
+	let callCount2 = 0;
+	let returnedObject2;
+	let returnedPath2;
+	let returnedPrevious2;
+	let returnedValue2;
+
+	const proxy1 = onChange(object1, function (path, value, previous) {
+		returnedObject1 = this;
+		returnedPath1 = path;
+		returnedValue1 = value;
+		returnedPrevious1 = previous;
+		callCount1++;
+	});
+	const proxy2 = onChange(object2, function (path, value, previous) {
+		returnedObject2 = this;
+		returnedPath2 = path;
+		returnedValue2 = value;
+		returnedPrevious2 = previous;
+		callCount2++;
+	});
+
+	proxy1.x.y[0].z = 1;
+	t.is(returnedObject1, proxy1);
+	t.is(returnedPath1, 'x.y.0.z');
+	t.is(returnedPrevious1, 0);
+	t.is(returnedValue1, 1);
+	t.is(callCount1, 1);
+	t.is(callCount2, 0);
+
+	proxy2.a.b[0].c = 1;
+	t.is(returnedObject2, proxy2);
+	t.is(returnedPath2, 'a.b.0.c');
+	t.is(returnedPrevious2, 0);
+	t.is(returnedValue2, 1);
+	t.is(callCount1, 1);
+	t.is(callCount2, 1);
+
+	proxy1.g = proxy2;
+	t.is(returnedObject1, proxy1);
+	t.is(returnedPath1, 'g');
+	t.is(returnedPrevious1, undefined);
+	t.is(returnedValue1, proxy2);
+	t.is(callCount1, 2);
+	t.is(callCount2, 1);
+
+	proxy1.g.a.b[0].c = 2;
+	t.is(returnedObject1, proxy1);
+	t.is(returnedPath1, 'g.a.b.0.c');
+	t.is(returnedPrevious1, 1);
+	t.is(returnedValue1, 2);
+	t.is(callCount1, 3);
+
+	t.is(returnedObject2, proxy2);
+	t.is(returnedPath2, 'a.b.0.c');
+	t.is(returnedPrevious2, 1);
+	t.is(returnedValue2, 2);
+	t.is(callCount2, 2);
+});

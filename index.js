@@ -44,9 +44,8 @@ const shallowClone = value => {
 	return Object.assign({}, value);
 };
 
-const proxyTarget = Symbol('ProxyTarget');
-
 const onChange = (object, onChange, options = {}) => {
+	const proxyTarget = Symbol('ProxyTarget');
 	let inApply = false;
 	let changed = false;
 	let applyPath;
