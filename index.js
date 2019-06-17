@@ -197,7 +197,11 @@ const onChange = (object, onChange, options = {}) => {
 				}
 
 				applyPath = pathCache.get(target);
-				applyPath = applyPath.slice(0, applyPath.lastIndexOf(PATH_SEPARATOR));
+				const firstPathPart = applyPath.lastIndexOf(PATH_SEPARATOR);
+				if (firstPathPart !== -1) {
+					applyPath = applyPath.slice(0, applyPath.lastIndexOf(PATH_SEPARATOR));
+				}
+
 				const result = Reflect.apply(target, thisArg, argumentsList);
 
 				inApply = false;
