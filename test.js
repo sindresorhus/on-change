@@ -311,6 +311,14 @@ test('the callback should provide the original proxied object, the path to the c
 	t.deepEqual(returnedPrevious, [{z: 4}, {z: 3}, {z: 2}]);
 	t.deepEqual(returnedValue, [{z: 4}]);
 	t.is(callCount, 12);
+
+	proxy.foo = function () {
+		proxy.a = 1;
+	};
+
+	proxy.foo();
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'foo');
 });
 
 test('should not call the callback for nested items if isShallow is true', t => {
