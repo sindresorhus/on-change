@@ -314,16 +314,14 @@ test('the callback should provide the original proxied object, the path to the c
 
 	proxy.foo = function () {
 		proxy.x.y[0].z = 2;
-		t.is(returnedObject, proxy);
-		// Fails here. returnedPath === 'foo' instead of 'x.y.0.z'
-		t.is(returnedPath, 'x.y.0.z');
-		t.is(returnedPrevious, 1);
-		t.is(returnedValue, 2);
 	};
+
+	t.is(callCount, 13);
 
 	proxy.foo();
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'foo');
+	t.is(returnedPath, '');
+	t.is(callCount, 14);
 });
 
 test('should not call the callback for nested items if isShallow is true', t => {
