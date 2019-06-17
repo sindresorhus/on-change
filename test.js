@@ -313,7 +313,12 @@ test('the callback should provide the original proxied object, the path to the c
 	t.is(callCount, 12);
 
 	proxy.foo = function () {
-		proxy.a = 1;
+		proxy.x.y[0].z = 2;
+		t.is(returnedObject, proxy);
+		// Fails here. returnedPath === 'foo' instead of 'x.y.0.z'
+		t.is(returnedPath, 'x.y.0.z');
+		t.is(returnedPrevious, 1);
+		t.is(returnedValue, 2);
 	};
 
 	proxy.foo();
