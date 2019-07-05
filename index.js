@@ -203,7 +203,7 @@ const onChange = (object, onChange, options = {}) => {
 				inApply = false;
 
 				if (changed || (compare && applyPrevious !== thisArg.valueOf())) {
-					handleChange(applyPath, '', applyPrevious, thisArg);
+					handleChange(applyPath, '', applyPrevious, thisArg[proxyTarget] || thisArg);
 					applyPrevious = null;
 					changed = false;
 				}
