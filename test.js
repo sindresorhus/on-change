@@ -324,6 +324,40 @@ test('the callback should provide the original proxied object, the path to the c
 	t.is(callCount, 14);
 });
 
+test('the callback should return a raw value when apply traps are triggered', t => {
+	const originalObject = {
+		x: {
+			y: [{
+				z: 0
+			}]
+		}
+	};
+
+	let callCount = 0;
+	let returnedObject;
+	let returnedPath;
+	let returnedPrevious;
+	let returnedValue;
+
+	const proxy = onChange(originalObject, function (path, value, previous) {
+		returnedObject = this;
+		returnedPath = path;
+		returnedValue = value;
+		returnedPrevious = previous;
+		callCount++;
+	});
+
+	proxy.x.y.push('pushed');
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPrevious, [{z: 0}]);
+	t.deepEqual(returnedValue, [{z: 0}, 'pushed']);
+	t.is(callCount, 1);
+
+	returnedValue.pop();
+	t.is(callCount, 1);
+});
+
 test('should not call the callback for nested items if isShallow is true', t => {
 	const originalObject = {
 		x: {
