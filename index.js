@@ -169,6 +169,10 @@ const onChange = (object, onChange, options = {}) => {
 		},
 
 		deleteProperty(target, property) {
+			if (!Reflect.has(target, property)) {
+				return true;
+			}
+
 			const previous = Reflect.get(target, property);
 			const result = Reflect.deleteProperty(target, property);
 			invalidateCachedDescriptor(target, property);

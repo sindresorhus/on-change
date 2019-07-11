@@ -71,23 +71,30 @@ for (const [index1, value1] of testValues.entries()) {
 
 				let callCount = 0;
 
-				const object = onChange(fixture, () => {
+				const proxy = onChange(fixture, () => {
 					callCount++;
 				});
 
-				object.a = value2;
-				t.is(object.a, value2);
+				proxy.a = value2;
+				t.is(proxy.a, value2);
 				t.is(callCount, 1);
 
-				object.a = value2;
+				proxy.a = value2;
 				t.is(callCount, 1);
 
-				object.b[2] = value2;
-				t.is(object.b[2], value2);
+				proxy.b[2] = value2;
+				t.is(proxy.b[2], value2);
 				t.is(callCount, 2);
 
-				object.b[2] = value2;
+				proxy.b[2] = value2;
 				t.is(callCount, 2);
+
+				delete proxy.nonExistent;
+				t.is(callCount, 2);
+
+				delete proxy.b;
+				t.is(proxy.b, undefined);
+				t.is(callCount, 3);
 			});
 		}
 	}
