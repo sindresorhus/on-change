@@ -2,6 +2,7 @@
 
 const PATH_SEPARATOR = '.';
 const TARGET = '[[target]]';
+const UNSUBSCRIBE = '[[unsubscribe]]';
 
 const isPrimitive = value => value === null || (typeof value !== 'object' && typeof value !== 'function');
 
@@ -51,12 +52,17 @@ const onChange = (object, onChange, options = {}) => {
 	let changed = false;
 	let applyPath;
 	let applyPrevious;
+	let isUnsubscribed = false;
 	const equals = options.equals || Object.is;
-	const propCache = new WeakMap();
-	const pathCache = new WeakMap();
-	const proxyCache = new WeakMap();
+	let propCache = new WeakMap();
+	let pathCache = new WeakMap();
+	let proxyCache = new WeakMap();
 
 	const handleChange = (path, property, previous, value) => {
+		if (isUnsubscribed) {
+			return;
+		}
+
 		if (!inApply) {
 			onChange(concatPath(path, property), value, previous);
 			return;
@@ -81,7 +87,7 @@ const onChange = (object, onChange, options = {}) => {
 	};
 
 	const getOwnPropertyDescriptor = (target, property) => {
-		let props = propCache.get(target);
+		let props = propCache ? propCache.get(target) : undefined;
 
 		if (props) {
 			return props;
@@ -100,17 +106,49 @@ const onChange = (object, onChange, options = {}) => {
 	};
 
 	const invalidateCachedDescriptor = (target, property) => {
-		const props = propCache.get(target);
+		const props = propCache ? propCache.get(target) : undefined;
 
 		if (props) {
 			props.delete(property);
 		}
 	};
 
+	const buildProxy = (value, path) => {
+		if (isUnsubscribed) {
+			return value;
+		}
+
+		pathCache.set(value, path);
+
+		let proxy = proxyCache.get(value);
+
+		if (proxy === undefined) {
+			proxy = new Proxy(value, handler);
+			proxyCache.set(value, proxy);
+		}
+
+		return proxy;
+	};
+
+	const unsubscribe = target => {
+		return () => {
+			isUnsubscribed = true;
+			propCache = null;
+			pathCache = null;
+			proxyCache = null;
+
+			return target;
+		};
+	};
+
 	const handler = {
 		get(target, property, receiver) {
 			if (property === proxyTarget || property === TARGET) {
 				return target;
+			}
+
+			if (property === UNSUBSCRIBE && pathCache.get(target) === '') {
+				return unsubscribe(target);
 			}
 
 			const value = Reflect.get(target, property, receiver);
@@ -135,14 +173,7 @@ const onChange = (object, onChange, options = {}) => {
 				}
 			}
 
-			pathCache.set(value, concatPath(pathCache.get(target), property));
-			let proxy = proxyCache.get(value);
-			if (proxy === undefined) {
-				proxy = new Proxy(value, handler);
-				proxyCache.set(value, proxy);
-			}
-
-			return proxy;
+			return buildProxy(value, concatPath(pathCache.get(target), property));
 		},
 
 		set(target, property, value, receiver) {
@@ -154,7 +185,7 @@ const onChange = (object, onChange, options = {}) => {
 			const previous = ignore ? null : Reflect.get(target, property, receiver);
 			const result = Reflect.set(target[proxyTarget] || target, property, value);
 
-			if (!ignore && !equals(previous, value)) {
+			if (!isUnsubscribed && !ignore && !equals(previous, value)) {
 				handleChange(pathCache.get(target), property, previous, value);
 			}
 
@@ -198,7 +229,7 @@ const onChange = (object, onChange, options = {}) => {
 					applyPrevious = thisArg.valueOf();
 				}
 
-				if (Array.isArray(thisArg) || Object.prototype.toString.call(thisArg) === '[object Object]') {
+				if (Array.isArray(thisArg) || toString.call(thisArg) === '[object Object]') {
 					applyPrevious = shallowClone(thisArg[proxyTarget]);
 				}
 
@@ -222,8 +253,7 @@ const onChange = (object, onChange, options = {}) => {
 		}
 	};
 
-	pathCache.set(object, '');
-	const proxy = new Proxy(object, handler);
+	const proxy = buildProxy(object, '');
 	onChange = onChange.bind(proxy);
 
 	return proxy;

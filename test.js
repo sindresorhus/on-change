@@ -653,3 +653,55 @@ test('should be able to mutate itself', t => {
 	t.deepEqual(returnedValue.x, 1);
 	t.is(callCount, 2);
 });
+
+test('the callback should not trigger after [[unsubscribe]] is called', t => {
+	const originalObject = {
+		x: {
+			y: [{
+				z: 0
+			}]
+		}
+	};
+
+	let callCount = 0;
+	let returnedObject;
+	let returnedPath;
+	let returnedPrevious;
+	let returnedValue;
+
+	const proxy = onChange(originalObject, function (path, value, previous) {
+		returnedObject = this;
+		returnedPath = path;
+		returnedValue = value;
+		returnedPrevious = previous;
+		callCount++;
+	});
+
+	proxy.z = true;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'z');
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, true);
+	t.is(callCount, 1);
+
+	const unsubscribed = proxy['[[unsubscribe]]']();
+
+	returnedObject = undefined;
+	returnedPath = undefined;
+	returnedPrevious = undefined;
+	returnedValue = undefined;
+
+	proxy.z = false;
+	t.is(returnedObject, undefined);
+	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, undefined);
+	t.is(callCount, 1);
+
+	unsubscribed.x.y[0].z = true;
+	t.is(returnedObject, undefined);
+	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, undefined);
+	t.is(callCount, 1);
+});

@@ -74,6 +74,11 @@ watchedObject.a.b[0].c = true;
 // Access the original object
 watchedObject['[[target]]'].foo = false;
 // Callback isn't called
+
+// Unsubscribe
+watchedObject['[[unsubscribe]]']();
+watchedObject.foo = 'bar';
+// Callback isn't called
 ```
 
 
@@ -83,7 +88,9 @@ watchedObject['[[target]]'].foo = false;
 
 Returns a version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
 
-A hidden property `[[target]]` on the returned object will return the original `object`.
+A hidden readonly property `[[target]]` on the returned object will return the original `object`.
+
+A hidden readonly method `[[unsubscribe]]` on the returned object will cancel all future callbacks.
 
 #### object
 
