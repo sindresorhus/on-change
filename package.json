@@ -38,6 +38,7 @@
 	],
 	"devDependencies": {
 		"ava": "^1.4.1",
+		"display-value": "^1.0.1",
 		"matcha": "^0.7.0",
 		"tsd": "^0.7.1",
 		"xo": "^0.24.0"

@@ -50,6 +50,7 @@ const onChange = (object, onChange, options = {}) => {
 	let changed = false;
 	let applyPath;
 	let applyPrevious;
+	const equals = options.equals || Object.is;
 	const propCache = new WeakMap();
 	const pathCache = new WeakMap();
 	const proxyCache = new WeakMap();
@@ -151,7 +152,7 @@ const onChange = (object, onChange, options = {}) => {
 			const previous = Reflect.get(target, property, receiver);
 			const result = Reflect.set(target[proxyTarget] || target, property, value);
 
-			if (previous !== value) {
+			if (!equals(previous, value)) {
 				handleChange(pathCache.get(target), property, previous, value);
 			}
 
@@ -202,7 +203,7 @@ const onChange = (object, onChange, options = {}) => {
 
 				inApply = false;
 
-				if (changed || (compare && applyPrevious !== thisArg.valueOf())) {
+				if (changed || (compare && !equals(applyPrevious, thisArg.valueOf()))) {
 					handleChange(applyPath, '', applyPrevious, thisArg[proxyTarget] || thisArg);
 					applyPrevious = null;
 					changed = false;

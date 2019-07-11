@@ -1,4 +1,5 @@
 import test from 'ava';
+import displayValue from 'display-value';
 import onChange from '.';
 
 const testValues = [
@@ -11,9 +12,13 @@ const testValues = [
 	true,
 	false,
 	1,
+	'1',
 	Number(2),
 	new Number(3), // eslint-disable-line no-new-wrappers, unicorn/new-for-builtins
-	Infinity
+	Infinity,
+	0,
+	-0,
+	NaN
 ];
 
 test('main', t => {
@@ -55,33 +60,37 @@ test('main', t => {
 	t.is(fixture.bar.a, prev);
 });
 
-for (const [index, value] of testValues.entries()) {
-	test(`should handle '${value}' (testValues[${index}])`, t => {
-		const fixture = {
-			a: 0,
-			b: [1, 2, 0]
-		};
+for (const [index1, value1] of testValues.entries()) {
+	for (const [index2, value2] of testValues.entries()) {
+		if (index1 !== index2) {
+			test(`should detect value changes from ${displayValue(value1)} to ${displayValue(value2)}`, t => {
+				const fixture = {
+					a: value1,
+					b: [1, 2, value1]
+				};
 
-		let callCount = 0;
+				let callCount = 0;
 
-		const object = onChange(fixture, () => {
-			callCount++;
-		});
+				const object = onChange(fixture, () => {
+					callCount++;
+				});
 
-		object.a = value;
-		t.is(object.a, value);
-		t.is(callCount, 1);
+				object.a = value2;
+				t.is(object.a, value2);
+				t.is(callCount, 1);
 
-		object.a = value;
-		t.is(callCount, 1);
+				object.a = value2;
+				t.is(callCount, 1);
 
-		object.b[2] = value;
-		t.is(object.b[2], value);
-		t.is(callCount, 2);
+				object.b[2] = value2;
+				t.is(object.b[2], value2);
+				t.is(callCount, 2);
 
-		object.b[2] = value;
-		t.is(callCount, 2);
-	});
+				object.b[2] = value2;
+				t.is(callCount, 2);
+			});
+		}
+	}
 }
 
 test('dates', t => {
