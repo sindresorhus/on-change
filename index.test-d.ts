@@ -28,3 +28,12 @@ const watchedObjectShallow = onChange(object, function () {
 expectType<typeof object>(watchedObjectShallow);
 
 watchedObject.foo = true;
+
+const watchedObjectEquals = onChange(object, function () {
+	expectType<typeof object>(this);
+}, {
+	equals: (a, b) => a == b
+});
+expectType<typeof object>(watchedObjectEquals);
+
+watchedObject.foo = true;

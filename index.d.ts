@@ -1,5 +1,5 @@
 declare namespace onChange {
-	interface Options {
+	interface options {
 		/**
 		Deep changes will not trigger the callback. Only changes to the immediate properties of the original object.
 
@@ -27,7 +27,38 @@ declare namespace onChange {
 		//=> 'Object changed: 1'
 		```
 		*/
-		readonly isShallow?: boolean;
+		isShallow?: boolean;
+		/**
+		 The function receives two arguments, the two values to be compared for equality. True should be returned if the two values are determined to be equal.
+
+		 @param {*} a
+		 @param {*} b
+
+		 @default Object.is (SameValue equality)
+
+		 @example
+		 ```
+		 import onChange = require('on-change');
+
+		 const object = {
+			a: {
+				b: false
+			}
+		};
+
+		 let i = 0;
+		 const watchedObject = onChange(object, () => {
+			console.log('Object changed:', ++i);
+		}, {equals: (a, b) => a == b});
+
+		 watchedObject.a.b = 0;
+		 // Nothing happens
+
+		 watchedObject.a = true;
+		 //=> 'Object changed: 1'
+		 ```
+		 */
+		equals?(a: any, b: any): boolean;
 	}
 }
 
@@ -37,6 +68,7 @@ declare const onChange: {
 
 	@param object - Object to watch for changes.
 	@param onChange - Function that gets called anytime the object changes.
+	@param [options]
 	@returns A version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
 
 	@example
@@ -104,7 +136,7 @@ declare const onChange: {
 			value: unknown,
 			previousValue: unknown
 		) => void,
-		options?: onChange.Options
+		options?: onChange.options
 	): ObjectType;
 
 	// TODO: Remove this for the next major release, refactor the whole definition to:
