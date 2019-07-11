@@ -59,6 +59,12 @@ declare namespace onChange {
 		 ```
 		 */
 		equals?(a: any, b: any): boolean;
+		/**
+		 Setting properties as Symbols won't trigger the callback.
+
+		 @default false
+		 */
+		ignoreSymbols?: boolean;
 	}
 }
 

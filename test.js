@@ -378,6 +378,88 @@ test('the callback should return a raw value when apply traps are triggered', t 
 	t.is(callCount, 1);
 });
 
+test('the callback should trigger when a Symbol is used as the key and ignoreSymbols is not set', t => {
+	const originalObject = {
+		x: {
+			y: [{
+				z: 0
+			}]
+		}
+	};
+
+	let callCount = 0;
+	let returnedObject;
+	let returnedPath;
+	let returnedPrevious;
+	let returnedValue;
+
+	const proxy = onChange(originalObject, function (path, value, previous) {
+		returnedObject = this;
+		returnedPath = path;
+		returnedValue = value;
+		returnedPrevious = previous;
+		callCount++;
+	});
+
+	const SYMBOL = Symbol('test');
+
+	proxy[SYMBOL] = true;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'Symbol(test)');
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, true);
+	t.is(callCount, 1);
+
+	proxy.z = true;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'z');
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, true);
+	t.is(callCount, 2);
+});
+
+test('the callback should not trigger when a Symbol is used as the key and ignoreSymbols is true', t => {
+	const originalObject = {
+		x: {
+			y: [{
+				z: 0
+			}]
+		}
+	};
+
+	let callCount = 0;
+	let returnedObject;
+	let returnedPath;
+	let returnedPrevious;
+	let returnedValue;
+
+	const proxy = onChange(originalObject, function (path, value, previous) {
+		returnedObject = this;
+		returnedPath = path;
+		returnedValue = value;
+		returnedPrevious = previous;
+		callCount++;
+	}, {
+		ignoreSymbols: true
+	});
+
+	const SYMBOL = Symbol('test');
+
+	proxy[SYMBOL] = true;
+	t.is(returnedObject, undefined);
+	t.is(returnedPath, undefined);
+	t.is(returnedPrevious, undefined);
+	t.is(returnedValue, undefined);
+	t.is(callCount, 0);
+
+	proxy.z = true;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'z');
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, true);
+	t.is(callCount, 1);
+});
+
 test('should not call the callback for nested items if isShallow is true', t => {
 	const originalObject = {
 		x: {

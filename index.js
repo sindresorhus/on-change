@@ -150,10 +150,11 @@ const onChange = (object, onChange, options = {}) => {
 				value = value[proxyTarget];
 			}
 
-			const previous = Reflect.get(target, property, receiver);
+			const ignore = options.ignoreSymbols === true && typeof property === 'symbol';
+			const previous = ignore ? null : Reflect.get(target, property, receiver);
 			const result = Reflect.set(target[proxyTarget] || target, property, value);
 
-			if (!equals(previous, value)) {
+			if (!ignore && !equals(previous, value)) {
 				handleChange(pathCache.get(target), property, previous, value);
 			}
 
