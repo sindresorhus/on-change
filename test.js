@@ -328,6 +328,10 @@ test('the callback should provide the original proxied object, the path to the c
 	t.deepEqual(returnedValue, [{z: 4}]);
 	t.is(callCount, 12);
 
+	t.is(proxy['[[target]]'], originalObject);
+	t.not(proxy['[[target]]'], proxy);
+	t.deepEqual(proxy['[[target]]'], proxy);
+
 	proxy.foo = function () {
 		proxy.x.y[0].z = 2;
 	};

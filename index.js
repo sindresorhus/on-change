@@ -1,6 +1,7 @@
 'use strict';
 
 const PATH_SEPARATOR = '.';
+const TARGET = '[[target]]';
 
 const isPrimitive = value => value === null || (typeof value !== 'object' && typeof value !== 'function');
 
@@ -108,7 +109,7 @@ const onChange = (object, onChange, options = {}) => {
 
 	const handler = {
 		get(target, property, receiver) {
-			if (property === proxyTarget) {
+			if (property === proxyTarget || property === TARGET) {
 				return target;
 			}
 

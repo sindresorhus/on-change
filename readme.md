@@ -70,6 +70,10 @@ watchedObject.a.b[0].c = true;
 //=> 'path: "a.b.0.c"'
 //=> 'value: true'
 //=> 'previousValue: false'
+
+// Access the original object
+watchedObject['[[target]]'].foo = false;
+// Callback isn't called
 ```
 
 
@@ -78,6 +82,8 @@ watchedObject.a.b[0].c = true;
 ### onChange(object, onChange, [options])
 
 Returns a version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
+
+A hidden property `[[target]]` on the returned object will return the original `object`.
 
 #### object
 
