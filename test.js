@@ -328,9 +328,17 @@ test('the callback should provide the original proxied object, the path to the c
 	t.deepEqual(returnedValue, [{z: 4}]);
 	t.is(callCount, 12);
 
-	t.is(proxy['[[target]]'], originalObject);
-	t.not(proxy['[[target]]'], proxy);
-	t.deepEqual(proxy['[[target]]'], proxy);
+	let unproxied = onChange.target(proxy);
+
+	t.is(unproxied, originalObject);
+	t.not(unproxied, proxy);
+	t.deepEqual(unproxied, proxy);
+
+	unproxied = onChange.target(unproxied);
+
+	t.is(unproxied, originalObject);
+	t.not(unproxied, proxy);
+	t.deepEqual(unproxied, proxy);
 
 	proxy.foo = function () {
 		proxy.x.y[0].z = 2;
@@ -652,4 +660,65 @@ test('should be able to mutate itself', t => {
 	});
 	t.deepEqual(returnedValue.x, 1);
 	t.is(callCount, 2);
+});
+
+test('the callback should not trigger after unsubscribe is called', t => {
+	const originalObject = {
+		x: {
+			y: [{
+				z: 0
+			}]
+		}
+	};
+
+	let callCount = 0;
+	let returnedObject;
+	let returnedPath;
+	let returnedPrevious;
+	let returnedValue;
+
+	const proxy = onChange(originalObject, function (path, value, previous) {
+		returnedObject = this;
+		returnedPath = path;
+		returnedValue = value;
+		returnedPrevious = previous;
+		callCount++;
+	});
+
+	proxy.z = true;
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'z');
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, true);
+	t.is(callCount, 1);
+
+	let unsubscribed = onChange.unsubscribe(proxy);
+
+	returnedObject = undefined;
+	returnedPath = undefined;
+	returnedPrevious = undefined;
+	returnedValue = undefined;
+
+	proxy.z = false;
+	t.is(returnedObject, undefined);
+	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, undefined);
+	t.is(callCount, 1);
+
+	unsubscribed.x.y[0].z = true;
+	t.is(returnedObject, undefined);
+	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, undefined);
+	t.is(callCount, 1);
+
+	unsubscribed = onChange.unsubscribe(unsubscribed);
+
+	unsubscribed.x.y[0].z = true;
+	t.is(returnedObject, undefined);
+	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, undefined);
+	t.is(callCount, 1);
 });

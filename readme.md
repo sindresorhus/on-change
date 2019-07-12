@@ -72,7 +72,12 @@ watchedObject.a.b[0].c = true;
 //=> 'previousValue: false'
 
 // Access the original object
-watchedObject['[[target]]'].foo = false;
+onChange.target(watchedObject).foo = false;
+// Callback isn't called
+
+// Unsubscribe
+onChange.unsubscribe(watchedObject);
+watchedObject.foo = 'bar';
 // Callback isn't called
 ```
 
@@ -82,8 +87,6 @@ watchedObject['[[target]]'].foo = false;
 ### onChange(object, onChange, [options])
 
 Returns a version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
-
-A hidden property `[[target]]` on the returned object will return the original `object`.
 
 #### object
 
@@ -120,7 +123,36 @@ Deep changes will not trigger the callback. Only changes to the immediate proper
 Type: `Function`<br>
 Default: [Object.is](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is) ([SameValue](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness#Same-value_equality) equality)
 
-The function receives two arguments, the two values to be compared for equality. True should be returned if the two values are determined to be equal.
+The function receives two arguments, the two values to be compared for equality. True should be returned if the two values are determined to be equal. 
+
+##### ignoreSymbols
+
+Type: `boolean`<br>
+Default: false
+
+Setting properties as Symbols won't trigger the callback.
+
+
+### onChange.target(object)
+
+Returns the original unwatched object.
+
+#### object
+
+Type: `object`
+
+Object that is already being watched for changes.
+
+
+### onChange.unsubscribe(object)
+
+Cancels all future callbacks on a watched object and returns the original unwatched object.
+
+#### object
+
+Type: `object`
+
+Object that is already being watched for changes.
 
 
 ## Use-case

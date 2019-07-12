@@ -1,5 +1,5 @@
 declare namespace onChange {
-	interface options {
+	interface Options {
 		/**
 		Deep changes will not trigger the callback. Only changes to the immediate properties of the original object.
 
@@ -142,7 +142,7 @@ declare const onChange: {
 			value: unknown,
 			previousValue: unknown
 		) => void,
-		options?: onChange.options
+		options?: onChange.Options
 	): ObjectType;
 
 	// TODO: Remove this for the next major release, refactor the whole definition to:
