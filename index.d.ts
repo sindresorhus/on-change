@@ -28,42 +28,41 @@ declare namespace onChange {
 		```
 		*/
 		isShallow?: boolean;
+
 		/**
-		 The function receives two arguments, the two values to be compared for equality. True should be returned if the two values are determined to be equal.
+		The function receives two arguments to be compared for equality. Should return `true` if the two values are determined to be equal.
 
-		 @param {*} a
-		 @param {*} b
+		@default Object.is
 
-		 @default Object.is (SameValue equality)
-
-		 @example
+		@example
 		 ```
-		 import onChange = require('on-change');
+		import onChange = require('on-change');
 
-		 const object = {
+		const object = {
 			a: {
 				b: false
 			}
 		};
 
-		 let i = 0;
-		 const watchedObject = onChange(object, () => {
+		let i = 0;
+		const watchedObject = onChange(object, () => {
 			console.log('Object changed:', ++i);
-		}, {equals: (a, b) => a == b});
+		}, {equals: (a, b) => a === b});
 
-		 watchedObject.a.b = 0;
-		 // Nothing happens
+		watchedObject.a.b = 0;
+		// Nothing happens
 
-		 watchedObject.a = true;
-		 //=> 'Object changed: 1'
-		 ```
-		 */
-		equals?(a: any, b: any): boolean;
+		watchedObject.a = true;
+		//=> 'Object changed: 1'
+		```
+		*/
+		equals?: (a: unknown, b: unknown) => boolean;
+
 		/**
-		 Setting properties as Symbols won't trigger the callback.
+		Setting properties as `Symbol` won't trigger the callback.
 
-		 @default false
-		 */
+		@default false
+		*/
 		ignoreSymbols?: boolean;
 	}
 }
