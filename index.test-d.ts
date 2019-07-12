@@ -32,7 +32,7 @@ watchedObject.foo = true;
 const watchedObjectEquals = onChange(object, function () {
 	expectType<typeof object>(this);
 }, {
-	equals: (a, b) => a == b
+	equals: (a, b) => a === b
 });
 expectType<typeof object>(watchedObjectEquals);
 

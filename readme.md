@@ -84,7 +84,7 @@ watchedObject.foo = 'bar';
 
 ## API
 
-### onChange(object, onChange, [options])
+### onChange(object, onChange, options?)
 
 Returns a version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
 
@@ -121,17 +121,16 @@ Deep changes will not trigger the callback. Only changes to the immediate proper
 ##### equals
 
 Type: `Function`<br>
-Default: [Object.is](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is) ([SameValue](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Equality_comparisons_and_sameness#Same-value_equality) equality)
+Default: [`Object.is`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is)
 
-The function receives two arguments, the two values to be compared for equality. True should be returned if the two values are determined to be equal. 
+The function receives two arguments to be compared for equality. Should return `true` if the two values are determined to be equal.
 
 ##### ignoreSymbols
 
 Type: `boolean`<br>
 Default: false
 
-Setting properties as Symbols won't trigger the callback.
-
+Setting properties as `Symbol` won't trigger the callback.
 
 ### onChange.target(object)
 
@@ -142,7 +141,6 @@ Returns the original unwatched object.
 Type: `object`
 
 Object that is already being watched for changes.
-
 
 ### onChange.unsubscribe(object)
 
