@@ -131,6 +131,15 @@ declare const onChange: {
 	//=> 'path: "a.b.0.c"'
 	//=> 'value: true'
 	//=> 'previousValue: false'
+
+	// Access the original object
+	onChange.target(watchedObject).foo = false;
+	// Callback isn't called
+
+	// Unsubscribe
+	onChange.unsubscribe(watchedObject);
+	watchedObject.foo = 'bar';
+	// Callback isn't called
 	```
 	*/
 	<ObjectType extends {[key: string]: unknown}>(
@@ -151,6 +160,24 @@ declare const onChange: {
 	// ): ObjectType;
 	// export = onChange;
 	default: typeof onChange;
+
+	/**
+	 * Returns the original unwatched object.
+	 *
+	 * @param object - Object that is already being watched for changes.
+	 *
+	 * @returns The original unwatched object.
+	 */
+	target(object: object): object;
+
+	/**
+	 * Cancels all future callbacks on a watched object and returns the original unwatched object.
+	 *
+	 * @param object - Object that is already being watched for changes.
+	 *
+	 * @returns The original unwatched object.
+	 */
+	unsubscribe(object: object): object;
 };
 
 export = onChange;
