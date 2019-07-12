@@ -1,8 +1,8 @@
 'use strict';
 
 const PATH_SEPARATOR = '.';
-const TARGET = '[[target]]';
-const UNSUBSCRIBE = '[[unsubscribe]]';
+const TARGET = Symbol('target');
+const UNSUBSCRIBE = Symbol('unsubscribe');
 
 const isPrimitive = value => value === null || (typeof value !== 'object' && typeof value !== 'function');
 
@@ -131,14 +131,12 @@ const onChange = (object, onChange, options = {}) => {
 	};
 
 	const unsubscribe = target => {
-		return () => {
-			isUnsubscribed = true;
-			propCache = null;
-			pathCache = null;
-			proxyCache = null;
+		isUnsubscribed = true;
+		propCache = null;
+		pathCache = null;
+		proxyCache = null;
 
-			return target;
-		};
+		return target;
 	};
 
 	const handler = {
@@ -258,6 +256,9 @@ const onChange = (object, onChange, options = {}) => {
 
 	return proxy;
 };
+
+onChange.target = proxy => proxy[TARGET] || proxy;
+onChange.unsubscribe = proxy => proxy[UNSUBSCRIBE] || proxy;
 
 module.exports = onChange;
 // TODO: Remove this for the next major release

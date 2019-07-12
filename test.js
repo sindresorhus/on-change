@@ -328,9 +328,17 @@ test('the callback should provide the original proxied object, the path to the c
 	t.deepEqual(returnedValue, [{z: 4}]);
 	t.is(callCount, 12);
 
-	t.is(proxy['[[target]]'], originalObject);
-	t.not(proxy['[[target]]'], proxy);
-	t.deepEqual(proxy['[[target]]'], proxy);
+	let unproxied = onChange.target(proxy);
+
+	t.is(unproxied, originalObject);
+	t.not(unproxied, proxy);
+	t.deepEqual(unproxied, proxy);
+
+	unproxied = onChange.target(unproxied);
+
+	t.is(unproxied, originalObject);
+	t.not(unproxied, proxy);
+	t.deepEqual(unproxied, proxy);
 
 	proxy.foo = function () {
 		proxy.x.y[0].z = 2;
@@ -654,7 +662,7 @@ test('should be able to mutate itself', t => {
 	t.is(callCount, 2);
 });
 
-test('the callback should not trigger after [[unsubscribe]] is called', t => {
+test('the callback should not trigger after unsubscribe is called', t => {
 	const originalObject = {
 		x: {
 			y: [{
@@ -684,7 +692,7 @@ test('the callback should not trigger after [[unsubscribe]] is called', t => {
 	t.deepEqual(returnedValue, true);
 	t.is(callCount, 1);
 
-	const unsubscribed = proxy['[[unsubscribe]]']();
+	let unsubscribed = onChange.unsubscribe(proxy);
 
 	returnedObject = undefined;
 	returnedPath = undefined;
@@ -697,6 +705,15 @@ test('the callback should not trigger after [[unsubscribe]] is called', t => {
 	t.deepEqual(returnedPrevious, undefined);
 	t.deepEqual(returnedValue, undefined);
 	t.is(callCount, 1);
+
+	unsubscribed.x.y[0].z = true;
+	t.is(returnedObject, undefined);
+	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, undefined);
+	t.is(callCount, 1);
+
+	unsubscribed = onChange.unsubscribe(unsubscribed);
 
 	unsubscribed.x.y[0].z = true;
 	t.is(returnedObject, undefined);

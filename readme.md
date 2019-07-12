@@ -72,11 +72,11 @@ watchedObject.a.b[0].c = true;
 //=> 'previousValue: false'
 
 // Access the original object
-watchedObject['[[target]]'].foo = false;
+onChange.target(watchedObject).foo = false;
 // Callback isn't called
 
 // Unsubscribe
-watchedObject['[[unsubscribe]]']();
+onChange.unsubscribe(watchedObject);
 watchedObject.foo = 'bar';
 // Callback isn't called
 ```
@@ -87,10 +87,6 @@ watchedObject.foo = 'bar';
 ### onChange(object, onChange, [options])
 
 Returns a version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
-
-A hidden readonly property `[[target]]` on the returned object will return the original `object`.
-
-A hidden readonly method `[[unsubscribe]]` on the returned object will cancel all future callbacks.
 
 #### object
 
@@ -135,6 +131,28 @@ Type: `boolean`<br>
 Default: false
 
 Setting properties as Symbols won't trigger the callback.
+
+
+### onChange.target(object)
+
+Returns the original unwatched object.
+
+#### object
+
+Type: `object`
+
+Object that is already being watched for changes.
+
+
+### onChange.unsubscribe(object)
+
+Cancels all future callbacks on a watched object and returns the original unwatched object.
+
+#### object
+
+Type: `object`
+
+Object that is already being watched for changes.
 
 
 ## Use-case
