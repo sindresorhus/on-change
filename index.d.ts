@@ -73,7 +73,6 @@ declare const onChange: {
 
 	@param object - Object to watch for changes.
 	@param onChange - Function that gets called anytime the object changes.
-	@param [options]
 	@returns A version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
 
 	@example
@@ -142,7 +141,7 @@ declare const onChange: {
 	// Callback isn't called
 	```
 	*/
-	<ObjectType extends {[key: string]: unknown}>(
+	<ObjectType extends {[key: string]: any}>(
 		object: ObjectType,
 		onChange: (
 			this: ObjectType,
@@ -162,22 +161,18 @@ declare const onChange: {
 	default: typeof onChange;
 
 	/**
-	 * Returns the original unwatched object.
-	 *
-	 * @param object - Object that is already being watched for changes.
-	 *
-	 * @returns The original unwatched object.
-	 */
-	target(object: object): object;
+	@param object - Object that is already being watched for changes.
+	@returns The original unwatched object.
+	*/
+	target<ObjectType extends {[key: string]: any}>(object: ObjectType): ObjectType;
 
 	/**
-	 * Cancels all future callbacks on a watched object and returns the original unwatched object.
-	 *
-	 * @param object - Object that is already being watched for changes.
-	 *
-	 * @returns The original unwatched object.
-	 */
-	unsubscribe(object: object): object;
+	Cancels all future callbacks on a watched object.
+
+	@param object - Object that is already being watched for changes.
+	@returns The original unwatched object.
+	*/
+	unsubscribe<ObjectType extends {[key: string]: any}>(object: ObjectType): ObjectType;
 };
 
 export = onChange;
