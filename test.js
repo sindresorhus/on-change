@@ -410,6 +410,7 @@ test('the callback should trigger when a Symbol is used as the key and ignoreSym
 	});
 
 	const SYMBOL = Symbol('test');
+	const SYMBOL2 = Symbol('test2');
 
 	proxy[SYMBOL] = true;
 	t.is(returnedObject, proxy);
@@ -418,12 +419,31 @@ test('the callback should trigger when a Symbol is used as the key and ignoreSym
 	t.deepEqual(returnedValue, true);
 	t.is(callCount, 1);
 
+	Object.defineProperty(proxy, SYMBOL2, {
+		value: true,
+		configurable: true,
+		writable: true,
+		enumerable: false
+	});
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'Symbol(test2)');
+	t.deepEqual(returnedPrevious, undefined);
+	t.deepEqual(returnedValue, true);
+	t.is(callCount, 2);
+
+	delete proxy[SYMBOL2];
+	t.is(returnedObject, proxy);
+	t.is(returnedPath, 'Symbol(test2)');
+	t.deepEqual(returnedPrevious, true);
+	t.deepEqual(returnedValue, undefined);
+	t.is(callCount, 3);
+
 	proxy.z = true;
 	t.is(returnedObject, proxy);
 	t.is(returnedPath, 'z');
 	t.deepEqual(returnedPrevious, undefined);
 	t.deepEqual(returnedValue, true);
-	t.is(callCount, 2);
+	t.is(callCount, 4);
 });
 
 test('the callback should not trigger when a Symbol is used as the key and ignoreSymbols is true', t => {
@@ -452,8 +472,28 @@ test('the callback should not trigger when a Symbol is used as the key and ignor
 	});
 
 	const SYMBOL = Symbol('test');
+	const SYMBOL2 = Symbol('test2');
 
 	proxy[SYMBOL] = true;
+	t.is(returnedObject, undefined);
+	t.is(returnedPath, undefined);
+	t.is(returnedPrevious, undefined);
+	t.is(returnedValue, undefined);
+	t.is(callCount, 0);
+
+	Object.defineProperty(proxy, SYMBOL2, {
+		value: true,
+		configurable: true,
+		writable: true,
+		enumerable: false
+	});
+	t.is(returnedObject, undefined);
+	t.is(returnedPath, undefined);
+	t.is(returnedPrevious, undefined);
+	t.is(returnedValue, undefined);
+	t.is(callCount, 0);
+
+	delete proxy[SYMBOL2];
 	t.is(returnedObject, undefined);
 	t.is(returnedPath, undefined);
 	t.is(returnedPrevious, undefined);

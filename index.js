@@ -139,6 +139,10 @@ const onChange = (object, onChange, options = {}) => {
 		return target;
 	};
 
+	const ignoreChange = property => {
+		return isUnsubscribed || (options.ignoreSymbols === true && typeof property === 'symbol');
+	};
+
 	const handler = {
 		get(target, property, receiver) {
 			if (property === proxyTarget || property === TARGET) {
@@ -179,11 +183,11 @@ const onChange = (object, onChange, options = {}) => {
 				value = value[proxyTarget];
 			}
 
-			const ignore = options.ignoreSymbols === true && typeof property === 'symbol';
+			const ignore = ignoreChange(property);
 			const previous = ignore ? null : Reflect.get(target, property, receiver);
 			const result = Reflect.set(target[proxyTarget] || target, property, value);
 
-			if (!isUnsubscribed && !ignore && !equals(previous, value)) {
+			if (!ignore && !equals(previous, value)) {
 				handleChange(pathCache.get(target), property, previous, value);
 			}
 
@@ -192,9 +196,12 @@ const onChange = (object, onChange, options = {}) => {
 
 		defineProperty(target, property, descriptor) {
 			const result = Reflect.defineProperty(target, property, descriptor);
-			invalidateCachedDescriptor(target, property);
 
-			handleChange(pathCache.get(target), property, undefined, descriptor.value);
+			if (!ignoreChange(property)) {
+				invalidateCachedDescriptor(target, property);
+
+				handleChange(pathCache.get(target), property, undefined, descriptor.value);
+			}
 
 			return result;
 		},
@@ -204,11 +211,15 @@ const onChange = (object, onChange, options = {}) => {
 				return true;
 			}
 
-			const previous = Reflect.get(target, property);
+			const ignore = ignoreChange(property);
+			const previous = ignore ? null : Reflect.get(target, property);
 			const result = Reflect.deleteProperty(target, property);
-			invalidateCachedDescriptor(target, property);
 
-			handleChange(pathCache.get(target), property, previous);
+			if (!ignore) {
+				invalidateCachedDescriptor(target, property);
+
+				handleChange(pathCache.get(target), property, previous);
+			}
 
 			return result;
 		},

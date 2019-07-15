@@ -106,6 +106,24 @@ suite('on-change, isShallow, large objects', () => {
 	commonBench.call(this);
 });
 
+suite('empty Proxy', () => {
+	before(() => {
+		this.object = new Proxy(buildObject(SMALL), {});
+		this.array = new Proxy(buildArray(SMALL), {});
+	});
+
+	commonBench.call(this);
+});
+
+suite('empty Proxy, large objects', () => {
+	before(() => {
+		this.object = new Proxy(buildObject(LARGE), {});
+		this.array = new Proxy(buildArray(LARGE), {});
+	});
+
+	commonBench.call(this);
+});
+
 suite('native', () => {
 	before(() => {
 		this.object = buildObject(SMALL);
