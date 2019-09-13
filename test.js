@@ -246,84 +246,84 @@ test('the callback should provide the original proxied object, the path to the c
 
 	proxy.x.y[0].z = 1;
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y.0.z');
+	t.deepEqual(returnedPath, ['x', 'y', '0', 'z']);
 	t.is(returnedPrevious, 0);
 	t.is(returnedValue, 1);
 	t.is(callCount, 1);
 
 	proxy.x.y[0].new = 1;
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y.0.new');
+	t.deepEqual(returnedPath, ['x', 'y', '0', 'new']);
 	t.is(returnedPrevious, undefined);
 	t.is(returnedValue, 1);
 	t.is(callCount, 2);
 
 	delete proxy.x.y[0].new;
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y.0.new');
+	t.deepEqual(returnedPath, ['x', 'y', '0', 'new']);
 	t.is(returnedPrevious, 1);
 	t.is(returnedValue, undefined);
 	t.is(callCount, 3);
 
 	proxy.x.y.push('pushed');
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPath, ['x', 'y']);
 	t.deepEqual(returnedPrevious, [{z: 1}]);
 	t.deepEqual(returnedValue, [{z: 1}, 'pushed']);
 	t.is(callCount, 4);
 
 	proxy.x.y.pop();
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPath, ['x', 'y']);
 	t.deepEqual(returnedPrevious, [{z: 1}, 'pushed']);
 	t.deepEqual(returnedValue, [{z: 1}]);
 	t.is(callCount, 5);
 
 	proxy.x.y.unshift('unshifted');
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPath, ['x', 'y']);
 	t.deepEqual(returnedPrevious, [{z: 1}]);
 	t.deepEqual(returnedValue, ['unshifted', {z: 1}]);
 	t.is(callCount, 6);
 
 	proxy.x.y.shift();
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPath, ['x', 'y']);
 	t.deepEqual(returnedPrevious, ['unshifted', {z: 1}]);
 	t.deepEqual(returnedValue, [{z: 1}]);
 	t.is(callCount, 7);
 
 	proxy.x.y = proxy.x.y.concat([{z: 3}, {z: 2}]);
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPath, ['x', 'y']);
 	t.deepEqual(returnedPrevious, [{z: 1}]);
 	t.deepEqual(returnedValue, [{z: 1}, {z: 3}, {z: 2}]);
 	t.is(callCount, 8);
 
 	proxy.x.y.sort((a, b) => a.z - b.z);
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPath, ['x', 'y']);
 	t.deepEqual(returnedPrevious, [{z: 1}, {z: 3}, {z: 2}]);
 	t.deepEqual(returnedValue, [{z: 1}, {z: 2}, {z: 3}]);
 	t.is(callCount, 9);
 
 	proxy.x.y.reverse();
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPath, ['x', 'y']);
 	t.deepEqual(returnedPrevious, [{z: 1}, {z: 2}, {z: 3}]);
 	t.deepEqual(returnedValue, [{z: 3}, {z: 2}, {z: 1}]);
 	t.is(callCount, 10);
 
 	proxy.x.y.forEach(item => item.z++);
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPath, ['x', 'y']);
 	t.deepEqual(returnedPrevious, [{z: 3}, {z: 2}, {z: 1}]);
 	t.deepEqual(returnedValue, [{z: 4}, {z: 3}, {z: 2}]);
 	t.is(callCount, 11);
 
 	proxy.x.y.splice(1, 2);
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPath, ['x', 'y']);
 	t.deepEqual(returnedPrevious, [{z: 4}, {z: 3}, {z: 2}]);
 	t.deepEqual(returnedValue, [{z: 4}]);
 	t.is(callCount, 12);
@@ -348,7 +348,7 @@ test('the callback should provide the original proxied object, the path to the c
 
 	proxy.foo();
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, '');
+	t.deepEqual(returnedPath, []);
 	t.is(callCount, 14);
 });
 
@@ -377,7 +377,7 @@ test('the callback should return a raw value when apply traps are triggered', t 
 
 	proxy.x.y.push('pushed');
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'x.y');
+	t.deepEqual(returnedPath, ['x', 'y']);
 	t.deepEqual(returnedPrevious, [{z: 0}]);
 	t.deepEqual(returnedValue, [{z: 0}, 'pushed']);
 	t.is(callCount, 1);
@@ -414,7 +414,7 @@ test('the callback should trigger when a Symbol is used as the key and ignoreSym
 
 	proxy[SYMBOL] = true;
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'Symbol(test)');
+	t.deepEqual(returnedPath, [SYMBOL]);
 	t.deepEqual(returnedPrevious, undefined);
 	t.deepEqual(returnedValue, true);
 	t.is(callCount, 1);
@@ -426,21 +426,21 @@ test('the callback should trigger when a Symbol is used as the key and ignoreSym
 		enumerable: false
 	});
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'Symbol(test2)');
+	t.deepEqual(returnedPath, [SYMBOL2]);
 	t.deepEqual(returnedPrevious, undefined);
 	t.deepEqual(returnedValue, true);
 	t.is(callCount, 2);
 
 	delete proxy[SYMBOL2];
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'Symbol(test2)');
+	t.deepEqual(returnedPath, [SYMBOL2]);
 	t.deepEqual(returnedPrevious, true);
 	t.deepEqual(returnedValue, undefined);
 	t.is(callCount, 3);
 
 	proxy.z = true;
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'z');
+	t.deepEqual(returnedPath, ['z']);
 	t.deepEqual(returnedPrevious, undefined);
 	t.deepEqual(returnedValue, true);
 	t.is(callCount, 4);
@@ -476,7 +476,7 @@ test('the callback should not trigger when a Symbol is used as the key and ignor
 
 	proxy[SYMBOL] = true;
 	t.is(returnedObject, undefined);
-	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPath, undefined);
 	t.is(returnedPrevious, undefined);
 	t.is(returnedValue, undefined);
 	t.is(callCount, 0);
@@ -488,21 +488,21 @@ test('the callback should not trigger when a Symbol is used as the key and ignor
 		enumerable: false
 	});
 	t.is(returnedObject, undefined);
-	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPath, undefined);
 	t.is(returnedPrevious, undefined);
 	t.is(returnedValue, undefined);
 	t.is(callCount, 0);
 
 	delete proxy[SYMBOL2];
 	t.is(returnedObject, undefined);
-	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPath, undefined);
 	t.is(returnedPrevious, undefined);
 	t.is(returnedValue, undefined);
 	t.is(callCount, 0);
 
 	proxy.z = true;
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'z');
+	t.deepEqual(returnedPath, ['z']);
 	t.deepEqual(returnedPrevious, undefined);
 	t.deepEqual(returnedValue, true);
 	t.is(callCount, 1);
@@ -533,25 +533,25 @@ test('should not call the callback for nested items if isShallow is true', t => 
 
 	proxy.a = 1;
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'a');
+	t.deepEqual(returnedPath, ['a']);
 	t.is(returnedPrevious, undefined);
 	t.is(returnedValue, 1);
 
 	proxy.x.new = 1;
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'a');
+	t.deepEqual(returnedPath, ['a']);
 	t.is(returnedPrevious, undefined);
 	t.is(returnedValue, 1);
 
 	proxy.x.y[0].new = 1;
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'a');
+	t.deepEqual(returnedPath, ['a']);
 	t.is(returnedPrevious, undefined);
 	t.is(returnedValue, 1);
 
 	proxy.a = 2;
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'a');
+	t.deepEqual(returnedPath, ['a']);
 	t.is(returnedPrevious, 1);
 	t.is(returnedValue, 2);
 });
@@ -605,7 +605,7 @@ test('should allow nested proxied objects', t => {
 
 	proxy1.x.y[0].z = 1;
 	t.is(returnedObject1, proxy1);
-	t.is(returnedPath1, 'x.y.0.z');
+	t.deepEqual(returnedPath1, ['x', 'y', '0', 'z']);
 	t.is(returnedPrevious1, 0);
 	t.is(returnedValue1, 1);
 	t.is(callCount1, 1);
@@ -613,7 +613,7 @@ test('should allow nested proxied objects', t => {
 
 	proxy2.a.b[0].c = 1;
 	t.is(returnedObject2, proxy2);
-	t.is(returnedPath2, 'a.b.0.c');
+	t.deepEqual(returnedPath2, ['a', 'b', '0', 'c']);
 	t.is(returnedPrevious2, 0);
 	t.is(returnedValue2, 1);
 	t.is(callCount1, 1);
@@ -621,7 +621,7 @@ test('should allow nested proxied objects', t => {
 
 	proxy1.g = proxy2;
 	t.is(returnedObject1, proxy1);
-	t.is(returnedPath1, 'g');
+	t.deepEqual(returnedPath1, ['g']);
 	t.is(returnedPrevious1, undefined);
 	t.is(returnedValue1, proxy2);
 	t.is(callCount1, 2);
@@ -629,13 +629,13 @@ test('should allow nested proxied objects', t => {
 
 	proxy1.g.a.b[0].c = 2;
 	t.is(returnedObject1, proxy1);
-	t.is(returnedPath1, 'g.a.b.0.c');
+	t.deepEqual(returnedPath1, ['g', 'a', 'b', '0', 'c']);
 	t.is(returnedPrevious1, 1);
 	t.is(returnedValue1, 2);
 	t.is(callCount1, 3);
 
 	t.is(returnedObject2, proxy2);
-	t.is(returnedPath2, 'a.b.0.c');
+	t.deepEqual(returnedPath2, ['a', 'b', '0', 'c']);
 	t.is(returnedPrevious2, 1);
 	t.is(returnedValue2, 2);
 	t.is(callCount2, 2);
@@ -667,7 +667,7 @@ test('should be able to mutate itself', t => {
 
 	proxy.method(proxy);
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, '');
+	t.deepEqual(returnedPath, []);
 	t.deepEqual(returnedPrevious, {
 		x: 0,
 		method
@@ -694,7 +694,7 @@ test('should be able to mutate itself', t => {
 
 	proxy.method();
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, '');
+	t.deepEqual(returnedPath, []);
 	t.deepEqual(returnedPrevious, {
 		x: 0
 	});
@@ -727,7 +727,7 @@ test('the callback should not trigger after unsubscribe is called', t => {
 
 	proxy.z = true;
 	t.is(returnedObject, proxy);
-	t.is(returnedPath, 'z');
+	t.deepEqual(returnedPath, ['z']);
 	t.deepEqual(returnedPrevious, undefined);
 	t.deepEqual(returnedValue, true);
 	t.is(callCount, 1);
@@ -741,14 +741,14 @@ test('the callback should not trigger after unsubscribe is called', t => {
 
 	proxy.z = false;
 	t.is(returnedObject, undefined);
-	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPath, undefined);
 	t.deepEqual(returnedPrevious, undefined);
 	t.deepEqual(returnedValue, undefined);
 	t.is(callCount, 1);
 
 	unsubscribed.x.y[0].z = true;
 	t.is(returnedObject, undefined);
-	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPath, undefined);
 	t.deepEqual(returnedPrevious, undefined);
 	t.deepEqual(returnedValue, undefined);
 	t.is(callCount, 1);
@@ -757,7 +757,7 @@ test('the callback should not trigger after unsubscribe is called', t => {
 
 	unsubscribed.x.y[0].z = true;
 	t.is(returnedObject, undefined);
-	t.is(returnedPath, undefined);
+	t.deepEqual(returnedPath, undefined);
 	t.deepEqual(returnedPrevious, undefined);
 	t.deepEqual(returnedValue, undefined);
 	t.is(callCount, 1);
