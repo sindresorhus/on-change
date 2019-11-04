@@ -352,6 +352,38 @@ test('the callback should provide the original proxied object, the path to the c
 	t.is(callCount, 14);
 });
 
+test('the callback should not get called when methods are called that don\'t mutate the proxied item', t => {
+	const originalObject = [
+		{
+			y: 1
+		},
+		{
+			y: 2
+		},
+		{
+			y: 3
+		}
+	];
+
+	let callCount = 0;
+
+	const proxy = onChange(originalObject, () => {
+		callCount++;
+	});
+
+	proxy.map(item => item.y);
+	t.is(callCount, 0);
+
+	proxy.reduce((result, item) => {
+		result.push(item.y);
+		return result;
+	}, []);
+	t.is(callCount, 0);
+
+	proxy.slice(0, 1);
+	t.is(callCount, 0);
+});
+
 test('the callback should return a raw value when apply traps are triggered', t => {
 	const originalObject = {
 		x: {
