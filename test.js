@@ -1,6 +1,6 @@
-import onChange from '.';
-import displayValue from 'display-value';
-import test from 'ava';
+const onChange = require('.');
+const displayValue = require('display-value');
+const test = require('ava');
 
 const testHelper = (t, object, options, callback) => {
 	const last = {};
@@ -48,8 +48,8 @@ const testValues = [
 	null,
 	undefined,
 	'string',
-	new RegExp('regExp1'),
-	RegExp('regExp2'), // eslint-disable-line unicorn/new-for-builtins
+	new RegExp('regExp1'), // eslint-disable-line prefer-regex-literals
+	RegExp('regExp2'), // eslint-disable-line unicorn/new-for-builtins, prefer-regex-literals
 	/regExp3/,
 	true,
 	false,
@@ -702,9 +702,7 @@ test('should NOT trigger if setting a property fails', t => {
 	Object.freeze(object);
 
 	testHelper(t, object, {}, (proxy, verify) => {
-		t.throws(() => {
-			proxy.x = false;
-		});
+		proxy.x = false;
 
 		verify(0, undefined, undefined, undefined, undefined);
 	});
@@ -718,9 +716,7 @@ test('should NOT trigger if deleting a property fails', t => {
 	Object.freeze(object);
 
 	testHelper(t, object, {}, (proxy, verify) => {
-		t.throws(() => {
-			delete proxy.x;
-		});
+		delete proxy.x;
 
 		verify(0, undefined, undefined, undefined, undefined);
 	});

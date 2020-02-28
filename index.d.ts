@@ -68,6 +68,8 @@ declare namespace onChange {
 }
 
 declare const onChange: {
+	default: typeof onChange;
+
 	/**
 	Watch an object or array for changes. It works recursively, so it will even detect if you modify a deep property like `obj.a.b[0].c = true`.
 
@@ -158,7 +160,6 @@ declare const onChange: {
 	// 	onChange: (this: ObjectType, path: string, value: unknown, previousValue: unknown) => void
 	// ): ObjectType;
 	// export = onChange;
-	default: typeof onChange;
 
 	/**
 	@param object - Object that is already being watched for changes.
