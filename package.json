@@ -1,6 +1,6 @@
 {
 	"name": "on-change",
-	"version": "1.6.2",
+	"version": "1.6.3",
 	"description": "Watch an object or array for changes",
 	"license": "MIT",
 	"repository": "sindresorhus/on-change",
