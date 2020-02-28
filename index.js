@@ -10,6 +10,14 @@ const isBuiltinWithoutMutableMethods = value => value instanceof RegExp || value
 
 const isBuiltinWithMutableMethods = value => value instanceof Date;
 
+const isSameDescriptor = (a, b) => {
+	return a !== undefined && b !== undefined &&
+		Object.is(a.value, b.value) &&
+		(a.writable || false) === (b.writable || false) &&
+		(a.enumerable || false) === (b.enumerable || false) &&
+		(a.configurable || false) === (b.configurable || false);
+};
+
 const concatPath = (path, property) => {
 	if (property && property.toString) {
 		if (path) {
@@ -87,7 +95,11 @@ const onChange = (object, onChange, options = {}) => {
 	};
 
 	const getOwnPropertyDescriptor = (target, property) => {
-		let props = propCache ? propCache.get(target) : undefined;
+		let props = propCache !== null && propCache.get(target);
+
+		if (props) {
+			props = props.get(property);
+		}
 
 		if (props) {
 			return props;
@@ -97,6 +109,7 @@ const onChange = (object, onChange, options = {}) => {
 		propCache.set(target, props);
 
 		let prop = props.get(property);
+
 		if (!prop) {
 			prop = Reflect.getOwnPropertyDescriptor(target, property);
 			props.set(property, prop);
@@ -149,7 +162,9 @@ const onChange = (object, onChange, options = {}) => {
 				return target;
 			}
 
-			if (property === UNSUBSCRIBE && pathCache.get(target) === '') {
+			if (property === UNSUBSCRIBE &&
+				pathCache !== null &&
+				pathCache.get(target) === '') {
 				return unsubscribe(target);
 			}
 
@@ -185,22 +200,31 @@ const onChange = (object, onChange, options = {}) => {
 
 			const ignore = ignoreChange(property);
 			const previous = ignore ? null : Reflect.get(target, property, receiver);
-			const result = Reflect.set(target[proxyTarget] || target, property, value);
+			const isChanged = !(property in target) || !equals(previous, value);
+			let result = true;
 
-			if (!ignore && !equals(previous, value)) {
-				handleChange(pathCache.get(target), property, previous, value);
+			if (isChanged) {
+				result = Reflect.set(target[proxyTarget] || target, property, value);
+
+				if (!ignore && result) {
+					handleChange(pathCache.get(target), property, previous, value);
+				}
 			}
 
 			return result;
 		},
 
 		defineProperty(target, property, descriptor) {
-			const result = Reflect.defineProperty(target, property, descriptor);
+			let result = true;
 
-			if (!ignoreChange(property)) {
-				invalidateCachedDescriptor(target, property);
+			if (!isSameDescriptor(descriptor, getOwnPropertyDescriptor(target, property))) {
+				result = Reflect.defineProperty(target, property, descriptor);
 
-				handleChange(pathCache.get(target), property, undefined, descriptor.value);
+				if (result && !ignoreChange(property) && !isSameDescriptor()) {
+					invalidateCachedDescriptor(target, property);
+
+					handleChange(pathCache.get(target), property, undefined, descriptor.value);
+				}
 			}
 
 			return result;
@@ -215,7 +239,7 @@ const onChange = (object, onChange, options = {}) => {
 			const previous = ignore ? null : Reflect.get(target, property);
 			const result = Reflect.deleteProperty(target, property);
 
-			if (!ignore) {
+			if (!ignore && result) {
 				invalidateCachedDescriptor(target, property);
 
 				handleChange(pathCache.get(target), property, previous);
