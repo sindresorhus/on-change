@@ -173,7 +173,8 @@ const onChange = (object, onChange, options = {}) => {
 				isPrimitive(value) ||
 				isBuiltinWithoutMutableMethods(value) ||
 				property === 'constructor' ||
-				options.isShallow === true
+				options.isShallow === true ||
+				property === '__ob__'
 			) {
 				return value;
 			}
