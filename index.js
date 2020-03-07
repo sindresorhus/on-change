@@ -174,7 +174,7 @@ const onChange = (object, onChange, options = {}) => {
 				isBuiltinWithoutMutableMethods(value) ||
 				property === 'constructor' ||
 				options.isShallow === true ||
-				options.ignoreKeys.includes(property)
+				(options.ignoreKeys && options.ignoreKeys.includes(property))
 			) {
 				return value;
 			}
