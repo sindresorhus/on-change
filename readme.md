@@ -132,6 +132,20 @@ Default: false
 
 Setting properties as `Symbol` won't trigger the callback.
 
+##### ignoreKeys
+
+Type: `Array<string|symbol>`<br>
+Default: undefined
+
+Setting properties in this array won't trigger the callback.
+
+##### ignoreUnderscores
+
+Type: `boolean`<br>
+Default: false
+
+Setting properties with an underscore as the first character won't trigger the callback.
+
 ### onChange.target(object)
 
 Returns the original unwatched object.

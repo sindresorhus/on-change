@@ -152,8 +152,11 @@ const onChange = (object, onChange, options = {}) => {
 		return target;
 	};
 
-	const ignoreChange = property => {
-		return isUnsubscribed || (options.ignoreSymbols === true && typeof property === 'symbol');
+	const ignoreProperty = property => {
+		return isUnsubscribed ||
+			(options.ignoreSymbols === true && typeof property === 'symbol') ||
+			(options.ignoreUnderscores === true && property.charAt(0) === '_') ||
+			(options.ignoreKeys !== undefined && options.ignoreKeys.includes(property));
 	};
 
 	const handler = {
@@ -174,7 +177,7 @@ const onChange = (object, onChange, options = {}) => {
 				isBuiltinWithoutMutableMethods(value) ||
 				property === 'constructor' ||
 				options.isShallow === true ||
-				(options.ignoreKeys && options.ignoreKeys.includes(property))
+				ignoreProperty(property)
 			) {
 				return value;
 			}
@@ -199,7 +202,7 @@ const onChange = (object, onChange, options = {}) => {
 				value = value[proxyTarget];
 			}
 
-			const ignore = ignoreChange(property);
+			const ignore = ignoreProperty(property);
 			const previous = ignore ? null : Reflect.get(target, property, receiver);
 			const isChanged = !(property in target) || !equals(previous, value);
 			let result = true;
@@ -221,7 +224,7 @@ const onChange = (object, onChange, options = {}) => {
 			if (!isSameDescriptor(descriptor, getOwnPropertyDescriptor(target, property))) {
 				result = Reflect.defineProperty(target, property, descriptor);
 
-				if (result && !ignoreChange(property) && !isSameDescriptor()) {
+				if (result && !ignoreProperty(property) && !isSameDescriptor()) {
 					invalidateCachedDescriptor(target, property);
 
 					handleChange(pathCache.get(target), property, undefined, descriptor.value);
@@ -236,7 +239,7 @@ const onChange = (object, onChange, options = {}) => {
 				return true;
 			}
 
-			const ignore = ignoreChange(property);
+			const ignore = ignoreProperty(property);
 			const previous = ignore ? null : Reflect.get(target, property);
 			const result = Reflect.deleteProperty(target, property);
 
