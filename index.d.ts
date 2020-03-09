@@ -64,6 +64,20 @@ declare namespace onChange {
 		@default false
 		*/
 		ignoreSymbols?: boolean;
+
+		/**
+		Setting properties in this array won't trigger the callback.
+
+		@default undefined
+		*/
+		ignoreKeys?: Array<string|symbol>;
+
+		/**
+		Setting properties with an underscore as the first character won't trigger the callback.
+
+		@default false
+		*/
+		ignoreUnderscores?: boolean;
 	}
 }
 

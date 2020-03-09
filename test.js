@@ -25,16 +25,16 @@ const testHelper = (t, object, options, callback) => {
 
 	// eslint-disable-next-line max-params
 	const verify = (count, thisArg, path, value, previous, fullObject) => {
-		t.is(last.count, count);
-		t.is(last.thisArg, thisArg);
-		t.deepEqual(last.path, path);
-		t.deepEqual(last.value, value);
-		t.deepEqual(last.previous, previous);
+		t.is(count, last.count);
+		t.is(thisArg, last.thisArg);
+		t.deepEqual(path, last.path);
+		t.deepEqual(value, last.value);
+		t.deepEqual(previous, last.previous);
 
-		t.is(onChange.target(proxy), object);
+		t.is(object, onChange.target(proxy));
 
 		if (fullObject !== undefined) {
-			t.deepEqual(object, fullObject);
+			t.deepEqual(fullObject, object);
 			t.deepEqual(proxy, object);
 		}
 	};
@@ -386,7 +386,7 @@ test('the callback should return a raw value when apply traps are triggered', t 
 	});
 });
 
-test('the callback should trigger when a Symbol is used as the key and ignoreSymbols is not set', t => {
+test('should trigger the callback when a Symbol is used as the key and ignoreSymbols is not set', t => {
 	const object = {
 		x: {
 			y: [{
@@ -418,7 +418,7 @@ test('the callback should trigger when a Symbol is used as the key and ignoreSym
 	});
 });
 
-test('the callback should not trigger when a Symbol is used as the key and ignoreSymbols is true', t => {
+test('should not trigger the callback when a Symbol is used as the key and ignoreSymbols is true', t => {
 	const object = {
 		x: {
 			y: [{
@@ -430,8 +430,16 @@ test('the callback should not trigger when a Symbol is used as the key and ignor
 	testHelper(t, object, {ignoreSymbols: true}, (proxy, verify) => {
 		const SYMBOL = Symbol('test');
 		const SYMBOL2 = Symbol('test2');
+		const object2 = {
+			c: 2
+		};
 
-		proxy[SYMBOL] = true;
+		proxy[SYMBOL] = object2;
+		verify(0);
+
+		t.is(proxy[SYMBOL], object2);
+
+		proxy[SYMBOL].c = 3;
 		verify(0);
 
 		Object.defineProperty(proxy, SYMBOL2, {
@@ -443,6 +451,82 @@ test('the callback should not trigger when a Symbol is used as the key and ignor
 		verify(0);
 
 		delete proxy[SYMBOL2];
+		verify(0);
+
+		proxy.z = true;
+		verify(1, proxy, 'z', true, undefined);
+	});
+});
+
+test('should not trigger the callback when a key is used that is in ignoreKeys', t => {
+	const object = {
+		x: {
+			y: [{
+				z: 0
+			}]
+		}
+	};
+
+	testHelper(t, object, {ignoreKeys: ['a', 'b']}, (proxy, verify) => {
+		const object2 = {
+			c: 2
+		};
+
+		proxy.a = object2;
+		verify(0);
+
+		t.is(proxy.a, object2);
+
+		proxy.a.c = 3;
+		verify(0);
+
+		Object.defineProperty(proxy, 'b', {
+			value: true,
+			configurable: true,
+			writable: true,
+			enumerable: false
+		});
+		verify(0);
+
+		delete proxy.b;
+		verify(0);
+
+		proxy.z = true;
+		verify(1, proxy, 'z', true, undefined);
+	});
+});
+
+test('should not trigger the callback when a key with an underscore is used and ignoreUnderscores is true', t => {
+	const object = {
+		x: {
+			y: [{
+				z: 0
+			}]
+		}
+	};
+
+	testHelper(t, object, {ignoreUnderscores: true}, (proxy, verify) => {
+		const object2 = {
+			c: 2
+		};
+
+		proxy._a = object2;
+		verify(0);
+
+		t.is(proxy._a, object2);
+
+		proxy._a.c = 3;
+		verify(0);
+
+		Object.defineProperty(proxy, '_b', {
+			value: true,
+			configurable: true,
+			writable: true,
+			enumerable: false
+		});
+		verify(0);
+
+		delete proxy._b;
 		verify(0);
 
 		proxy.z = true;
