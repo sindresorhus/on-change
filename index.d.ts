@@ -78,6 +78,13 @@ declare namespace onChange {
 		@default false
 		*/
 		ignoreUnderscores?: boolean;
+
+		/**
+		The path will be provided as an array of keys instead of a delimited string.
+
+		@default false
+		*/
+		pathAsArray?: boolean;
 	}
 }
 
