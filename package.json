@@ -10,11 +10,11 @@
 		"url": "sindresorhus.com"
 	},
 	"engines": {
-		"node": ">=6"
+		"node": ">=10"
 	},
 	"scripts": {
 		"test": "xo && ava && tsd",
-		"bench": "matcha bench/bench.js"
+		"bench": "karma start karma.bench.conf.js"
 	},
 	"files": [
 		"index.js",
@@ -39,7 +39,7 @@
 	"devDependencies": {
 		"ava": "^3.5.0",
 		"display-value": "^1.6.0",
-		"matcha": "^0.7.0",
+		"karma-webpack-bundle": "^0.1.2",
 		"tsd": "^0.11.0",
 		"xo": "^0.27.2"
 	}
