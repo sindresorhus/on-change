@@ -4,13 +4,14 @@
 	"description": "Watch an object or array for changes",
 	"license": "MIT",
 	"repository": "sindresorhus/on-change",
+	"funding": "https://github.com/sindresorhus/on-change?sponsor=1",
 	"author": {
 		"name": "Sindre Sorhus",
 		"email": "sindresorhus@gmail.com",
-		"url": "sindresorhus.com"
+		"url": "https://sindresorhus.com"
 	},
 	"engines": {
-		"node": ">=6"
+		"node": ">=10"
 	},
 	"scripts": {
 		"test": "xo && ava && tsd",
