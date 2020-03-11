@@ -51,7 +51,7 @@ const shallowClone = value => {
 		return value.slice();
 	}
 
-	return {...value};
+	return Object.assign({}, value);
 };
 
 const onChange = (object, onChange, options = {}) => {
