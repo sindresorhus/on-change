@@ -148,8 +148,8 @@ Setting properties with an underscore as the first character won't trigger the c
 
 ##### pathAsArray
 
-Type: `boolean`<br>
-Default: false
+Type: `boolean`\
+Default: `false`
 
 The path will be provided as an array of keys instead of a delimited string.
 
