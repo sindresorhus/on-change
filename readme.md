@@ -6,13 +6,11 @@ It works recursively, so it will even detect if you modify a deep property like 
 
 Uses the [`Proxy` API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy).
 
-
 ## Install
 
 ```
 $ npm install on-change
 ```
-
 
 ## Usage
 
@@ -81,7 +79,6 @@ watchedObject.foo = 'bar';
 // Callback isn't called
 ```
 
-
 ## API
 
 ### onChange(object, onChange, options?)
@@ -113,36 +110,36 @@ Type: `object`
 
 ##### isShallow
 
-Type: `boolean`<br>
+Type: `boolean`\
 Default: `false`
 
 Deep changes will not trigger the callback. Only changes to the immediate properties of the original object.
 
 ##### equals
 
-Type: `Function`<br>
+Type: `Function`\
 Default: [`Object.is`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is)
 
 The function receives two arguments to be compared for equality. Should return `true` if the two values are determined to be equal. Useful if you only need a more loose form of equality.
 
 ##### ignoreSymbols
 
-Type: `boolean`<br>
-Default: false
+Type: `boolean`\
+Default: `false`
 
 Setting properties as `Symbol` won't trigger the callback.
 
 ##### ignoreKeys
 
-Type: `Array<string|symbol>`<br>
-Default: undefined
+Type: `Array<string | symbol>`\
+Default: `undefined`
 
 Setting properties in this array won't trigger the callback.
 
 ##### ignoreUnderscores
 
-Type: `boolean`<br>
-Default: false
+Type: `boolean`\
+Default: `false`
 
 Setting properties with an underscore as the first character won't trigger the callback.
 
@@ -165,7 +162,6 @@ Cancels all future callbacks on a watched object and returns the original unwatc
 Type: `object`
 
 Object that is already being watched for changes.
-
 
 ## Use-case
 
@@ -215,14 +211,12 @@ foo.b = 7;
 foo.a = 10;
 ```
 
-
 ## Related
 
 - [known](https://github.com/sindresorhus/known) - Allow only access to known object properties *(Uses `Proxy` too)*
 - [negative-array](https://github.com/sindresorhus/negative-array) - Negative array index support `array[-1]` *(Uses `Proxy` too)*
 - [statux](https://github.com/franciscop/state) - State manager *(Uses `Proxy` too)*
 - [introspected](https://github.com/WebReflection/introspected) - Never-ending Proxy with multiple observers *(Uses `Proxy` too)*
-
 
 ## Maintainers
 
