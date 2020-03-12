@@ -97,9 +97,9 @@ test('main', t => {
 	t.is(callCount, 4);
 
 	// Unwrap proxies on assignment
-	const prev = object.bar.a;
+	const previous = object.bar.a;
 	proxy.bar.a = proxy.bar.a; // eslint-disable-line no-self-assign
-	t.is(object.bar.a, prev);
+	t.is(object.bar.a, previous);
 });
 
 for (const [index1, value1] of testValues.entries()) {
@@ -232,8 +232,8 @@ test('invariants', t => {
 	});
 	Object.defineProperty(object, 'useAccessor', {
 		configurable: false,
-		set(val) {
-			this._useAccessor = val;
+		set(value) {
+			this._useAccessor = value;
 		},
 		get() {
 			return this._useAccessor;
@@ -340,7 +340,7 @@ test('the callback should provide the original proxied object, the path to the c
 	});
 });
 
-test('the callback should not get called when methods are called that don\'t mutate the proxied item', t => {
+test('the callback should not get called when methods are called that don’t mutate the proxied item', t => {
 	const object = [
 		{
 			y: 1

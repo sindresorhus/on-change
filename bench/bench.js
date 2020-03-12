@@ -7,42 +7,42 @@ const save = () => {};
 const commonBench = function () {
 	set('mintime', 500);
 
-	let val = 0;
+	let value = 0;
 
 	bench('object read', () => {
-		this.object.a === val++; // eslint-disable-line no-unused-expressions
+		this.object.a === value++; // eslint-disable-line no-unused-expressions
 	});
 
 	bench('nested read', () => {
-		this.object.subObj.a === val++; // eslint-disable-line no-unused-expressions
+		this.object.subObj.a === value++; // eslint-disable-line no-unused-expressions
 	});
 
 	bench('array read', () => {
-		this.array[0] === val++; // eslint-disable-line no-unused-expressions
+		this.array[0] === value++; // eslint-disable-line no-unused-expressions
 	});
 
 	bench('object write', () => {
-		this.object.a = val++;
+		this.object.a = value++;
 	});
 
 	bench('array write', () => {
-		this.array[0] = val++;
+		this.array[0] = value++;
 	});
 
 	bench('array write in apply', () => {
 		this.array.some((value, index) => {
-			this.array[index] = val++;
+			this.array[index] = value++;
 			return true;
 		});
 	});
 
 	bench('array push + pop', () => {
-		this.array.push(val++);
+		this.array.push(value++);
 		this.array.pop();
 	});
 
 	bench('array unshift + shift', () => {
-		this.array.unshift(val++);
+		this.array.unshift(value++);
 		this.array.shift();
 	});
 };
