@@ -24,7 +24,7 @@ const shallowClone = value => {
 		return value.slice();
 	}
 
-	return Object.assign({}, value); // eslint-disable-line prefer-object-spread
+	return {...value};
 };
 
 const onChange = (object, onChange, options = {}) => {
