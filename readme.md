@@ -143,6 +143,13 @@ Default: `false`
 
 Setting properties with an underscore as the first character won't trigger the callback.
 
+##### pathAsArray
+
+Type: `boolean`\
+Default: `false`
+
+The path will be provided as an array of keys instead of a delimited string.
+
 ### onChange.target(object)
 
 Returns the original unwatched object.

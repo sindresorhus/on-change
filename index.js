@@ -1,8 +1,9 @@
 'use strict';
 
-const PATH_SEPARATOR = '.';
-const TARGET = Symbol('target');
-const UNSUBSCRIBE = Symbol('unsubscribe');
+const {TARGET, UNSUBSCRIBE} = require('./lib/constants');
+const path = require('./lib/path');
+const isArray = require('./lib/is-array');
+const isSymbol = require('./lib/is-symbol');
 
 const isPrimitive = value => value === null || (typeof value !== 'object' && typeof value !== 'function');
 
@@ -18,36 +19,8 @@ const isSameDescriptor = (a, b) => {
 		(a.configurable || false) === (b.configurable || false);
 };
 
-const concatPath = (path, property) => {
-	if (property && property.toString) {
-		if (path) {
-			path += PATH_SEPARATOR;
-		}
-
-		path += property.toString();
-	}
-
-	return path;
-};
-
-const walkPath = (path, callback) => {
-	let index;
-
-	while (path) {
-		index = path.indexOf(PATH_SEPARATOR);
-
-		if (index === -1) {
-			index = path.length;
-		}
-
-		callback(path.slice(0, index));
-
-		path = path.slice(index + 1);
-	}
-};
-
 const shallowClone = value => {
-	if (Array.isArray(value)) {
+	if (isArray(value)) {
 		return value.slice();
 	}
 
@@ -66,23 +39,23 @@ const onChange = (object, onChange, options = {}) => {
 	let pathCache = new WeakMap();
 	let proxyCache = new WeakMap();
 
-	const handleChange = (path, property, previous, value) => {
+	const handleChange = (changePath, property, previous, value) => {
 		if (isUnsubscribed) {
 			return;
 		}
 
 		if (!inApply) {
-			onChange(concatPath(path, property), value, previous);
+			onChange(path.concat(changePath, property), value, previous);
 			return;
 		}
 
 		if (inApply && applyPrevious && previous !== undefined && value !== undefined && property !== 'length') {
 			let item = applyPrevious;
 
-			if (path !== applyPath) {
-				path = path.replace(applyPath, '').slice(1);
+			if (changePath !== applyPath) {
+				changePath = path.after(changePath, applyPath);
 
-				walkPath(path, key => {
+				path.walk(changePath, key => {
 					item[key] = shallowClone(item[key]);
 					item = item[key];
 				});
@@ -154,7 +127,7 @@ const onChange = (object, onChange, options = {}) => {
 
 	const ignoreProperty = property => {
 		return isUnsubscribed ||
-			(options.ignoreSymbols === true && typeof property === 'symbol') ||
+			(options.ignoreSymbols === true && isSymbol(property)) ||
 			(options.ignoreUnderscores === true && property.charAt(0) === '_') ||
 			(options.ignoreKeys !== undefined && options.ignoreKeys.includes(property));
 	};
@@ -194,7 +167,7 @@ const onChange = (object, onChange, options = {}) => {
 				}
 			}
 
-			return buildProxy(value, concatPath(pathCache.get(target), property));
+			return buildProxy(value, path.concat(pathCache.get(target), property));
 		},
 
 		set(target, property, value, receiver) {
@@ -266,12 +239,11 @@ const onChange = (object, onChange, options = {}) => {
 					applyPrevious = thisArg.valueOf();
 				}
 
-				if (Array.isArray(thisArg) || toString.call(thisArg) === '[object Object]') {
+				if (isArray(thisArg) || toString.call(thisArg) === '[object Object]') {
 					applyPrevious = shallowClone(thisArg[proxyTarget]);
 				}
 
-				applyPath = pathCache.get(target);
-				applyPath = applyPath.slice(0, Math.max(applyPath.lastIndexOf(PATH_SEPARATOR), 0));
+				applyPath = path.initial(pathCache.get(target));
 
 				const result = Reflect.apply(target, thisArg, argumentsList);
 
@@ -290,7 +262,7 @@ const onChange = (object, onChange, options = {}) => {
 		}
 	};
 
-	const proxy = buildProxy(object, '');
+	const proxy = buildProxy(object, options.pathAsArray === true ? [] : '');
 	onChange = onChange.bind(proxy);
 
 	return proxy;
