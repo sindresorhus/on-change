@@ -300,5 +300,3 @@ onChange.target = proxy => proxy[TARGET] || proxy;
 onChange.unsubscribe = proxy => proxy[UNSUBSCRIBE] || proxy;
 
 module.exports = onChange;
-// TODO: Remove this for the next major release
-module.exports.default = onChange;
