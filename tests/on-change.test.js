@@ -1,6 +1,7 @@
 const onChange = require('..');
 const displayValue = require('display-value');
 const test = require('ava');
+const {difference, objects, functions, dates, testValues} = require('./helpers/data-types');
 
 const testHelper = (t, object, options, callback) => {
 	const last = {};
@@ -44,25 +45,6 @@ const testHelper = (t, object, options, callback) => {
 	onChange.unsubscribe(proxy);
 };
 
-const testValues = [
-	null,
-	undefined,
-	'string',
-	new RegExp('regExp1'), // eslint-disable-line prefer-regex-literals
-	RegExp('regExp2'), // eslint-disable-line unicorn/new-for-builtins, prefer-regex-literals
-	/regExp3/,
-	true,
-	false,
-	1,
-	'1',
-	Number(2),
-	new Number(3), // eslint-disable-line no-new-wrappers, unicorn/new-for-builtins
-	Infinity,
-	0,
-	-0,
-	NaN
-];
-
 test('main', t => {
 	const object = {
 		foo: false,
@@ -102,9 +84,34 @@ test('main', t => {
 	t.is(object.bar.a, previous);
 });
 
-for (const [index1, value1] of testValues.entries()) {
-	for (const [index2, value2] of testValues.entries()) {
-		if (index1 !== index2) {
+const mainValues = difference(testValues, objects, functions, dates);
+
+for (const [index1, value1] of mainValues.entries()) {
+	for (const [index2, value2] of mainValues.entries()) {
+		if (index1 === index2) {
+			test(`should NOT detect value changes when reset to ${displayValue(value1)}`, t => {
+				const object = {
+					a: value1,
+					b: [1, 2, value1]
+				};
+
+				testHelper(t, object, {}, (proxy, verify) => {
+					proxy.a = value2;
+					t.is(proxy.a, value2);
+					verify(0);
+
+					proxy.a = value2;
+					verify(0);
+
+					proxy.b[2] = value2;
+					t.is(proxy.b[2], value2);
+					verify(0);
+
+					proxy.b[2] = value2;
+					verify(0);
+				});
+			});
+		} else {
 			test(`should detect value changes from ${displayValue(value1)} to ${displayValue(value2)}`, t => {
 				const object = {
 					a: value1,
@@ -172,7 +179,7 @@ test('dates', t => {
 	const object = {
 		a: 0
 	};
-	const date = new Date('1/1/2001');
+	const date = dates[0];
 
 	testHelper(t, object, {}, (proxy, verify) => {
 		proxy.a = date;

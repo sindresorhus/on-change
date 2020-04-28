@@ -1,15 +1,10 @@
 'use strict';
 
 const {TARGET, UNSUBSCRIBE} = require('./lib/constants');
+const isBuiltin = require('./lib/is-builtin');
 const path = require('./lib/path');
 const isArray = require('./lib/is-array');
 const isSymbol = require('./lib/is-symbol');
-
-const isPrimitive = value => value === null || (typeof value !== 'object' && typeof value !== 'function');
-
-const isBuiltinWithoutMutableMethods = value => value instanceof RegExp || value instanceof Number;
-
-const isBuiltinWithMutableMethods = value => value instanceof Date;
 
 const isSameDescriptor = (a, b) => {
 	return a !== undefined && b !== undefined &&
@@ -146,8 +141,7 @@ const onChange = (object, onChange, options = {}) => {
 
 			const value = Reflect.get(target, property, receiver);
 			if (
-				isPrimitive(value) ||
-				isBuiltinWithoutMutableMethods(value) ||
+				isBuiltin.withoutMutableMethods(value) ||
 				property === 'constructor' ||
 				options.isShallow === true ||
 				ignoreProperty(property)
@@ -226,7 +220,7 @@ const onChange = (object, onChange, options = {}) => {
 		},
 
 		apply(target, thisArg, argumentsList) {
-			const compare = isBuiltinWithMutableMethods(thisArg);
+			const compare = isBuiltin.withMutableMethods(thisArg);
 
 			if (compare) {
 				thisArg = thisArg[proxyTarget];
