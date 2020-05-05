@@ -93,6 +93,39 @@ const buildObject = length => {
 const SMALL = 10;
 const LARGE = 100000;
 
+suite('on-change init', () => {
+	array = buildArray(SMALL);
+	object = buildObject(SMALL);
+
+	benchmark('new Proxy', () => {
+		temporaryTarget = new Proxy(object, {});
+	}, benchSettings);
+
+	benchmark('object', () => {
+		onChange(object, callback);
+	}, benchSettings);
+
+	benchmark('object, pathAsArray', () => {
+		onChange(object, callback, {pathAsArray: true});
+	}, benchSettings);
+
+	benchmark('object, fat-arrow', () => {
+		onChange(object, () => {});
+	}, benchSettings);
+
+	benchmark('array', () => {
+		onChange(array, callback);
+	}, benchSettings);
+
+	benchmark('array, pathAsArray', () => {
+		onChange(array, callback, {pathAsArray: true});
+	}, benchSettings);
+
+	benchmark('array, fat-arrow', () => {
+		onChange(array, () => {});
+	}, benchSettings);
+});
+
 suite('on-change', () => {
 	commonBench(() => {
 		object = onChange(buildObject(SMALL), callback);

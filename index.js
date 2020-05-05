@@ -5,6 +5,7 @@ const isBuiltin = require('./lib/is-builtin');
 const path = require('./lib/path');
 const isArray = require('./lib/is-array');
 const isSymbol = require('./lib/is-symbol');
+const SmartClone = require('./lib/smart-clone');
 
 const isSameDescriptor = (a, b) => {
 	return a !== undefined && b !== undefined &&
@@ -14,52 +15,27 @@ const isSameDescriptor = (a, b) => {
 		(a.configurable || false) === (b.configurable || false);
 };
 
-const shallowClone = value => {
-	if (isArray(value)) {
-		return value.slice();
-	}
-
-	return {...value};
-};
-
 const onChange = (object, onChange, options = {}) => {
 	const proxyTarget = Symbol('ProxyTarget');
-	let inApply = false;
-	let changed = false;
-	let applyPath;
-	let applyPrevious;
 	let isUnsubscribed = false;
 	const equals = options.equals || Object.is;
 	let propCache = new WeakMap();
 	let pathCache = new WeakMap();
 	let proxyCache = new WeakMap();
+	const smartClone = new SmartClone();
+
+	const handleChangeOnTarget = (target, property, previous, value) => {
+		if (!(isUnsubscribed || (options.ignoreSymbols === true && isSymbol(property)))) {
+			handleChange(pathCache.get(target), property, previous, value);
+		}
+	};
 
 	const handleChange = (changePath, property, previous, value) => {
-		if (isUnsubscribed) {
-			return;
-		}
-
-		if (!inApply) {
+		if (smartClone.isCloning) {
+			smartClone.update(changePath, property, previous);
+		} else {
 			onChange(path.concat(changePath, property), value, previous);
-			return;
 		}
-
-		if (inApply && applyPrevious && previous !== undefined && value !== undefined && property !== 'length') {
-			let item = applyPrevious;
-
-			if (changePath !== applyPath) {
-				changePath = path.after(changePath, applyPath);
-
-				path.walk(changePath, key => {
-					item[key] = shallowClone(item[key]);
-					item = item[key];
-				});
-			}
-
-			item[property] = previous;
-		}
-
-		changed = true;
 	};
 
 	const getOwnPropertyDescriptor = (target, property) => {
@@ -178,7 +154,7 @@ const onChange = (object, onChange, options = {}) => {
 				result = Reflect.set(target[proxyTarget] || target, property, value);
 
 				if (!ignore && result) {
-					handleChange(pathCache.get(target), property, previous, value);
+					handleChangeOnTarget(target, property, previous, value);
 				}
 			}
 
@@ -194,7 +170,7 @@ const onChange = (object, onChange, options = {}) => {
 				if (result && !ignoreProperty(property) && !isSameDescriptor()) {
 					invalidateCachedDescriptor(target, property);
 
-					handleChange(pathCache.get(target), property, undefined, descriptor.value);
+					handleChangeOnTarget(target, property, undefined, descriptor.value);
 				}
 			}
 
@@ -213,46 +189,43 @@ const onChange = (object, onChange, options = {}) => {
 			if (!ignore && result) {
 				invalidateCachedDescriptor(target, property);
 
-				handleChange(pathCache.get(target), property, previous);
+				handleChangeOnTarget(target, property, previous);
 			}
 
 			return result;
 		},
 
 		apply(target, thisArg, argumentsList) {
-			const compare = isBuiltin.withMutableMethods(thisArg);
+			const isMutable = isBuiltin.withMutableMethods(thisArg);
 
-			if (compare) {
+			if (isMutable) {
 				thisArg = thisArg[proxyTarget];
 			}
 
-			if (!inApply) {
-				inApply = true;
-
-				if (compare) {
-					applyPrevious = thisArg.valueOf();
-				}
-
-				if (isArray(thisArg) || toString.call(thisArg) === '[object Object]') {
-					applyPrevious = shallowClone(thisArg[proxyTarget]);
-				}
-
-				applyPath = path.initial(pathCache.get(target));
-
-				const result = Reflect.apply(target, thisArg, argumentsList);
-
-				inApply = false;
-
-				if (changed || (compare && !equals(applyPrevious, thisArg.valueOf()))) {
-					handleChange(applyPath, '', applyPrevious, thisArg[proxyTarget] || thisArg);
-					applyPrevious = null;
-					changed = false;
-				}
-
-				return result;
+			if (smartClone.isCloning || isUnsubscribed) {
+				return Reflect.apply(target, thisArg, argumentsList);
 			}
 
-			return Reflect.apply(target, thisArg, argumentsList);
+			const applyPath = path.initial(pathCache.get(target));
+
+			if (
+				isMutable ||
+				isArray(thisArg) ||
+				toString.call(thisArg) === '[object Object]'
+			) {
+				smartClone.start(thisArg[proxyTarget] || thisArg, applyPath);
+			}
+
+			const result = Reflect.apply(target, thisArg, argumentsList);
+
+			if (smartClone.isChanged(isMutable, thisArg, equals)) {
+				smartClone.isCloning = false;
+				handleChange(applyPath, '', smartClone.clone, thisArg[proxyTarget] || thisArg);
+			}
+
+			smartClone.done();
+
+			return result;
 		}
 	};
 

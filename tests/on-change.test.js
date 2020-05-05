@@ -186,11 +186,11 @@ test('dates', t => {
 		t.true(proxy.a instanceof Date);
 		verify(1, proxy, 'a', date, 0);
 
-		let clone = date.valueOf();
+		let clone = new Date(date);
 		proxy.a.setSeconds(32);
 		verify(2, proxy, 'a', date, clone);
 
-		clone = date.valueOf();
+		clone = new Date(date);
 		proxy.a.setHours(5);
 		verify(3, proxy, 'a', date, clone);
 
