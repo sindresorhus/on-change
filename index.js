@@ -5,28 +5,19 @@ const isBuiltin = require('./lib/is-builtin');
 const path = require('./lib/path');
 const isArray = require('./lib/is-array');
 const isSymbol = require('./lib/is-symbol');
+const ignoreProperty = require('./lib/ignore-property');
+const Cache = require('./lib/cache');
 const SmartClone = require('./lib/smart-clone');
-
-const isSameDescriptor = (a, b) => {
-	return a !== undefined && b !== undefined &&
-		Object.is(a.value, b.value) &&
-		(a.writable || false) === (b.writable || false) &&
-		(a.enumerable || false) === (b.enumerable || false) &&
-		(a.configurable || false) === (b.configurable || false);
-};
 
 const onChange = (object, onChange, options = {}) => {
 	const proxyTarget = Symbol('ProxyTarget');
-	let isUnsubscribed = false;
 	const equals = options.equals || Object.is;
-	let propCache = new WeakMap();
-	let pathCache = new WeakMap();
-	let proxyCache = new WeakMap();
+	const cache = new Cache(equals);
 	const smartClone = new SmartClone();
 
 	const handleChangeOnTarget = (target, property, previous, value) => {
-		if (!(isUnsubscribed || (options.ignoreSymbols === true && isSymbol(property)))) {
-			handleChange(pathCache.get(target), property, previous, value);
+		if (!ignoreProperty(cache, options, property)) {
+			handleChange(cache.getPath(target), property, previous, value);
 		}
 	};
 
@@ -38,81 +29,21 @@ const onChange = (object, onChange, options = {}) => {
 		}
 	};
 
-	const getOwnPropertyDescriptor = (target, property) => {
-		let props = propCache !== null && propCache.get(target);
-
-		if (props) {
-			props = props.get(property);
-		}
-
-		if (props) {
-			return props;
-		}
-
-		props = new Map();
-		propCache.set(target, props);
-
-		let prop = props.get(property);
-
-		if (!prop) {
-			prop = Reflect.getOwnPropertyDescriptor(target, property);
-			props.set(property, prop);
-		}
-
-		return prop;
-	};
-
-	const invalidateCachedDescriptor = (target, property) => {
-		const props = propCache ? propCache.get(target) : undefined;
-
-		if (props) {
-			props.delete(property);
-		}
-	};
-
-	const buildProxy = (value, path) => {
-		if (isUnsubscribed) {
-			return value;
-		}
-
-		pathCache.set(value, path);
-
-		let proxy = proxyCache.get(value);
-
-		if (proxy === undefined) {
-			proxy = new Proxy(value, handler);
-			proxyCache.set(value, proxy);
-		}
-
-		return proxy;
-	};
-
-	const unsubscribe = target => {
-		isUnsubscribed = true;
-		propCache = null;
-		pathCache = null;
-		proxyCache = null;
-
-		return target;
-	};
-
-	const ignoreProperty = property => {
-		return isUnsubscribed ||
-			(options.ignoreSymbols === true && isSymbol(property)) ||
-			(options.ignoreUnderscores === true && property.charAt(0) === '_') ||
-			(options.ignoreKeys !== undefined && options.ignoreKeys.includes(property));
-	};
-
 	const handler = {
 		get(target, property, receiver) {
-			if (property === proxyTarget || property === TARGET) {
-				return target;
-			}
+			if (isSymbol(property)) {
+				if (property === proxyTarget || property === TARGET) {
+					return target;
+				}
 
-			if (property === UNSUBSCRIBE &&
-				pathCache !== null &&
-				pathCache.get(target) === '') {
-				return unsubscribe(target);
+				if (
+					property === UNSUBSCRIBE &&
+					!cache.isUnsubscribed &&
+					cache.getPath(target).length === 0
+				) {
+					cache.unsubscribe();
+					return target;
+				}
 			}
 
 			const value = Reflect.get(target, property, receiver);
@@ -120,24 +51,13 @@ const onChange = (object, onChange, options = {}) => {
 				isBuiltin.withoutMutableMethods(value) ||
 				property === 'constructor' ||
 				options.isShallow === true ||
-				ignoreProperty(property)
+				ignoreProperty(cache, options, property) ||
+				cache.isGetInvariant(target, property)
 			) {
 				return value;
 			}
 
-			// Preserve invariants
-			const descriptor = getOwnPropertyDescriptor(target, property);
-			if (descriptor && !descriptor.configurable) {
-				if (descriptor.set && !descriptor.get) {
-					return undefined;
-				}
-
-				if (descriptor.writable === false) {
-					return value;
-				}
-			}
-
-			return buildProxy(value, path.concat(pathCache.get(target), property));
+			return cache.getProxy(value, path.concat(cache.getPath(target), property), handler);
 		},
 
 		set(target, property, value, receiver) {
@@ -145,36 +65,31 @@ const onChange = (object, onChange, options = {}) => {
 				value = value[proxyTarget];
 			}
 
-			const ignore = ignoreProperty(property);
-			const previous = ignore ? null : Reflect.get(target, property, receiver);
-			const isChanged = !(property in target) || !equals(previous, value);
-			let result = true;
+			const reflectTarget = target[proxyTarget] || target;
+			const previous = Reflect.get(reflectTarget, property, receiver);
+			const hasProperty = property in target;
 
-			if (isChanged) {
-				result = Reflect.set(target[proxyTarget] || target, property, value);
-
-				if (!ignore && result) {
+			if (cache.setProperty(reflectTarget, property, value, receiver, previous)) {
+				if (!equals(previous, value) || !hasProperty) {
 					handleChangeOnTarget(target, property, previous, value);
 				}
+
+				return true;
 			}
 
-			return result;
+			return false;
 		},
 
 		defineProperty(target, property, descriptor) {
-			let result = true;
-
-			if (!isSameDescriptor(descriptor, getOwnPropertyDescriptor(target, property))) {
-				result = Reflect.defineProperty(target, property, descriptor);
-
-				if (result && !ignoreProperty(property) && !isSameDescriptor()) {
-					invalidateCachedDescriptor(target, property);
-
-					handleChangeOnTarget(target, property, undefined, descriptor.value);
+			if (!cache.isSameDescriptor(descriptor, target, property)) {
+				if (!cache.defineProperty(target, property, descriptor)) {
+					return false;
 				}
+
+				handleChangeOnTarget(target, property, undefined, descriptor.value);
 			}
 
-			return result;
+			return true;
 		},
 
 		deleteProperty(target, property) {
@@ -182,17 +97,15 @@ const onChange = (object, onChange, options = {}) => {
 				return true;
 			}
 
-			const ignore = ignoreProperty(property);
-			const previous = ignore ? null : Reflect.get(target, property);
-			const result = Reflect.deleteProperty(target, property);
+			const previous = Reflect.get(target, property);
 
-			if (!ignore && result) {
-				invalidateCachedDescriptor(target, property);
-
+			if (cache.deleteProperty(target, property, previous)) {
 				handleChangeOnTarget(target, property, previous);
+
+				return true;
 			}
 
-			return result;
+			return false;
 		},
 
 		apply(target, thisArg, argumentsList) {
@@ -202,11 +115,11 @@ const onChange = (object, onChange, options = {}) => {
 				thisArg = thisArg[proxyTarget];
 			}
 
-			if (smartClone.isCloning || isUnsubscribed) {
+			if (smartClone.isCloning || cache.isUnsubscribed) {
 				return Reflect.apply(target, thisArg, argumentsList);
 			}
 
-			const applyPath = path.initial(pathCache.get(target));
+			const applyPath = path.initial(cache.getPath(target));
 
 			if (
 				isMutable ||
@@ -229,7 +142,7 @@ const onChange = (object, onChange, options = {}) => {
 		}
 	};
 
-	const proxy = buildProxy(object, options.pathAsArray === true ? [] : '');
+	const proxy = cache.getProxy(object, options.pathAsArray === true ? [] : '', handler);
 	onChange = onChange.bind(proxy);
 
 	return proxy;

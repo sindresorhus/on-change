@@ -177,7 +177,7 @@ declare const onChange: {
 	@param object - Object that is already being watched for changes.
 	@returns The original unwatched object.
 	*/
-	target<ObjectType extends {[key: string]: any}>(object: ObjectType): ObjectType;
+	target<ObjectType extends {[key: string]: any}>(object: ObjectType): ObjectType; // eslint-disable-line @typescript-eslint/method-signature-style
 
 	/**
 	Cancels all future callbacks on a watched object.
@@ -185,7 +185,7 @@ declare const onChange: {
 	@param object - Object that is already being watched for changes.
 	@returns The original unwatched object.
 	*/
-	unsubscribe<ObjectType extends {[key: string]: any}>(object: ObjectType): ObjectType;
+	unsubscribe<ObjectType extends {[key: string]: any}>(object: ObjectType): ObjectType; // eslint-disable-line @typescript-eslint/method-signature-style
 };
 
 export = onChange;

@@ -4,28 +4,7 @@
 const isBuiltin = require('../lib/is-builtin');
 const {benchSettings} = require('karma-webpack-bundle');
 
-let temporaryTarget; // eslint-disable-line no-unused-vars
-
-suite('isBuiltin.primitive', () => {
-	const object = {};
-	const func = () => {};
-
-	benchmark('null', () => {
-		temporaryTarget = isBuiltin.primitive(null);
-	}, benchSettings);
-
-	benchmark('string', () => {
-		temporaryTarget = isBuiltin.primitive('a');
-	}, benchSettings);
-
-	benchmark('object', () => {
-		temporaryTarget = isBuiltin.primitive(object);
-	}, benchSettings);
-
-	benchmark('function', () => {
-		temporaryTarget = isBuiltin.primitive(func);
-	}, benchSettings);
-});
+let temporaryTarget;
 
 suite('isBuiltin.withMutableMethods', () => {
 	const date = new Date();
@@ -41,7 +20,7 @@ suite('isBuiltin.withMutableMethods', () => {
 });
 
 suite('isBuiltin.withoutMutableMethods', () => {
-	const testNaN = NaN;
+	const testNaN = Number.NaN;
 	const testRegExp = /as/g;
 	const testString = 'a';
 	const testNumber = 42;
@@ -64,6 +43,6 @@ suite('isBuiltin.withoutMutableMethods', () => {
 	}, benchSettings);
 
 	benchmark('number instance', () => {
-		temporaryTarget = isBuiltin.withoutMutableMethods(testNumberInstance);
+		temporaryTarget = isBuiltin.withoutMutableMethods(testNumberInstance); // eslint-disable-line no-unused-vars
 	}, benchSettings);
 });

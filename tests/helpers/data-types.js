@@ -49,7 +49,7 @@ const dates = [
 	new Date('1/1/2001')
 ];
 
-const nots = [undefined, null, NaN];
+const nots = [undefined, null, Number.NaN];
 
 const testValues = nots.concat(
 	booleans,

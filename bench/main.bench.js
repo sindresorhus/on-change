@@ -4,7 +4,7 @@
 const {benchSettings} = require('karma-webpack-bundle');
 const onChange = require('..');
 
-let temporaryTarget; // eslint-disable-line no-unused-vars
+let temporaryTarget;
 const callback = function () {};
 let array;
 let object;
@@ -98,7 +98,7 @@ suite('on-change init', () => {
 	object = buildObject(SMALL);
 
 	benchmark('new Proxy', () => {
-		temporaryTarget = new Proxy(object, {});
+		temporaryTarget = new Proxy(object, {}); // eslint-disable-line no-unused-vars
 	}, benchSettings);
 
 	benchmark('object', () => {
