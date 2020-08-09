@@ -132,8 +132,9 @@ const onChange = (object, onChange, options = {}) => {
 			const result = Reflect.apply(target, thisArg, argumentsList);
 
 			if (smartClone.isChanged(isMutable, thisArg, equals)) {
-				smartClone.isCloning = false;
-				handleChange(applyPath, '', smartClone.clone, thisArg[proxyTarget] || thisArg);
+				const {clone} = smartClone;
+				smartClone.done();
+				handleChange(applyPath, '', clone, thisArg[proxyTarget] || thisArg);
 			}
 
 			smartClone.done();

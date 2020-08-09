@@ -1180,3 +1180,21 @@ test('should NOT trigger if deleting a property fails', t => {
 		verify(0);
 	});
 });
+
+test('should only execute once if map is called within callback', t => {
+	let count = 0;
+
+	const object = {
+		arr: [],
+		foo: true
+	};
+
+	const watchedObject = onChange(object, function () {
+		count++;
+		this.arr.map(item => item);
+	});
+
+	watchedObject.arr.unshift('value');
+
+	t.is(count, 1);
+});
