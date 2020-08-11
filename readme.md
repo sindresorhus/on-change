@@ -29,12 +29,13 @@ const object = {
 };
 
 let i = 0;
-const watchedObject = onChange(object, function (path, value, previousValue) {
+const watchedObject = onChange(object, function (path, value, previousValue, name) {
 	console.log('Object changed:', ++i);
 	console.log('this:', this);
 	console.log('path:', path);
 	console.log('value:', value);
 	console.log('previousValue:', previousValue);
+	console.log('name:', name);
 });
 
 watchedObject.foo = true;
@@ -52,6 +53,7 @@ watchedObject.foo = true;
 //=> 'path: "foo"'
 //=> 'value: true'
 //=> 'previousValue: false'
+//=> 'name: undefined'
 
 watchedObject.a.b[0].c = true;
 //=> 'Object changed: 2'
@@ -68,6 +70,25 @@ watchedObject.a.b[0].c = true;
 //=> 'path: "a.b.0.c"'
 //=> 'value: true'
 //=> 'previousValue: false'
+//=> 'name: undefined'
+
+watchedObject.a.b.push(3);
+//=> 'Object changed: 3'
+//=> 'this: {
+//   	foo: true,
+//   	a: {
+//   		b: [
+//   			{
+//   				c: true
+//   			},
+//   			3
+//   		]
+//   	}
+//   }'
+//=> 'path: "a.b"'
+//=> 'value: [{c: true}, 3]'
+//=> 'previousValue: [{c: true}]'
+//=> 'name: "push"'
 
 // Access the original object
 onChange.target(watchedObject).foo = false;
@@ -97,10 +118,11 @@ Type: `Function`
 
 Function that gets called anytime the object changes.
 
-The function receives three arguments:
+The function receives four arguments:
 1. A path to the value that was changed. A change to `c` in the above example would return `a.b.0.c`.
 2. The new value at the path.
 3. The previous value at the path.
+4. The name of the method that produced the change.
 
 The context (this) is set to the original object passed to `onChange` (with Proxy).
 

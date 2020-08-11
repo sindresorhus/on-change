@@ -21,11 +21,12 @@ const onChange = (object, onChange, options = {}) => {
 		}
 	};
 
-	const handleChange = (changePath, property, previous, value) => {
+	// eslint-disable-next-line max-params
+	const handleChange = (changePath, property, previous, value, name) => {
 		if (smartClone.isCloning) {
 			smartClone.update(changePath, property, previous);
 		} else {
-			onChange(path.concat(changePath, property), value, previous);
+			onChange(path.concat(changePath, property), value, previous, name);
 		}
 	};
 
@@ -142,7 +143,7 @@ const onChange = (object, onChange, options = {}) => {
 
 			if (smartClone.isChanged(isMutable, thisArg, equals)) {
 				const clone = smartClone.done();
-				handleChange(applyPath, '', clone, thisProxyTarget);
+				handleChange(applyPath, '', clone, thisProxyTarget, target.name);
 			}
 
 			smartClone.done();

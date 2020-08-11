@@ -112,12 +112,13 @@ declare const onChange: {
 	};
 
 	let i = 0;
-	const watchedObject = onChange(object, function (path, value, previousValue) {
+	const watchedObject = onChange(object, function (path, value, previousValue, name) {
 		console.log('Object changed:', ++i);
 		console.log('this:', this);
 		console.log('path:', path);
 		console.log('value:', value);
 		console.log('previousValue:', previousValue);
+		console.log('name:', name);
 	});
 
 	watchedObject.foo = true;
@@ -135,6 +136,7 @@ declare const onChange: {
 	//=> 'path: "foo"'
 	//=> 'value: true'
 	//=> 'previousValue: false'
+	//=> 'name: undefined'
 
 	watchedObject.a.b[0].c = true;
 	//=> 'Object changed: 2'
@@ -151,6 +153,25 @@ declare const onChange: {
 	//=> 'path: "a.b.0.c"'
 	//=> 'value: true'
 	//=> 'previousValue: false'
+	//=> 'name: undefined'
+
+	watchedObject.a.b.push(3);
+	//=> 'Object changed: 3'
+	//=> 'this: {
+	//   	foo: true,
+	//   	a: {
+	//   		b: [
+	//   			{
+	//   				c: true
+	//   			},
+	//   			3
+	//   		]
+	//   	}
+	//   }'
+	//=> 'path: "a.b"'
+	//=> 'value: [{c: true}, 3]'
+	//=> 'previousValue: [{c: true}]'
+	//=> 'name: "push"'
 
 	// Access the original object
 	onChange.target(watchedObject).foo = false;
@@ -168,7 +189,8 @@ declare const onChange: {
 			this: ObjectType,
 			path: string,
 			value: unknown,
-			previousValue: unknown
+			previousValue: unknown,
+			name: string
 		) => void,
 		options?: onChange.Options
 	): ObjectType;

@@ -16,21 +16,23 @@ const testHelper = (t, object, options, callback) => {
 
 	reset();
 
-	const proxy = onChange(object, function (path, value, previous) {
+	const proxy = onChange(object, function (path, value, previous, name) {
 		last.count++;
 		last.thisArg = this;
 		last.path = path;
 		last.value = value;
 		last.previous = previous;
+		last.name = name;
 	}, options);
 
 	// eslint-disable-next-line max-params
-	const verify = (count, thisArg, path, value, previous, fullObject) => {
+	const verify = (count, thisArg, path, value, previous, name, fullObject) => {
 		t.is(count, last.count);
 		t.is(thisArg, last.thisArg);
 		t.deepEqual(path, last.path);
 		t.deepEqual(value, last.value);
 		t.deepEqual(previous, last.previous);
+		t.is(name, last.name);
 
 		t.is(object, onChange.target(proxy));
 
@@ -188,14 +190,14 @@ test('dates', t => {
 
 		let clone = new Date(date);
 		proxy.a.setSeconds(32);
-		verify(2, proxy, 'a', date, clone);
+		verify(2, proxy, 'a', date, clone, 'setSeconds');
 
 		clone = new Date(date);
 		proxy.a.setHours(5);
-		verify(3, proxy, 'a', date, clone);
+		verify(3, proxy, 'a', date, clone, 'setHours');
 
 		proxy.a.setHours(5);
-		verify(3, proxy, 'a', date, clone);
+		verify(3, proxy, 'a', date, clone, 'setHours');
 	});
 });
 
@@ -204,7 +206,7 @@ test('should trigger once when an array element is set with an array as the main
 
 	testHelper(t, object, {}, (proxy, verify) => {
 		proxy[0] = 'a';
-		verify(1, proxy, '0', 'a', 1, ['a', 2, {a: false}]);
+		verify(1, proxy, '0', 'a', 1, undefined, ['a', 2, {a: false}]);
 	});
 });
 
@@ -213,7 +215,7 @@ test('should trigger once when a property of an array element is set with an arr
 
 	testHelper(t, object, {}, (proxy, verify) => {
 		proxy[2].a = true;
-		verify(1, proxy, '2.a', true, false, [1, 2, {a: true}]);
+		verify(1, proxy, '2.a', true, false, undefined, [1, 2, {a: true}]);
 	});
 });
 
@@ -222,7 +224,7 @@ test('should trigger once when an array is sorted with an array as the main obje
 
 	testHelper(t, object, {}, (proxy, verify) => {
 		proxy.sort();
-		verify(1, proxy, '', [1, 2, 3], [2, 3, 1], [1, 2, 3]);
+		verify(1, proxy, '', [1, 2, 3], [2, 3, 1], 'sort', [1, 2, 3]);
 	});
 });
 
@@ -231,7 +233,7 @@ test('should trigger once when an array is popped with an array as the main obje
 
 	testHelper(t, object, {}, (proxy, verify) => {
 		proxy.pop();
-		verify(1, proxy, '', [2, 3], [2, 3, 1], [2, 3]);
+		verify(1, proxy, '', [2, 3], [2, 3, 1], 'pop', [2, 3]);
 	});
 });
 
@@ -240,7 +242,7 @@ test('should trigger once when an array is reversed with an array as the main ob
 
 	testHelper(t, object, {}, (proxy, verify) => {
 		proxy.reverse();
-		verify(1, proxy, '', [1, 3, 2], [2, 3, 1], [1, 3, 2]);
+		verify(1, proxy, '', [1, 3, 2], [2, 3, 1], 'reverse', [1, 3, 2]);
 	});
 });
 
@@ -249,7 +251,7 @@ test('should trigger once when an array is spliced with an array as the main obj
 
 	testHelper(t, object, {}, (proxy, verify) => {
 		proxy.splice(1, 1, 'a', 'b');
-		verify(1, proxy, '', [2, 'a', 'b', 1], [2, 3, 1], [2, 'a', 'b', 1]);
+		verify(1, proxy, '', [2, 'a', 'b', 1], [2, 3, 1], 'splice', [2, 'a', 'b', 1]);
 	});
 });
 
@@ -456,31 +458,31 @@ test('the callback should provide the original proxied object, the path to the c
 		verify(3, proxy, 'x.y.0.new', undefined, 1);
 
 		proxy.x.y.push('pushed');
-		verify(4, proxy, 'x.y', [{z: 1}, 'pushed'], [{z: 1}]);
+		verify(4, proxy, 'x.y', [{z: 1}, 'pushed'], [{z: 1}], 'push');
 
 		proxy.x.y.pop();
-		verify(5, proxy, 'x.y', [{z: 1}], [{z: 1}, 'pushed']);
+		verify(5, proxy, 'x.y', [{z: 1}], [{z: 1}, 'pushed'], 'pop');
 
 		proxy.x.y.unshift('unshifted');
-		verify(6, proxy, 'x.y', ['unshifted', {z: 1}], [{z: 1}]);
+		verify(6, proxy, 'x.y', ['unshifted', {z: 1}], [{z: 1}], 'unshift');
 
 		proxy.x.y.shift();
-		verify(7, proxy, 'x.y', [{z: 1}], ['unshifted', {z: 1}]);
+		verify(7, proxy, 'x.y', [{z: 1}], ['unshifted', {z: 1}], 'shift');
 
 		proxy.x.y = proxy.x.y.concat([{z: 3}, {z: 2}]);
 		verify(8, proxy, 'x.y', [{z: 1}, {z: 3}, {z: 2}], [{z: 1}]);
 
 		proxy.x.y.sort((a, b) => a.z - b.z);
-		verify(9, proxy, 'x.y', [{z: 1}, {z: 2}, {z: 3}], [{z: 1}, {z: 3}, {z: 2}]);
+		verify(9, proxy, 'x.y', [{z: 1}, {z: 2}, {z: 3}], [{z: 1}, {z: 3}, {z: 2}], 'sort');
 
 		proxy.x.y.reverse();
-		verify(10, proxy, 'x.y', [{z: 3}, {z: 2}, {z: 1}], [{z: 1}, {z: 2}, {z: 3}]);
+		verify(10, proxy, 'x.y', [{z: 3}, {z: 2}, {z: 1}], [{z: 1}, {z: 2}, {z: 3}], 'reverse');
 
 		proxy.x.y.forEach(item => item.z++);
-		verify(11, proxy, 'x.y', [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}]);
+		verify(11, proxy, 'x.y', [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}], 'forEach');
 
 		proxy.x.y.splice(1, 2);
-		verify(12, proxy, 'x.y', [{z: 4}], [{z: 4}, {z: 3}, {z: 2}]);
+		verify(12, proxy, 'x.y', [{z: 4}], [{z: 4}, {z: 3}, {z: 2}], 'splice');
 
 		let unproxied = onChange.target(proxy);
 
@@ -529,31 +531,31 @@ test('the callback should provide the original proxied object, the path to the c
 		verify(3, proxy, ['x', 'y', '0', 'new'], undefined, 1);
 
 		proxy.x.y.push('pushed');
-		verify(4, proxy, ['x', 'y'], [{z: 1}, 'pushed'], [{z: 1}]);
+		verify(4, proxy, ['x', 'y'], [{z: 1}, 'pushed'], [{z: 1}], 'push');
 
 		proxy.x.y.pop();
-		verify(5, proxy, ['x', 'y'], [{z: 1}], [{z: 1}, 'pushed']);
+		verify(5, proxy, ['x', 'y'], [{z: 1}], [{z: 1}, 'pushed'], 'pop');
 
 		proxy.x.y.unshift('unshifted');
-		verify(6, proxy, ['x', 'y'], ['unshifted', {z: 1}], [{z: 1}]);
+		verify(6, proxy, ['x', 'y'], ['unshifted', {z: 1}], [{z: 1}], 'unshift');
 
 		proxy.x.y.shift();
-		verify(7, proxy, ['x', 'y'], [{z: 1}], ['unshifted', {z: 1}]);
+		verify(7, proxy, ['x', 'y'], [{z: 1}], ['unshifted', {z: 1}], 'shift');
 
 		proxy.x.y = proxy.x.y.concat([{z: 3}, {z: 2}]);
 		verify(8, proxy, ['x', 'y'], [{z: 1}, {z: 3}, {z: 2}], [{z: 1}]);
 
 		proxy.x.y.sort((a, b) => a.z - b.z);
-		verify(9, proxy, ['x', 'y'], [{z: 1}, {z: 2}, {z: 3}], [{z: 1}, {z: 3}, {z: 2}]);
+		verify(9, proxy, ['x', 'y'], [{z: 1}, {z: 2}, {z: 3}], [{z: 1}, {z: 3}, {z: 2}], 'sort');
 
 		proxy.x.y.reverse();
-		verify(10, proxy, ['x', 'y'], [{z: 3}, {z: 2}, {z: 1}], [{z: 1}, {z: 2}, {z: 3}]);
+		verify(10, proxy, ['x', 'y'], [{z: 3}, {z: 2}, {z: 1}], [{z: 1}, {z: 2}, {z: 3}], 'reverse');
 
 		proxy.x.y.forEach(item => item.z++);
-		verify(11, proxy, ['x', 'y'], [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}]);
+		verify(11, proxy, ['x', 'y'], [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}], 'forEach');
 
 		proxy.x.y.splice(1, 2);
-		verify(12, proxy, ['x', 'y'], [{z: 4}], [{z: 4}, {z: 3}, {z: 2}]);
+		verify(12, proxy, ['x', 'y'], [{z: 4}], [{z: 4}, {z: 3}, {z: 2}], 'splice');
 
 		let unproxied = onChange.target(proxy);
 
@@ -619,7 +621,7 @@ test('the callback should return a raw value when apply traps are triggered', t 
 
 	testHelper(t, object, {}, (proxy, verify, reset, last) => {
 		proxy.x.y.push('pushed');
-		verify(1, proxy, 'x.y', [{z: 0}, 'pushed'], [{z: 0}]);
+		verify(1, proxy, 'x.y', [{z: 0}, 'pushed'], [{z: 0}], 'push');
 
 		last.value.pop();
 		t.is(last.count, 1);
@@ -637,7 +639,7 @@ test('the callback should return a raw value when apply traps are triggered and 
 
 	testHelper(t, object, {pathAsArray: true}, (proxy, verify, reset, last) => {
 		proxy.x.y.push('pushed');
-		verify(1, proxy, ['x', 'y'], [{z: 0}, 'pushed'], [{z: 0}]);
+		verify(1, proxy, ['x', 'y'], [{z: 0}, 'pushed'], [{z: 0}], 'push');
 
 		last.value.pop();
 		t.is(last.count, 1);
@@ -856,7 +858,7 @@ test('should not call the callback for nested items of an array if isShallow is 
 		verify(0);
 
 		proxy.unshift('a');
-		verify(1, proxy, '', ['a', {z: 1}], [{z: 1}]);
+		verify(1, proxy, '', ['a', {z: 1}], [{z: 1}], 'unshift');
 	});
 });
 
@@ -1045,7 +1047,7 @@ test('should be able to mutate itself in an object', t => {
 		verify(1, proxy, '', {x: 1, method}, {
 			x: 0,
 			method
-		});
+		}, 'method');
 	});
 });
 
@@ -1064,7 +1066,7 @@ test('should be able to mutate itself in a class', t => {
 		proxy.method();
 		verify(1, proxy, '', new TestClass(1), {
 			x: 0
-		});
+		}, 'method');
 	});
 });
 
