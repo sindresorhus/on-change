@@ -6,7 +6,7 @@ const {benchSettings} = require('karma-webpack-bundle');
 
 let temporaryTarget;
 
-suite.only('Cache init', () => {
+suite('Cache init', () => {
 	benchmark('init', () => {
 		temporaryTarget = new Cache();
 	}, benchSettings);

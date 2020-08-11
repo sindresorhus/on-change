@@ -824,7 +824,7 @@ test('should not trigger the callback when a key with an underscore is used and 
 	});
 });
 
-test('should not call the callback for nested items if isShallow is true', t => {
+test('should not call the callback for nested items of an object if isShallow is true', t => {
 	const object = {
 		x: {
 			y: [{
@@ -845,6 +845,18 @@ test('should not call the callback for nested items if isShallow is true', t => 
 
 		proxy.a = 2;
 		verify(2, proxy, 'a', 2, 1);
+	});
+});
+
+test('should not call the callback for nested items of an array if isShallow is true', t => {
+	const array = [{z: 0}];
+
+	testHelper(t, array, {isShallow: true}, (proxy, verify) => {
+		proxy[0].z = 1;
+		verify(0);
+
+		proxy.unshift('a');
+		verify(1, proxy, '', ['a', {z: 1}], [{z: 1}]);
 	});
 });
 
