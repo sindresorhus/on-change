@@ -862,6 +862,30 @@ test('should not call the callback for nested items of an array if isShallow is 
 	});
 });
 
+test('should call the callback for items returned from a handled method on array', t => {
+	const array = [{z: 0}, {z: 1}];
+
+	testHelper(t, array, {}, (proxy, verify) => {
+		const returned = proxy.concat([]);
+		verify(0);
+
+		returned[0].z = 3;
+		verify(1, proxy, '0.z', 3, 0);
+	});
+});
+
+test('should call the callback for items returned from a non-handled method on array', t => {
+	const array = [{z: 0}, {z: 1}];
+
+	testHelper(t, array, {}, (proxy, verify) => {
+		const returned = proxy.map(item => item);
+		verify(0);
+
+		returned[0].z = 3;
+		verify(1, proxy, '0.z', 3, 0);
+	});
+});
+
 test('should allow nested proxied objects', t => {
 	const object1 = {
 		x: {

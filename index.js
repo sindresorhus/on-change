@@ -148,6 +148,13 @@ const onChange = (object, onChange, options = {}) => {
 
 			smartClone.done();
 
+			if (
+				!isBuiltin.withoutMutableMethods(result) &&
+				smartClone.isHandledMethod(thisProxyTarget, target.name)
+			) {
+				return cache.getProxy(result, applyPath, handler);
+			}
+
 			return result;
 		}
 	};
