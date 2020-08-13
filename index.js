@@ -4,6 +4,7 @@ const {TARGET, UNSUBSCRIBE} = require('./lib/constants');
 const isBuiltin = require('./lib/is-builtin');
 const path = require('./lib/path');
 const isArray = require('./lib/is-array');
+const isObject = require('./lib/is-object');
 const isSymbol = require('./lib/is-symbol');
 const ignoreProperty = require('./lib/ignore-property');
 const Cache = require('./lib/cache');
@@ -127,11 +128,7 @@ const onChange = (object, onChange, options = {}) => {
 
 			const applyPath = path.initial(cache.getPath(target));
 
-			if (
-				isMutable ||
-				isArray(thisArg) ||
-				toString.call(thisArg) === '[object Object]'
-			) {
+			if (isMutable || isArray(thisArg) || isObject(thisArg)) {
 				smartClone.start(thisProxyTarget, applyPath);
 			}
 
@@ -149,7 +146,7 @@ const onChange = (object, onChange, options = {}) => {
 			smartClone.done();
 
 			if (
-				!isBuiltin.withoutMutableMethods(result) &&
+				(isArray(result) || isObject(result)) &&
 				smartClone.isHandledMethod(thisProxyTarget, target.name)
 			) {
 				return cache.getProxy(result, applyPath, handler);

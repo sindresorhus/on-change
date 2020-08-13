@@ -1227,12 +1227,47 @@ test('should only execute once if map is called within callback', t => {
 		foo: true
 	};
 
-	const watchedObject = onChange(object, function () {
+	const proxy = onChange(object, function () {
 		count++;
 		this.arr.map(item => item);
 	});
 
-	watchedObject.arr.unshift('value');
+	proxy.arr.unshift('value');
 
 	t.is(count, 1);
+});
+
+test('should return an array iterator when array.keys is called', t => {
+	let count = 0;
+	let callbackCount = 0;
+	const array = ['a', 'b', 'c'];
+
+	const proxy = onChange(array, () => {
+		callbackCount++;
+	});
+
+	for (const index of proxy.keys()) {
+		t.is(count++, index);
+	}
+
+	t.is(callbackCount, 0);
+});
+
+test('should return an array iterator when array.entries is called', t => {
+	let count = 0;
+	let callbackCount = 0;
+	const array = [{a: 0}, {a: 1}, {a: 2}];
+
+	const proxy = onChange(array, () => {
+		callbackCount++;
+	});
+
+	for (const [index, element] of proxy.entries()) {
+		t.is(count++, index);
+		t.is(callbackCount, element.a);
+		element.a++;
+		t.is(callbackCount, element.a);
+	}
+
+	t.is(callbackCount, 3);
 });
