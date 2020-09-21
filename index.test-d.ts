@@ -12,8 +12,9 @@ const object = {
 	}
 };
 
-const watchedObject = onChange(object, function () {
+const watchedObject = onChange(object, function (path) {
 	expectType<typeof object>(this);
+	expectType<string>(path);
 });
 expectType<typeof object>(watchedObject);
 
@@ -37,3 +38,22 @@ const watchedObjectEquals = onChange(object, function () {
 expectType<typeof object>(watchedObjectEquals);
 
 watchedObject.foo = true;
+
+const watchedObjectPathAsArray = onChange(object, function (path) {
+	expectType<typeof object>(this);
+	expectType<Array<string|symbol>>(path);
+}, {
+	pathAsArray: true
+});
+expectType<typeof object>(watchedObjectPathAsArray);
+watchedObjectPathAsArray.foo = true;
+
+const watchedObjectPathAsString = onChange(object, function (path) {
+	expectType<typeof object>(this);
+	expectType<string>(path);
+}, {
+	pathAsArray: false
+});
+expectType<typeof object>(watchedObjectPathAsString);
+
+watchedObjectPathAsString.foo = true;
