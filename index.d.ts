@@ -192,7 +192,20 @@ declare const onChange: {
 			previousValue: unknown,
 			name: string
 		) => void,
-		options?: onChange.Options
+		options?: onChange.Options & {pathAsArray?: false}
+	): ObjectType;
+
+	// Overload that returns an Array as path when pathAsArray is true
+	<ObjectType extends {[key: string]: any}>(
+		object: ObjectType,
+		onChange: (
+			this: ObjectType,
+			path: Array<string|symbol>,
+			value: unknown,
+			previousValue: unknown,
+			name: string
+		) => void,
+		options: onChange.Options & {pathAsArray: true}
 	): ObjectType;
 
 	/**
