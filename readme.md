@@ -121,7 +121,7 @@ Function that gets called anytime the object changes.
 The function receives four arguments:
 1. A path to the value that was changed. A change to `c` in the above example would return `a.b.0.c`.
 2. The new value at the path.
-3. The previous value at the path.
+3. The previous value at the path. Changes in `WeakSets` and `WeakMaps` will return `undefined`.
 4. The name of the method that produced the change.
 
 The context (this) is set to the original object passed to `onChange` (with Proxy).

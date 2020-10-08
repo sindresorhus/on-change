@@ -9,10 +9,15 @@ const {
 	strings,
 	dates,
 	nots,
-	testValues
+	testValues,
+	sets,
+	maps,
+	weakSets,
+	weakMaps
 } = require('./helpers/data-types');
 
 const withoutMutableMethods = nots.concat(booleans, numbers, strings, regExps);
+const singleCollections = [sets[0], maps[0], weakSets[0], weakMaps[0]];
 
 withoutMutableMethods.forEach(value => {
 	test(`.withoutMutableMethods should return true for ${displayValue(value)}`, t => {
@@ -20,19 +25,21 @@ withoutMutableMethods.forEach(value => {
 	});
 });
 
-difference(testValues, withoutMutableMethods).forEach(value => {
+difference(testValues, withoutMutableMethods.concat(singleCollections)).forEach(value => {
 	test(`.withoutMutableMethods should return false for ${displayValue(value)}`, t => {
 		t.false(isBuiltin.withoutMutableMethods(value));
 	});
 });
 
-dates.forEach(value => {
+const withMutableMethods = dates.concat(singleCollections);
+
+withMutableMethods.forEach(value => {
 	test(`withMutableMethods should return true for ${displayValue(value)}`, t => {
 		t.true(isBuiltin.withMutableMethods(value));
 	});
 });
 
-difference(testValues, dates).forEach(value => {
+difference(testValues, dates.concat(sets, maps, weakSets, weakMaps)).forEach(value => {
 	test(`withMutableMethods should return false for ${displayValue(value)}`, t => {
 		t.false(isBuiltin.withMutableMethods(value));
 	});

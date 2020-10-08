@@ -25,11 +25,11 @@ suite('SmartClone', () => {
 	}, benchSettings);
 
 	benchmark('shallowClone object', () => {
-		temporaryTarget = smartClone.shallowClone(object);
+		temporaryTarget = smartClone._shallowClone(object);
 	}, benchSettings);
 
 	benchmark('shallowClone array', () => {
-		temporaryTarget = smartClone.shallowClone(array);
+		temporaryTarget = smartClone._shallowClone(array);
 	}, benchSettings);
 
 	benchmark('start, path', () => {

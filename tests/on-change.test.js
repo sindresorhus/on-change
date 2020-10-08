@@ -1,7 +1,7 @@
 const onChange = require('..');
 const displayValue = require('display-value');
 const test = require('ava');
-const {difference, objects, functions, dates, testValues} = require('./helpers/data-types');
+const {dates, testValues} = require('./helpers/data-types');
 
 const testHelper = (t, object, options, callback) => {
 	const last = {};
@@ -86,12 +86,20 @@ test('main', t => {
 	t.is(object.bar.a, previous);
 });
 
-const mainValues = difference(testValues, objects, functions, dates);
+const compare = (t, a, b) => {
+	if (a) {
+		a = onChange.target(a);
+	}
 
-for (const [index1, value1] of mainValues.entries()) {
-	for (const [index2, value2] of mainValues.entries()) {
+	t.is(a, b);
+};
+
+for (const [index1, value1] of testValues.entries()) {
+	for (const [index2, value2] of testValues.entries()) {
+		const tag = `(${index1}/${index2})`;
+
 		if (index1 === index2) {
-			test(`should NOT detect value changes when reset to ${displayValue(value1)}`, t => {
+			test(`should NOT detect value changes when reset to ${displayValue(value1)} ${tag}`, t => {
 				const object = {
 					a: value1,
 					b: [1, 2, value1]
@@ -99,14 +107,14 @@ for (const [index1, value1] of mainValues.entries()) {
 
 				testHelper(t, object, {}, (proxy, verify) => {
 					proxy.a = value2;
-					t.is(proxy.a, value2);
+					compare(t, proxy.a, value2);
 					verify(0);
 
 					proxy.a = value2;
 					verify(0);
 
 					proxy.b[2] = value2;
-					t.is(proxy.b[2], value2);
+					compare(t, proxy.b[2], value2);
 					verify(0);
 
 					proxy.b[2] = value2;
@@ -114,7 +122,7 @@ for (const [index1, value1] of mainValues.entries()) {
 				});
 			});
 		} else {
-			test(`should detect value changes from ${displayValue(value1)} to ${displayValue(value2)}`, t => {
+			test(`should detect value changes from ${displayValue(value1)} to ${displayValue(value2)} ${tag}`, t => {
 				const object = {
 					a: value1,
 					b: [1, 2, value1]
@@ -122,14 +130,14 @@ for (const [index1, value1] of mainValues.entries()) {
 
 				testHelper(t, object, {}, (proxy, verify) => {
 					proxy.a = value2;
-					t.is(proxy.a, value2);
+					compare(t, proxy.a, value2);
 					verify(1, proxy, 'a', value2, value1);
 
 					proxy.a = value2;
 					verify(1, proxy, 'a', value2, value1);
 
 					proxy.b[2] = value2;
-					t.is(proxy.b[2], value2);
+					compare(t, proxy.b[2], value2);
 					verify(2, proxy, 'b.2', value2, value1);
 
 					proxy.b[2] = value2;
@@ -144,7 +152,7 @@ for (const [index1, value1] of mainValues.entries()) {
 				});
 			});
 
-			test(`should detect value changes from ${displayValue(value1)} to ${displayValue(value2)} when pathAsArray is true`, t => {
+			test(`should detect value changes from ${displayValue(value1)} to ${displayValue(value2)} when pathAsArray is true ${tag}`, t => {
 				const object = {
 					a: value1,
 					b: [1, 2, value1]
@@ -152,14 +160,14 @@ for (const [index1, value1] of mainValues.entries()) {
 
 				testHelper(t, object, {pathAsArray: true}, (proxy, verify) => {
 					proxy.a = value2;
-					t.is(proxy.a, value2);
+					compare(t, proxy.a, value2);
 					verify(1, proxy, ['a'], value2, value1);
 
 					proxy.a = value2;
 					verify(1, proxy, ['a'], value2, value1);
 
 					proxy.b[2] = value2;
-					t.is(proxy.b[2], value2);
+					compare(t, proxy.b[2], value2);
 					verify(2, proxy, ['b', '2'], value2, value1);
 
 					proxy.b[2] = value2;
@@ -1270,4 +1278,98 @@ test('should return an array iterator when array.entries is called', t => {
 	}
 
 	t.is(callbackCount, 3);
+});
+
+test('should handle shallow changes to Sets', t => {
+	const object = {a: 0};
+	const set = new Set();
+
+	testHelper(t, object, {}, (proxy, verify) => {
+		proxy.a = set;
+		t.true(proxy.a instanceof Set);
+		verify(1, proxy, 'a', set, 0);
+
+		let clone = new Set(set);
+		proxy.a.add(32);
+		verify(2, proxy, 'a', set, clone, 'add');
+
+		clone = new Set(set);
+		proxy.a.add(64);
+		verify(3, proxy, 'a', set, clone, 'add');
+
+		clone = new Set(set);
+		proxy.a.delete(32);
+		verify(4, proxy, 'a', set, clone, 'delete');
+
+		proxy.a.delete(32);
+		verify(4, proxy, 'a', set, clone, 'delete');
+
+		clone = new Set(set);
+		proxy.a.clear();
+		verify(5, proxy, 'a', set, clone, 'clear');
+	});
+});
+
+test('should handle shallow changes to WeakSets', t => {
+	const object = {a: 0};
+	const set = new WeakSet();
+	const setObject = {x: 2};
+
+	testHelper(t, object, {}, (proxy, verify) => {
+		proxy.a = set;
+		t.true(proxy.a instanceof WeakSet);
+		verify(1, proxy, 'a', set, 0);
+
+		proxy.a.add(setObject);
+		verify(2, proxy, 'a', set, undefined, 'add');
+
+		proxy.a.delete(setObject);
+		verify(3, proxy, 'a', set, undefined, 'delete');
+
+		proxy.a.delete(setObject);
+		verify(3, proxy, 'a', set, undefined, 'delete');
+	});
+});
+
+test('should handle shallow changes to Maps', t => {
+	const object = {a: 0};
+	const map = new Map();
+
+	testHelper(t, object, {}, (proxy, verify) => {
+		proxy.a = map;
+		t.true(proxy.a instanceof Map);
+		verify(1, proxy, 'a', map, 0);
+
+		let clone = new Map(map);
+		proxy.a.set(32, true);
+		verify(2, proxy, 'a', map, clone, 'set');
+
+		clone = new Map(map);
+		proxy.a.delete(32);
+		verify(3, proxy, 'a', map, clone, 'delete');
+
+		proxy.a.delete(32);
+		verify(3, proxy, 'a', map, clone, 'delete');
+	});
+});
+
+test('should handle shallow changes to WeakMaps', t => {
+	const object = {a: 0};
+	const map = new WeakMap();
+	const setObject = {x: 2};
+
+	testHelper(t, object, {}, (proxy, verify) => {
+		proxy.a = map;
+		t.true(proxy.a instanceof WeakMap);
+		verify(1, proxy, 'a', map, 0);
+
+		proxy.a.set(setObject, true);
+		verify(2, proxy, 'a', map, undefined, 'set');
+
+		proxy.a.delete(setObject);
+		verify(3, proxy, 'a', map, undefined, 'delete');
+
+		proxy.a.delete(32);
+		verify(3, proxy, 'a', map, undefined, 'delete');
+	});
 });

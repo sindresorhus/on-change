@@ -6,35 +6,59 @@ const onChange = require('..');
 
 let temporaryTarget;
 const callback = function () {};
-let object;
+let object = {};
+let value = 0;
 
-const commonBench = before => {
-	let value = 0;
-	const settings = {
+const buildSettings = before => {
+	return {
 		...benchSettings,
 		onStart: before,
 		onCycle: before
 	};
+};
 
-	benchmark('read', () => {
-		temporaryTarget = object.a;
-	}, settings);
+const sizes = [{
+	size: 10,
+	name: 'small'
+}, {
+	size: 100000,
+	name: 'large'
+}];
 
-	benchmark('read nested', () => {
-		temporaryTarget = object.subObj.a;
-	}, settings);
+const commonBench = bench => {
+	sizes.forEach((option, index) => {
+		const separator = (index === sizes.length - 1) ?
+			'' :
+			'     ' + '_'.repeat(20 - option.name.length);
 
-	benchmark('write', () => {
-		object.a = value++;
-	}, settings);
+		benchmark(`(${option.name}) no options`, bench, buildSettings(() => {
+			object = onChange(buildObject(option.size), callback);
+		}));
 
-	benchmark('write nested', () => {
-		object.subObj.a = value++;
-	}, settings);
+		benchmark(`(${option.name}) isShallow`, bench, buildSettings(() => {
+			object = onChange(buildObject(option.size), callback, {isShallow: true});
+		}));
 
-	benchmark('toString', () => {
-		temporaryTarget = object.toString();
-	}, settings);
+		benchmark(`(${option.name}) pathAsArray`, bench, buildSettings(() => {
+			object = onChange(buildObject(option.size), callback, {pathAsArray: true});
+		}));
+
+		benchmark(`(${option.name}) ignoreSymbols`, bench, buildSettings(() => {
+			object = onChange(buildObject(option.size), callback, {ignoreSymbols: true});
+		}));
+
+		benchmark(`(${option.name}) ignoreUnderscores`, bench, buildSettings(() => {
+			object = onChange(buildObject(option.size), callback, {ignoreUnderscores: true});
+		}));
+
+		benchmark(`(${option.name}) empty Proxy`, bench, buildSettings(() => {
+			object = new Proxy(buildObject(option.size), {});
+		}));
+
+		benchmark(`(${option.name}) native ${separator}`, bench, buildSettings(() => {
+			object = buildObject(option.size);
+		}));
+	});
 };
 
 const buildObject = length => {
@@ -51,14 +75,11 @@ const buildObject = length => {
 	return object;
 };
 
-const SMALL = 10;
-const LARGE = 100000;
-
 suite('on-change init with object', () => {
-	object = buildObject(SMALL);
+	object = buildObject(sizes[0].size);
 
 	benchmark('new Proxy', () => {
-		temporaryTarget = new Proxy(object, {}); // eslint-disable-line no-unused-vars
+		temporaryTarget = new Proxy(object, {});
 	}, benchSettings);
 
 	benchmark('no options', () => {
@@ -74,62 +95,32 @@ suite('on-change init with object', () => {
 	}, benchSettings);
 });
 
-suite('on-change with object', () => {
+suite('on-change with object, read', () => {
 	commonBench(() => {
-		object = onChange(buildObject(SMALL), callback);
+		temporaryTarget = object.a;
 	});
 });
 
-suite('on-change with large object', () => {
+suite('on-change with object, read nested', () => {
 	commonBench(() => {
-		object = onChange(buildObject(LARGE), callback);
+		temporaryTarget = object.subObj.a;
 	});
 });
 
-suite('on-change with object, isShallow', () => {
+suite('on-change with object, write', () => {
 	commonBench(() => {
-		object = onChange(buildObject(SMALL), callback, {isShallow: true});
+		object.a = value++;
 	});
 });
 
-suite('on-change with large object, isShallow', () => {
+suite('on-change with object, write nested', () => {
 	commonBench(() => {
-		object = onChange(buildObject(LARGE), callback, {isShallow: true});
+		object.subObj.a = value++;
 	});
 });
 
-suite('on-change with object, pathAsArray', () => {
+suite('on-change with object, toString', () => {
 	commonBench(() => {
-		object = onChange(buildObject(SMALL), callback, {pathAsArray: true});
-	});
-});
-
-suite('on-change with large object, pathAsArray', () => {
-	commonBench(() => {
-		object = onChange(buildObject(LARGE), callback, {pathAsArray: true});
-	});
-});
-
-suite('empty Proxy with object', () => {
-	commonBench(() => {
-		object = new Proxy(buildObject(SMALL), {});
-	});
-});
-
-suite('empty Proxy with large object', () => {
-	commonBench(() => {
-		object = new Proxy(buildObject(LARGE), {});
-	});
-});
-
-suite('native object', () => {
-	commonBench(() => {
-		object = buildObject(SMALL);
-	});
-});
-
-suite('native large object', () => {
-	commonBench(() => {
-		object = buildObject(LARGE);
+		temporaryTarget = object.toString(); // eslint-disable-line no-unused-vars
 	});
 });

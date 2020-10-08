@@ -29,7 +29,8 @@ const numbers = [
 
 const objects = [
 	{},
-	[]
+	[],
+	new Promise(() => {})
 ];
 
 const regExps = [
@@ -49,6 +50,26 @@ const dates = [
 	new Date('1/1/2001')
 ];
 
+const sets = [
+	new Set(),
+	new Set(strings)
+];
+
+const maps = [
+	new Map(),
+	new Map([[1, 'test']])
+];
+
+const weakSets = [
+	new WeakSet(),
+	new WeakSet(dates)
+];
+
+const weakMaps = [
+	new WeakMap(),
+	new WeakMap([[strings, regExps]])
+];
+
 const nots = [undefined, null, Number.NaN];
 
 const testValues = nots.concat(
@@ -58,7 +79,11 @@ const testValues = nots.concat(
 	objects,
 	regExps,
 	strings,
-	dates
+	dates,
+	sets,
+	maps,
+	weakSets,
+	weakMaps
 );
 
 module.exports = {
@@ -71,5 +96,9 @@ module.exports = {
 	strings,
 	dates,
 	nots,
-	testValues
+	testValues,
+	sets,
+	maps,
+	weakSets,
+	weakMaps
 };

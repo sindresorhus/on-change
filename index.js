@@ -3,16 +3,27 @@
 const {TARGET, UNSUBSCRIBE} = require('./lib/constants');
 const isBuiltin = require('./lib/is-builtin');
 const path = require('./lib/path');
-const isArray = require('./lib/is-array');
-const isObject = require('./lib/is-object');
 const isSymbol = require('./lib/is-symbol');
+const isObject = require('./lib/is-object');
 const ignoreProperty = require('./lib/ignore-property');
 const Cache = require('./lib/cache');
 const SmartClone = require('./lib/smart-clone');
 
+const defaultOptions = {
+	equals: Object.is,
+	isShallow: false,
+	pathAsArray: false,
+	ignoreSymbols: false,
+	ignoreUnderscores: false
+};
+
 const onChange = (object, onChange, options = {}) => {
+	options = {
+		...defaultOptions,
+		...options
+	};
 	const proxyTarget = Symbol('ProxyTarget');
-	const equals = options.equals || Object.is;
+	const {equals, isShallow} = options;
 	const cache = new Cache(equals);
 	const smartClone = new SmartClone();
 
@@ -48,11 +59,14 @@ const onChange = (object, onChange, options = {}) => {
 				}
 			}
 
-			const value = Reflect.get(target, property, receiver);
+			const value = isBuiltin.withMutableMethods(target) ?
+				Reflect.get(target, property) :
+				Reflect.get(target, property, receiver);
+
 			if (
 				isBuiltin.withoutMutableMethods(value) ||
 				property === 'constructor' ||
-				(options.isShallow === true && !smartClone.isHandledMethod(target, property)) ||
+				(isShallow && !smartClone.isHandledMethod(target, property)) ||
 				ignoreProperty(cache, options, property) ||
 				cache.isGetInvariant(target, property)
 			) {
@@ -63,7 +77,7 @@ const onChange = (object, onChange, options = {}) => {
 		},
 
 		set(target, property, value, receiver) {
-			if (value) {
+			if (isObject(value)) {
 				const valueProxyTarget = value[proxyTarget];
 
 				if (valueProxyTarget !== undefined) {
@@ -72,7 +86,7 @@ const onChange = (object, onChange, options = {}) => {
 			}
 
 			const reflectTarget = target[proxyTarget] || target;
-			const previous = Reflect.get(reflectTarget, property, receiver);
+			const previous = reflectTarget[property];
 			const hasProperty = property in target;
 
 			if (cache.setProperty(reflectTarget, property, value, receiver, previous)) {
@@ -123,13 +137,13 @@ const onChange = (object, onChange, options = {}) => {
 			}
 
 			if (smartClone.isCloning || cache.isUnsubscribed) {
-				return Reflect.apply(target, thisArg, argumentsList);
+				return Reflect.apply(target, thisProxyTarget, argumentsList);
 			}
 
 			const applyPath = path.initial(cache.getPath(target));
 
-			if (isMutable || isArray(thisArg) || isObject(thisArg)) {
-				smartClone.start(thisProxyTarget, applyPath);
+			if (isMutable || smartClone.isHandledType(thisProxyTarget)) {
+				smartClone.start(thisProxyTarget, applyPath, argumentsList);
 			}
 
 			const result = Reflect.apply(
@@ -138,7 +152,7 @@ const onChange = (object, onChange, options = {}) => {
 				argumentsList
 			);
 
-			if (smartClone.isChanged(isMutable, thisArg, equals)) {
+			if (smartClone.isChanged(isMutable, thisProxyTarget, equals, argumentsList)) {
 				const clone = smartClone.done();
 				handleChange(applyPath, '', clone, thisProxyTarget, target.name);
 			}
@@ -146,7 +160,7 @@ const onChange = (object, onChange, options = {}) => {
 			smartClone.done();
 
 			if (
-				(isArray(result) || isObject(result)) &&
+				smartClone.isHandledType(result) &&
 				smartClone.isHandledMethod(thisProxyTarget, target.name)
 			) {
 				return cache.getProxy(result, applyPath, handler);
@@ -156,7 +170,7 @@ const onChange = (object, onChange, options = {}) => {
 		}
 	};
 
-	const proxy = cache.getProxy(object, options.pathAsArray === true ? [] : '', handler);
+	const proxy = cache.getProxy(object, options.pathAsArray ? [] : '', handler);
 	onChange = onChange.bind(proxy);
 
 	return proxy;

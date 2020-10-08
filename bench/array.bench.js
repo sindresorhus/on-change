@@ -1,84 +1,67 @@
 /* globals suite benchmark */
 'use strict';
 
-const onChange = require('..');
 const {benchSettings} = require('karma-webpack-bundle');
+const onChange = require('..');
 
 let temporaryTarget;
-const callback = () => {};
-let array;
+const callback = function () {};
+let array = [];
+let value = 0;
 
-const commonBench = before => {
-	let value = 0;
-	const settings = {
+const buildSettings = before => {
+	return {
 		...benchSettings,
 		onStart: before,
 		onCycle: before
 	};
+};
 
-	benchmark('read', () => {
-		temporaryTarget = array[3];
-	}, settings);
+const sizes = [{
+	size: 10,
+	name: 'small'
+}, {
+	size: 100000,
+	name: 'large'
+}];
 
-	benchmark('read nested', () => {
-		temporaryTarget = array[3].a;
-	}, settings);
+const commonBench = bench => {
+	sizes.forEach((option, index) => {
+		const separator = (index === sizes.length - 1) ?
+			'' :
+			'     ' + '_'.repeat(20 - option.name.length);
 
-	benchmark('write', () => {
-		array[2] = value++;
-	}, settings);
+		benchmark(`(${option.name}) no options`, bench, buildSettings(() => {
+			array = onChange(buildArray(option.size), callback);
+		}));
 
-	benchmark('write nested', () => {
-		array[4].a = value++;
-	}, settings);
+		benchmark(`(${option.name}) isShallow`, bench, buildSettings(() => {
+			array = onChange(buildArray(option.size), callback, {isShallow: true});
+		}));
 
-	benchmark('read in apply', () => {
-		array.some((value, index) => {
-			temporaryTarget = array[index];
-			return true;
-		});
-	}, settings);
+		benchmark(`(${option.name}) pathAsArray`, bench, buildSettings(() => {
+			array = onChange(buildArray(option.size), callback, {pathAsArray: true});
+		}));
 
-	benchmark('write in apply', () => {
-		array.some((value, index) => {
-			array[index] = value++;
-			return true;
-		});
-	}, settings);
+		benchmark(`(${option.name}) empty Proxy`, bench, buildSettings(() => {
+			array = new Proxy(buildArray(option.size), {});
+		}));
 
-	benchmark('push', () => {
-		array.push(0);
-	}, settings);
-
-	benchmark('pop', () => {
-		array.pop();
-	}, settings);
-
-	benchmark('unshift', () => {
-		array.unshift(0);
-	}, settings);
-
-	benchmark('shift', () => {
-		array.shift();
-	}, settings);
-
-	benchmark('toString', () => {
-		temporaryTarget = array.toString();
-	}, settings);
+		benchmark(`(${option.name}) native ${separator}`, bench, buildSettings(() => {
+			array = buildArray(option.size);
+		}));
+	});
 };
 
 const buildArray = length => new Array(length)
 	.fill(0)
 	.map((value, index) => ({a: index}));
 
-const SMALL = 10;
-const LARGE = 100000;
-
-suite('on-change init array', () => {
-	array = buildArray(SMALL);
+suite.only('on-change init with array', () => {
+	array = buildArray(sizes[0].size);
 
 	benchmark('new Proxy', () => {
-		temporaryTarget = new Proxy(array, {}); // eslint-disable-line no-unused-vars
+		temporaryTarget = new Proxy(array, {});
 	}, benchSettings);
 
 	benchmark('no options', () => {
@@ -94,62 +77,74 @@ suite('on-change init array', () => {
 	}, benchSettings);
 });
 
-suite('on-change with array', () => {
+suite.only('on-change with array, read', () => {
 	commonBench(() => {
-		array = onChange(buildArray(SMALL), callback);
+		temporaryTarget = array[3];
 	});
 });
 
-suite('on-change with large array', () => {
+suite.only('on-change with array, read nested', () => {
 	commonBench(() => {
-		array = onChange(buildArray(LARGE), callback);
+		temporaryTarget = array[3].a;
 	});
 });
 
-suite('on-change with array, isShallow', () => {
+suite.only('on-change with array, write', () => {
 	commonBench(() => {
-		array = onChange(buildArray(SMALL), callback, {isShallow: true});
+		array[2] = value++;
 	});
 });
 
-suite('on-change with large array, isShallow', () => {
+suite.only('on-change with array, write nested', () => {
 	commonBench(() => {
-		array = onChange(buildArray(LARGE), callback, {isShallow: true});
+		array[4].a = value++;
 	});
 });
 
-suite('on-change with array, pathAsArray', () => {
+suite.only('on-change with array, read in apply', () => {
 	commonBench(() => {
-		array = onChange(buildArray(SMALL), callback, {pathAsArray: true});
+		array.some((value, index) => {
+			temporaryTarget = array[index];
+			return true;
+		});
 	});
 });
 
-suite('on-change with large array, pathAsArray', () => {
+suite.only('on-change with array, write in apply', () => {
 	commonBench(() => {
-		array = onChange(buildArray(LARGE), callback, {pathAsArray: true});
+		array.some((value, index) => {
+			array[index] = value++;
+			return true;
+		});
 	});
 });
 
-suite('empty Proxy with array', () => {
+suite.only('on-change with array, push', () => {
 	commonBench(() => {
-		array = new Proxy(buildArray(SMALL), {});
+		array.push(0);
 	});
 });
 
-suite('empty Proxy with large array', () => {
+suite.only('on-change with array, pop', () => {
 	commonBench(() => {
-		array = new Proxy(buildArray(LARGE), {});
+		array.pop();
 	});
 });
 
-suite('native with array', () => {
+suite.only('on-change with array, unshift', () => {
 	commonBench(() => {
-		array = buildArray(SMALL);
+		array.unshift(0);
 	});
 });
 
-suite('native with large array', () => {
+suite.only('on-change with array, shift', () => {
 	commonBench(() => {
-		array = buildArray(LARGE);
+		array.shift();
+	});
+});
+
+suite.only('on-change with array, toString', () => {
+	commonBench(() => {
+		temporaryTarget = array.toString(); // eslint-disable-line no-unused-vars
 	});
 });
