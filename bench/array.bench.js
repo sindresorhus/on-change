@@ -57,7 +57,7 @@ const buildArray = length => new Array(length)
 	.fill(0)
 	.map((value, index) => ({a: index}));
 
-suite.only('on-change init with array', () => {
+suite('on-change init with array', () => {
 	array = buildArray(sizes[0].size);
 
 	benchmark('new Proxy', () => {
@@ -77,31 +77,31 @@ suite.only('on-change init with array', () => {
 	}, benchSettings);
 });
 
-suite.only('on-change with array, read', () => {
+suite('on-change with array, read', () => {
 	commonBench(() => {
 		temporaryTarget = array[3];
 	});
 });
 
-suite.only('on-change with array, read nested', () => {
+suite('on-change with array, read nested', () => {
 	commonBench(() => {
 		temporaryTarget = array[3].a;
 	});
 });
 
-suite.only('on-change with array, write', () => {
+suite('on-change with array, write', () => {
 	commonBench(() => {
 		array[2] = value++;
 	});
 });
 
-suite.only('on-change with array, write nested', () => {
+suite('on-change with array, write nested', () => {
 	commonBench(() => {
 		array[4].a = value++;
 	});
 });
 
-suite.only('on-change with array, read in apply', () => {
+suite('on-change with array, read in apply', () => {
 	commonBench(() => {
 		array.some((value, index) => {
 			temporaryTarget = array[index];
@@ -110,7 +110,7 @@ suite.only('on-change with array, read in apply', () => {
 	});
 });
 
-suite.only('on-change with array, write in apply', () => {
+suite('on-change with array, write in apply', () => {
 	commonBench(() => {
 		array.some((value, index) => {
 			array[index] = value++;
@@ -119,31 +119,31 @@ suite.only('on-change with array, write in apply', () => {
 	});
 });
 
-suite.only('on-change with array, push', () => {
+suite('on-change with array, push', () => {
 	commonBench(() => {
 		array.push(0);
 	});
 });
 
-suite.only('on-change with array, pop', () => {
+suite('on-change with array, pop', () => {
 	commonBench(() => {
 		array.pop();
 	});
 });
 
-suite.only('on-change with array, unshift', () => {
+suite('on-change with array, unshift', () => {
 	commonBench(() => {
 		array.unshift(0);
 	});
 });
 
-suite.only('on-change with array, shift', () => {
+suite('on-change with array, shift', () => {
 	commonBench(() => {
 		array.shift();
 	});
 });
 
-suite.only('on-change with array, toString', () => {
+suite('on-change with array, toString', () => {
 	commonBench(() => {
 		temporaryTarget = array.toString(); // eslint-disable-line no-unused-vars
 	});

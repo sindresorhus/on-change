@@ -70,6 +70,18 @@ const weakMaps = [
 	new WeakMap([[strings, regExps]])
 ];
 
+const typedArrays = [
+	new Int8Array([1, 2, 3]),
+	new Uint8Array([1, 2, 3]),
+	new Uint8ClampedArray([1, 2, 3]),
+	new Int16Array([1, 2, 3]),
+	new Uint16Array([1, 2, 3]),
+	new Int32Array([1, 2, 3]),
+	new Uint32Array([1, 2, 3]),
+	new Float32Array([1, 2, 3]),
+	new Float64Array([1, 2, 3])
+];
+
 const nots = [undefined, null, Number.NaN];
 
 const testValues = nots.concat(
@@ -83,7 +95,8 @@ const testValues = nots.concat(
 	sets,
 	maps,
 	weakSets,
-	weakMaps
+	weakMaps,
+	typedArrays
 );
 
 module.exports = {
