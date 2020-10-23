@@ -27,12 +27,12 @@ const testHelper = (t, object, options, callback) => {
 
 	// eslint-disable-next-line max-params
 	const verify = (count, thisArg, path, value, previous, name, fullObject) => {
-		t.is(count, last.count);
-		t.is(thisArg, last.thisArg);
-		t.deepEqual(path, last.path);
-		t.deepEqual(value, last.value);
-		t.deepEqual(previous, last.previous);
-		t.is(name, last.name);
+		t.is(count, last.count, 'count is incorrect');
+		t.is(thisArg, last.thisArg, 'thisArg is incorrect');
+		t.deepEqual(path, last.path, 'path is incorrect');
+		t.deepEqual(value, last.value, 'value is incorrect');
+		t.deepEqual(previous, last.previous, 'previous value is incorrect');
+		t.is(name, last.name, 'name is incorrect');
 
 		t.is(object, onChange.target(proxy));
 
@@ -1115,6 +1115,7 @@ test('should not trigger after unsubscribe is called', t => {
 		proxy.z = true;
 		verify(1, proxy, 'z', true, undefined);
 
+		const {forEach} = proxy.x.y;
 		let unsubscribed = onChange.unsubscribe(proxy);
 		reset();
 
@@ -1127,6 +1128,11 @@ test('should not trigger after unsubscribe is called', t => {
 		unsubscribed = onChange.unsubscribe(unsubscribed);
 
 		unsubscribed.x.y[0].z = true;
+		verify(0);
+
+		forEach.call(proxy.x.y, item => {
+			item.z++;
+		});
 		verify(0);
 	});
 });
@@ -1371,5 +1377,41 @@ test('should handle shallow changes to WeakMaps', t => {
 
 		proxy.a.delete(32);
 		verify(3, proxy, 'a', map, undefined, 'delete');
+	});
+});
+
+test('should handle changes in nested apply traps', t => {
+	const object = [{a: [{x: 1}]}];
+
+	testHelper(t, object, {}, (proxy, verify) => {
+		proxy.forEach(item => {
+			item.a = item.a.map(subItem => {
+				return {x: subItem.x + 1};
+			});
+		});
+
+		verify(1, proxy, '', object, [{a: [{x: 1}]}], 'forEach');
+
+		proxy.forEach(item => {
+			item.a.forEach(subItem => {
+				subItem.x++;
+			});
+		});
+
+		verify(2, proxy, '', object, [{a: [{x: 2}]}], 'forEach');
+	});
+});
+
+test('should handle changes to dates within apply trap', t => {
+	const object = [{a: new Date('1/1/2001')}];
+
+	testHelper(t, object, {}, (proxy, verify) => {
+		const clone = new Date(object[0].a);
+
+		proxy.forEach(item => {
+			item.a.setSeconds(32);
+		});
+
+		verify(1, proxy, '', object, [{a: clone}], 'forEach');
 	});
 });

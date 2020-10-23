@@ -6,11 +6,6 @@ const {benchSettings} = require('karma-webpack-bundle');
 let temporaryTarget;
 
 suite('SmartClone', () => {
-	const object = {
-		a: 1,
-		b: 2,
-		c: 3
-	};
 	const array = [1, 2, 3];
 	const smartClone = new SmartClone();
 	smartClone.start();
@@ -22,14 +17,6 @@ suite('SmartClone', () => {
 	benchmark('init and start', () => {
 		new SmartClone()
 			.start('a');
-	}, benchSettings);
-
-	benchmark('shallowClone object', () => {
-		temporaryTarget = smartClone._shallowClone(object);
-	}, benchSettings);
-
-	benchmark('shallowClone array', () => {
-		temporaryTarget = smartClone._shallowClone(array);
 	}, benchSettings);
 
 	benchmark('start, path', () => {

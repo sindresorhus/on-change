@@ -4,7 +4,6 @@ const {TARGET, UNSUBSCRIBE} = require('./lib/constants');
 const isBuiltin = require('./lib/is-builtin');
 const path = require('./lib/path');
 const isSymbol = require('./lib/is-symbol');
-const isObject = require('./lib/is-object');
 const ignoreProperty = require('./lib/ignore-property');
 const Cache = require('./lib/cache');
 const SmartClone = require('./lib/smart-clone');
@@ -66,7 +65,7 @@ const onChange = (object, onChange, options = {}) => {
 			if (
 				isBuiltin.withoutMutableMethods(value) ||
 				property === 'constructor' ||
-				(isShallow && !smartClone.isHandledMethod(target, property)) ||
+				(isShallow && !SmartClone.isHandledMethod(target, property)) ||
 				ignoreProperty(cache, options, property) ||
 				cache.isGetInvariant(target, property)
 			) {
@@ -77,7 +76,7 @@ const onChange = (object, onChange, options = {}) => {
 		},
 
 		set(target, property, value, receiver) {
-			if (isObject(value)) {
+			if (value) {
 				const valueProxyTarget = value[proxyTarget];
 
 				if (valueProxyTarget !== undefined) {
@@ -129,44 +128,40 @@ const onChange = (object, onChange, options = {}) => {
 		},
 
 		apply(target, thisArg, argumentsList) {
-			const isMutable = isBuiltin.withMutableMethods(thisArg);
 			const thisProxyTarget = thisArg[proxyTarget] || thisArg;
 
-			if (isMutable) {
-				thisArg = thisProxyTarget;
-			}
-
-			if (smartClone.isCloning || cache.isUnsubscribed) {
+			if (cache.isUnsubscribed) {
 				return Reflect.apply(target, thisProxyTarget, argumentsList);
 			}
 
-			const applyPath = path.initial(cache.getPath(target));
+			if (SmartClone.isHandledType(thisProxyTarget)) {
+				const applyPath = path.initial(cache.getPath(target));
 
-			if (isMutable || smartClone.isHandledType(thisProxyTarget)) {
 				smartClone.start(thisProxyTarget, applyPath, argumentsList);
+
+				const result = Reflect.apply(
+					target,
+					smartClone.preferredThisArg(target, thisArg, thisProxyTarget),
+					argumentsList
+				);
+
+				const isChanged = smartClone.isChanged(thisProxyTarget, equals, argumentsList);
+				const clone = smartClone.stop();
+
+				if (isChanged) {
+					if (smartClone.isCloning) {
+						handleChange(path.initial(applyPath), path.last(applyPath), clone, thisProxyTarget, target.name);
+					} else {
+						handleChange(applyPath, '', clone, thisProxyTarget, target.name);
+					}
+				}
+
+				return (SmartClone.isHandledType(result) && SmartClone.isHandledMethod(thisProxyTarget, target.name)) ?
+					cache.getProxy(result, applyPath, handler) :
+					result;
 			}
 
-			const result = Reflect.apply(
-				target,
-				smartClone.preferredThisArg(target, thisArg, thisProxyTarget),
-				argumentsList
-			);
-
-			if (smartClone.isChanged(isMutable, thisProxyTarget, equals, argumentsList)) {
-				const clone = smartClone.done();
-				handleChange(applyPath, '', clone, thisProxyTarget, target.name);
-			}
-
-			smartClone.done();
-
-			if (
-				smartClone.isHandledType(result) &&
-				smartClone.isHandledMethod(thisProxyTarget, target.name)
-			) {
-				return cache.getProxy(result, applyPath, handler);
-			}
-
-			return result;
+			return Reflect.apply(target, thisArg, argumentsList);
 		}
 	};
 

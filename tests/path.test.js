@@ -111,6 +111,36 @@ test('initial should return all but the last key in an array', t => {
 	t.deepEqual(path.initial(array), ['a', '0']);
 });
 
+test('last should return an empty string if an empty string is provided', t => {
+	t.is(path.last(''), '');
+});
+
+test('last should return an empty string if a single key is provided', t => {
+	t.is(path.last('key'), 'key');
+});
+
+test('last should return all but the last key', t => {
+	t.is(path.last('a.0.b'), 'b');
+});
+
+test('last should return an empty array if an empty array is provided', t => {
+	const array = [];
+
+	t.is(path.last(array), '');
+});
+
+test('last should return an empty array if a single key is provided', t => {
+	const array = ['key'];
+
+	t.is(path.last(array), 'key');
+});
+
+test('last should return all but the last key in an array', t => {
+	const array = ['a', '0', 'b'];
+
+	t.is(path.last(array), 'b');
+});
+
 test('walk should not call the callback if path is empty', t => {
 	path.walk('', () => {
 		t.fail();
