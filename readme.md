@@ -172,6 +172,15 @@ Default: `false`
 
 The path will be provided as an array of keys instead of a delimited string.
 
+##### ignoreDetached
+
+Type: `boolean`\
+Default: `false`
+
+Ignore changes to objects that become detached from the watched object.
+
+<br/>
+
 ### onChange.target(object)
 
 Returns the original unwatched object.

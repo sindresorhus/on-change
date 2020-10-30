@@ -51,6 +51,10 @@ const commonBench = bench => {
 			object = onChange(buildObject(option.size), callback, {ignoreUnderscores: true});
 		}));
 
+		benchmark(`(${option.name}) ignoreDetached`, bench, buildSettings(() => {
+			object = onChange(buildObject(option.size), callback, {ignoreDetached: true});
+		}));
+
 		benchmark(`(${option.name}) empty Proxy`, bench, buildSettings(() => {
 			object = new Proxy(buildObject(option.size), {});
 		}));

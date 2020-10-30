@@ -85,6 +85,13 @@ declare namespace onChange {
 		@default false
 		*/
 		pathAsArray?: boolean;
+
+		/**
+		Ignore changes to objects that become detached from the watched object.
+
+		@default false
+		*/
+		ignoreDetached?: boolean;
 	}
 }
 
