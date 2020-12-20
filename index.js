@@ -45,6 +45,14 @@ const onChange = (object, onChange, options = {}) => {
 		}
 	};
 
+	const getProxyTarget = value => {
+		if (value) {
+			return value[proxyTarget] || value;
+		}
+
+		return value;
+	};
+
 	const handler = {
 		get(target, property, receiver) {
 			if (isSymbol(property)) {
@@ -81,13 +89,7 @@ const onChange = (object, onChange, options = {}) => {
 		},
 
 		set(target, property, value, receiver) {
-			if (value) {
-				const valueProxyTarget = value[proxyTarget];
-
-				if (valueProxyTarget !== undefined) {
-					value = valueProxyTarget;
-				}
-			}
+			value = getProxyTarget(value);
 
 			const reflectTarget = target[proxyTarget] || target;
 			const previous = reflectTarget[property];
@@ -141,13 +143,16 @@ const onChange = (object, onChange, options = {}) => {
 
 			if (SmartClone.isHandledType(thisProxyTarget)) {
 				const applyPath = path.initial(cache.getPath(target));
+				const isHandledMethod = SmartClone.isHandledMethod(thisProxyTarget, target.name);
 
 				smartClone.start(thisProxyTarget, applyPath, argumentsList);
 
 				const result = Reflect.apply(
 					target,
 					smartClone.preferredThisArg(target, thisArg, thisProxyTarget),
-					argumentsList
+					isHandledMethod ?
+						argumentsList.map(argument => getProxyTarget(argument)) :
+						argumentsList
 				);
 
 				const isChanged = smartClone.isChanged(thisProxyTarget, equals, argumentsList);
@@ -161,7 +166,7 @@ const onChange = (object, onChange, options = {}) => {
 					}
 				}
 
-				return (SmartClone.isHandledType(result) && SmartClone.isHandledMethod(thisProxyTarget, target.name)) ?
+				return (SmartClone.isHandledType(result) && isHandledMethod) ?
 					cache.getProxy(result, applyPath, handler) :
 					result;
 			}

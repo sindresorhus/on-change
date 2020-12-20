@@ -1479,3 +1479,24 @@ test('should not execute for changes on a detached array if ignoreDetached is tr
 		verify(0);
 	});
 });
+
+test('should unwrap proxies passed to immutable methods on array', t => {
+	const item = {a: 1};
+	const object = {
+		b: item,
+		c: []
+	};
+
+	const proxy = onChange(object, () => {
+	});
+
+	proxy.c.push(proxy.b);
+
+	t.is(proxy.c[0], proxy.b);
+	t.is(proxy.c.indexOf(item), 0);
+	t.is(proxy.c.indexOf(proxy.c[0]), 0);
+
+	proxy.c[1] = proxy.b;
+
+	t.is(proxy.c[1], proxy.b);
+});
