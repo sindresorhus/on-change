@@ -1,4 +1,4 @@
-# on-change [![Build Status](https://travis-ci.com/sindresorhus/on-change.svg?branch=master)](https://travis-ci.org/sindresorhus/on-change)
+# on-change
 
 > Watch an object or array for changes
 
