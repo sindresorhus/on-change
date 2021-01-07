@@ -1500,3 +1500,17 @@ test('should unwrap proxies passed to immutable methods on array', t => {
 
 	t.is(proxy.c[1], proxy.b);
 });
+
+test('should not wrap a proxied object in another proxy', t => {
+	const object = {
+		b: {a: 1},
+		get c() {
+			return this.b;
+		}
+	};
+
+	const proxy = onChange(object, () => {
+	});
+
+	t.is(proxy.b, proxy.c);
+});

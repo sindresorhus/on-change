@@ -85,7 +85,7 @@ const onChange = (object, onChange, options = {}) => {
 				return value;
 			}
 
-			return cache.getProxy(value, path.concat(cache.getPath(target), property), handler);
+			return cache.getProxy(value, path.concat(cache.getPath(target), property), handler, proxyTarget);
 		},
 
 		set(target, property, value, receiver) {
@@ -167,7 +167,7 @@ const onChange = (object, onChange, options = {}) => {
 				}
 
 				return (SmartClone.isHandledType(result) && isHandledMethod) ?
-					cache.getProxy(result, applyPath, handler) :
+					cache.getProxy(result, applyPath, handler, proxyTarget) :
 					result;
 			}
 
