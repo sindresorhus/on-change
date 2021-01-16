@@ -4,6 +4,8 @@ const {TARGET, UNSUBSCRIBE} = require('./lib/constants');
 const isBuiltin = require('./lib/is-builtin');
 const path = require('./lib/path');
 const isSymbol = require('./lib/is-symbol');
+const isIterator = require('./lib/is-iterator');
+const wrapIterator = require('./lib/wrap-iterator');
 const ignoreProperty = require('./lib/ignore-property');
 const Cache = require('./lib/cache');
 const SmartClone = require('./lib/smart-clone');
@@ -53,6 +55,25 @@ const onChange = (object, onChange, options = {}) => {
 		return value;
 	};
 
+	const prepareValue = (value, target, property, basePath) => {
+		if (
+			isBuiltin.withoutMutableMethods(value) ||
+			property === 'constructor' ||
+			(isShallow && !SmartClone.isHandledMethod(target, property)) ||
+			ignoreProperty(cache, options, property) ||
+			cache.isGetInvariant(target, property) ||
+			(ignoreDetached && cache.isDetached(target, object))
+		) {
+			return value;
+		}
+
+		if (basePath === undefined) {
+			basePath = cache.getPath(target);
+		}
+
+		return cache.getProxy(value, path.concat(basePath, property), handler, proxyTarget);
+	};
+
 	const handler = {
 		get(target, property, receiver) {
 			if (isSymbol(property)) {
@@ -74,18 +95,7 @@ const onChange = (object, onChange, options = {}) => {
 				Reflect.get(target, property) :
 				Reflect.get(target, property, receiver);
 
-			if (
-				isBuiltin.withoutMutableMethods(value) ||
-				property === 'constructor' ||
-				(isShallow && !SmartClone.isHandledMethod(target, property)) ||
-				ignoreProperty(cache, options, property) ||
-				cache.isGetInvariant(target, property) ||
-				(ignoreDetached && cache.isDetached(target, object))
-			) {
-				return value;
-			}
-
-			return cache.getProxy(value, path.concat(cache.getPath(target), property), handler, proxyTarget);
+			return prepareValue(value, target, property);
 		},
 
 		set(target, property, value, receiver) {
@@ -164,6 +174,13 @@ const onChange = (object, onChange, options = {}) => {
 					} else {
 						handleChange(applyPath, '', clone, thisProxyTarget, target.name);
 					}
+				}
+
+				if (
+					(thisArg instanceof Map || thisArg instanceof Set) &&
+					isIterator(result)
+				) {
+					return wrapIterator(result, target, thisArg, applyPath, prepareValue);
 				}
 
 				return (SmartClone.isHandledType(result) && isHandledMethod) ?

@@ -1251,39 +1251,52 @@ test('should only execute once if map is called within callback', t => {
 	t.is(count, 1);
 });
 
-test('should return an array iterator when array.keys is called', t => {
-	let count = 0;
-	let callbackCount = 0;
-	const array = ['a', 'b', 'c'];
+test('should return an array iterator when array[Symbol.iterator] is called', t => {
+	const array = [{a: 1}, {a: 2}];
 
-	const proxy = onChange(array, () => {
-		callbackCount++;
+	testHelper(t, array, {}, (proxy, verify) => {
+		for (const entry of proxy[Symbol.iterator]()) {
+			entry.a++;
+		}
+
+		verify(2, proxy, '1.a', 3, 2);
 	});
+});
 
-	for (const index of proxy.keys()) {
-		t.is(count++, index);
-	}
+test('should return an array iterator when array.keys is called', t => {
+	const array = [{a: 1}, {a: 2}];
 
-	t.is(callbackCount, 0);
+	testHelper(t, array, {}, (proxy, verify) => {
+		for (const key of proxy.keys()) {
+			proxy[key].a++;
+		}
+
+		verify(2, proxy, '1.a', 3, 2);
+	});
 });
 
 test('should return an array iterator when array.entries is called', t => {
-	let count = 0;
-	let callbackCount = 0;
-	const array = [{a: 0}, {a: 1}, {a: 2}];
+	const array = [{a: 1}, {a: 2}];
 
-	const proxy = onChange(array, () => {
-		callbackCount++;
+	testHelper(t, array, {}, (proxy, verify) => {
+		for (const entry of proxy.entries()) {
+			entry[1].a++;
+		}
+
+		verify(2, proxy, '1.a', 3, 2);
 	});
+});
 
-	for (const [index, element] of proxy.entries()) {
-		t.is(count++, index);
-		t.is(callbackCount, element.a);
-		element.a++;
-		t.is(callbackCount, element.a);
-	}
+test('should return an array iterator when array.values is called', t => {
+	const array = [{a: 1}, {a: 2}];
 
-	t.is(callbackCount, 3);
+	testHelper(t, array, {}, (proxy, verify) => {
+		for (const entry of proxy.values()) {
+			entry.a++;
+		}
+
+		verify(2, proxy, '1.a', 3, 2);
+	});
 });
 
 test('should handle shallow changes to Sets', t => {
@@ -1316,6 +1329,54 @@ test('should handle shallow changes to Sets', t => {
 	});
 });
 
+test('should return an iterator when Set[Symbol.iterator] is called', t => {
+	const set = new Set([{a: 1}, {a: 2}]);
+
+	testHelper(t, set, {pathAsArray: true}, (proxy, verify) => {
+		for (const entry of proxy[Symbol.iterator]()) {
+			entry.a++;
+		}
+
+		verify(2, proxy, [{a: 3}, 'a'], 3, 2);
+	});
+});
+
+test('should return an iterator when Set.keys is called', t => {
+	const set = new Set([{a: 1}, {a: 2}]);
+
+	testHelper(t, set, {pathAsArray: true}, (proxy, verify) => {
+		for (const key of proxy.keys()) {
+			key.a++;
+		}
+
+		verify(2, proxy, [{a: 3}, 'a'], 3, 2);
+	});
+});
+
+test('should return an iterator when Set.entries is called', t => {
+	const set = new Set([{a: 1}, {a: 2}]);
+
+	testHelper(t, set, {pathAsArray: true}, (proxy, verify) => {
+		for (const entry of proxy.entries()) {
+			entry[1].a++;
+		}
+
+		verify(2, proxy, [{a: 3}, 'a'], 3, 2);
+	});
+});
+
+test('should return an iterator when Set.values is called', t => {
+	const set = new Set([{a: 1}, {a: 2}]);
+
+	testHelper(t, set, {pathAsArray: true}, (proxy, verify) => {
+		for (const entry of proxy.values()) {
+			entry.a++;
+		}
+
+		verify(2, proxy, [{a: 3}, 'a'], 3, 2);
+	});
+});
+
 test('should handle shallow changes to WeakSets', t => {
 	const object = {a: 0};
 	const set = new WeakSet();
@@ -1334,6 +1395,62 @@ test('should handle shallow changes to WeakSets', t => {
 
 		proxy.a.delete(setObject);
 		verify(3, proxy, 'a', set, undefined, 'delete');
+	});
+});
+
+test('should return an iterator when Map[Symbol.iterator] is called', t => {
+	const object = {a: 1};
+	const map = new Map();
+	map.set(object, 1);
+
+	testHelper(t, map, {pathAsArray: true}, (proxy, verify) => {
+		for (const entry of proxy[Symbol.iterator]()) {
+			entry[0].a++;
+		}
+
+		verify(1, proxy, [object, 'a'], 2, 1);
+	});
+});
+
+test('should return an iterator when Map.keys is called', t => {
+	const object = {a: 1};
+	const map = new Map();
+	map.set(object, 1);
+
+	testHelper(t, map, {pathAsArray: true}, (proxy, verify) => {
+		for (const key of proxy.keys()) {
+			key.a++;
+		}
+
+		verify(1, proxy, [object, 'a'], 2, 1);
+	});
+});
+
+test('should return an iterator when Map.entries is called', t => {
+	const object = {};
+	const map = new Map();
+	map.set(object, {y: 1});
+
+	testHelper(t, map, {pathAsArray: true}, (proxy, verify) => {
+		for (const entry of proxy.entries()) {
+			entry[1].y++;
+		}
+
+		verify(1, proxy, [object, 'y'], 2, 1);
+	});
+});
+
+test('should return an iterator when Map.values is called', t => {
+	const object = {};
+	const map = new Map();
+	map.set(object, {y: 1});
+
+	testHelper(t, map, {pathAsArray: true}, (proxy, verify) => {
+		for (const value of proxy.values()) {
+			value.y++;
+		}
+
+		verify(1, proxy, [object, 'y'], 2, 1);
 	});
 });
 
