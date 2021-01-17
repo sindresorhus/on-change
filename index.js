@@ -30,21 +30,21 @@ const onChange = (object, onChange, options = {}) => {
 	const cache = new Cache(equals);
 	const smartClone = new SmartClone();
 
-	const handleChangeOnTarget = (target, property, previous, value) => {
+	const handleChangeOnTarget = (target, property, value, previous) => {
 		if (
 			!ignoreProperty(cache, options, property) &&
 			!(ignoreDetached && cache.isDetached(target, object))
 		) {
-			handleChange(cache.getPath(target), property, previous, value);
+			handleChange(cache.getPath(target), property, value, previous);
 		}
 	};
 
 	// eslint-disable-next-line max-params
-	const handleChange = (changePath, property, previous, value, name) => {
+	const handleChange = (changePath, property, value, previous, applyData) => {
 		if (smartClone.isCloning) {
 			smartClone.update(changePath, property, previous);
 		} else {
-			onChange(path.concat(changePath, property), value, previous, name);
+			onChange(path.concat(changePath, property), value, previous, applyData);
 		}
 	};
 
@@ -108,7 +108,7 @@ const onChange = (object, onChange, options = {}) => {
 
 			if (cache.setProperty(reflectTarget, property, value, receiver, previous)) {
 				if (!equals(previous, value) || !hasProperty) {
-					handleChangeOnTarget(target, property, previous, value);
+					handleChangeOnTarget(target, property, value, previous);
 				}
 
 				return true;
@@ -123,7 +123,7 @@ const onChange = (object, onChange, options = {}) => {
 					return false;
 				}
 
-				handleChangeOnTarget(target, property, undefined, descriptor.value);
+				handleChangeOnTarget(target, property, descriptor.value);
 			}
 
 			return true;
@@ -137,7 +137,7 @@ const onChange = (object, onChange, options = {}) => {
 			const previous = Reflect.get(target, property);
 
 			if (cache.deleteProperty(target, property, previous)) {
-				handleChangeOnTarget(target, property, previous);
+				handleChangeOnTarget(target, property, undefined, previous);
 
 				return true;
 			}
@@ -162,7 +162,7 @@ const onChange = (object, onChange, options = {}) => {
 
 				smartClone.start(thisProxyTarget, applyPath, argumentsList);
 
-				const result = Reflect.apply(
+				let result = Reflect.apply(
 					target,
 					smartClone.preferredThisArg(target, thisArg, thisProxyTarget),
 					isHandledMethod ?
@@ -173,11 +173,21 @@ const onChange = (object, onChange, options = {}) => {
 				const isChanged = smartClone.isChanged(thisProxyTarget, equals, argumentsList);
 				const clone = smartClone.stop();
 
+				if (SmartClone.isHandledType(result) && isHandledMethod) {
+					result = cache.getProxy(result, applyPath, handler);
+				}
+
 				if (isChanged) {
+					const applyData = {
+						name: target.name,
+						args: argumentsList,
+						result
+					};
+
 					if (smartClone.isCloning) {
-						handleChange(path.initial(applyPath), path.last(applyPath), clone, thisProxyTarget, target.name);
+						handleChange(path.initial(applyPath), path.last(applyPath), thisProxyTarget, clone, applyData);
 					} else {
-						handleChange(applyPath, '', clone, thisProxyTarget, target.name);
+						handleChange(applyPath, '', thisProxyTarget, clone, applyData);
 					}
 				}
 
@@ -188,9 +198,7 @@ const onChange = (object, onChange, options = {}) => {
 					return wrapIterator(result, target, thisArg, applyPath, prepareValue);
 				}
 
-				return (SmartClone.isHandledType(result) && isHandledMethod) ?
-					cache.getProxy(result, applyPath, handler, proxyTarget) :
-					result;
+				return result;
 			}
 
 			return Reflect.apply(target, thisArg, argumentsList);

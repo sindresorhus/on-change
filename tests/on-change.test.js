@@ -1,51 +1,8 @@
 const onChange = require('..');
-const displayValue = require('display-value');
 const test = require('ava');
-const {dates, testValues} = require('./helpers/data-types');
+const {testRunner, setOnChange} = require('./helpers/test-runner');
 
-const testHelper = (t, object, options, callback) => {
-	const last = {};
-
-	const reset = () => {
-		last.count = 0;
-		last.thisArg = undefined;
-		last.path = undefined;
-		last.value = undefined;
-		last.previous = undefined;
-	};
-
-	reset();
-
-	const proxy = onChange(object, function (path, value, previous, name) {
-		last.count++;
-		last.thisArg = this;
-		last.path = path;
-		last.value = value;
-		last.previous = previous;
-		last.name = name;
-	}, options);
-
-	// eslint-disable-next-line max-params
-	const verify = (count, thisArg, path, value, previous, name, fullObject) => {
-		t.is(count, last.count, 'count is incorrect');
-		t.is(thisArg, last.thisArg, 'thisArg is incorrect');
-		t.deepEqual(path, last.path, 'path is incorrect');
-		t.deepEqual(value, last.value, 'value is incorrect');
-		t.deepEqual(previous, last.previous, 'previous value is incorrect');
-		t.is(name, last.name, 'name is incorrect');
-
-		t.is(object, onChange.target(proxy));
-
-		if (fullObject !== undefined) {
-			t.deepEqual(fullObject, object);
-			t.deepEqual(proxy, object);
-		}
-	};
-
-	callback(proxy, verify, reset, last);
-
-	onChange.unsubscribe(proxy);
-};
+setOnChange(onChange);
 
 test('main', t => {
 	const object = {
@@ -86,357 +43,7 @@ test('main', t => {
 	t.is(object.bar.a, previous);
 });
 
-const compare = (t, a, b) => {
-	if (a) {
-		a = onChange.target(a);
-	}
-
-	t.is(a, b);
-};
-
-for (const [index1, value1] of testValues.entries()) {
-	for (const [index2, value2] of testValues.entries()) {
-		const tag = `(${index1}/${index2})`;
-
-		if (index1 === index2) {
-			test(`should NOT detect value changes when reset to ${displayValue(value1)} ${tag}`, t => {
-				const object = {
-					a: value1,
-					b: [1, 2, value1]
-				};
-
-				testHelper(t, object, {}, (proxy, verify) => {
-					proxy.a = value2;
-					compare(t, proxy.a, value2);
-					verify(0);
-
-					proxy.a = value2;
-					verify(0);
-
-					proxy.b[2] = value2;
-					compare(t, proxy.b[2], value2);
-					verify(0);
-
-					proxy.b[2] = value2;
-					verify(0);
-				});
-			});
-		} else {
-			test(`should detect value changes from ${displayValue(value1)} to ${displayValue(value2)} ${tag}`, t => {
-				const object = {
-					a: value1,
-					b: [1, 2, value1]
-				};
-
-				testHelper(t, object, {}, (proxy, verify) => {
-					proxy.a = value2;
-					compare(t, proxy.a, value2);
-					verify(1, proxy, 'a', value2, value1);
-
-					proxy.a = value2;
-					verify(1, proxy, 'a', value2, value1);
-
-					proxy.b[2] = value2;
-					compare(t, proxy.b[2], value2);
-					verify(2, proxy, 'b.2', value2, value1);
-
-					proxy.b[2] = value2;
-					verify(2, proxy, 'b.2', value2, value1);
-
-					delete proxy.nonExistent;
-					verify(2, proxy, 'b.2', value2, value1);
-
-					delete proxy.b;
-					t.is(proxy.b, undefined);
-					verify(3, proxy, 'b', undefined, [1, 2, value2]);
-				});
-			});
-
-			test(`should detect value changes from ${displayValue(value1)} to ${displayValue(value2)} when pathAsArray is true ${tag}`, t => {
-				const object = {
-					a: value1,
-					b: [1, 2, value1]
-				};
-
-				testHelper(t, object, {pathAsArray: true}, (proxy, verify) => {
-					proxy.a = value2;
-					compare(t, proxy.a, value2);
-					verify(1, proxy, ['a'], value2, value1);
-
-					proxy.a = value2;
-					verify(1, proxy, ['a'], value2, value1);
-
-					proxy.b[2] = value2;
-					compare(t, proxy.b[2], value2);
-					verify(2, proxy, ['b', '2'], value2, value1);
-
-					proxy.b[2] = value2;
-					verify(2, proxy, ['b', '2'], value2, value1);
-
-					delete proxy.nonExistent;
-					verify(2, proxy, ['b', '2'], value2, value1);
-
-					delete proxy.b;
-					t.is(proxy.b, undefined);
-					verify(3, proxy, ['b'], undefined, [1, 2, value2]);
-				});
-			});
-		}
-	}
-}
-
-test('dates', t => {
-	const object = {
-		a: 0
-	};
-	const date = dates[0];
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy.a = date;
-		t.true(proxy.a instanceof Date);
-		verify(1, proxy, 'a', date, 0);
-
-		let clone = new Date(date);
-		proxy.a.setSeconds(32);
-		verify(2, proxy, 'a', date, clone, 'setSeconds');
-
-		clone = new Date(date);
-		proxy.a.setHours(5);
-		verify(3, proxy, 'a', date, clone, 'setHours');
-
-		proxy.a.setHours(5);
-		verify(3, proxy, 'a', date, clone, 'setHours');
-	});
-});
-
-test('should trigger once when an array element is set with an array as the main object', t => {
-	const object = [1, 2, {a: false}];
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy[0] = 'a';
-		verify(1, proxy, '0', 'a', 1, undefined, ['a', 2, {a: false}]);
-	});
-});
-
-test('should trigger once when a property of an array element is set with an array as the main object', t => {
-	const object = [1, 2, {a: false}];
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy[2].a = true;
-		verify(1, proxy, '2.a', true, false, undefined, [1, 2, {a: true}]);
-	});
-});
-
-test('should trigger once when an array is sorted with an array as the main object', t => {
-	const object = [2, 3, 1];
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy.sort();
-		verify(1, proxy, '', [1, 2, 3], [2, 3, 1], 'sort', [1, 2, 3]);
-	});
-});
-
-test('should trigger once when an array is popped with an array as the main object', t => {
-	const object = [2, 3, 1];
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy.pop();
-		verify(1, proxy, '', [2, 3], [2, 3, 1], 'pop', [2, 3]);
-	});
-});
-
-test('should trigger once when an array is reversed with an array as the main object', t => {
-	const object = [2, 3, 1];
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy.reverse();
-		verify(1, proxy, '', [1, 3, 2], [2, 3, 1], 'reverse', [1, 3, 2]);
-	});
-});
-
-test('should trigger once when an array is spliced with an array as the main object', t => {
-	const object = [2, 3, 1];
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy.splice(1, 1, 'a', 'b');
-		verify(1, proxy, '', [2, 'a', 'b', 1], [2, 3, 1], 'splice', [2, 'a', 'b', 1]);
-	});
-});
-
-test('invariants', t => {
-	const object = {};
-
-	Object.defineProperty(object, 'nonWritable', {
-		configurable: false,
-		writable: false,
-		value: {a: true}
-	});
-	// eslint-disable-next-line accessor-pairs
-	Object.defineProperty(object, 'nonReadable', {
-		configurable: false,
-		set: () => {} // No-Op setter
-	});
-	Object.defineProperty(object, 'useAccessor', {
-		configurable: false,
-		set(value) {
-			this._useAccessor = value;
-		},
-		get() {
-			return this._useAccessor;
-		}
-	});
-
-	let callCount = 0;
-
-	const proxy = onChange(object, () => {
-		callCount++;
-	});
-
-	t.is(proxy.nonWritable, object.nonWritable);
-	t.is(proxy.nonWritable, object.nonWritable);
-	t.is(proxy.nonReadable, undefined);
-	t.is(proxy.nonReadable, undefined);
-
-	proxy.useAccessor = 10;
-	t.is(proxy.useAccessor, 10);
-	t.is(callCount, 2);
-
-	proxy.useAccessor = 20;
-	t.is(proxy.useAccessor, 20);
-	t.is(callCount, 4);
-});
-
-test('should invalidate cached descriptors when a property is defined', t => {
-	const object = {};
-	const value1 = {b: 1};
-	const value2 = {c: 2};
-
-	let callCount = 0;
-
-	const proxy = onChange(object, () => {
-		callCount++;
-	});
-
-	Object.defineProperty(proxy, 'a', {
-		configurable: true,
-		writable: true,
-		value: value1
-	});
-
-	t.is(callCount, 1);
-	t.deepEqual(proxy.a, value1);
-
-	Object.defineProperty(proxy, 'a', {
-		configurable: true,
-		writable: true,
-		value: value1
-	});
-
-	t.is(callCount, 1);
-	t.deepEqual(proxy.a, value1);
-
-	Object.defineProperty(proxy, 'a', {
-		configurable: false,
-		writable: true,
-		value: value2
-	});
-
-	t.is(callCount, 2);
-
-	t.deepEqual(proxy.a, value2);
-
-	Object.defineProperty(proxy, 'a', {
-		configurable: false,
-		writable: true,
-		value: value2
-	});
-
-	t.is(callCount, 2);
-
-	t.deepEqual(proxy.a, value2);
-});
-
-test('should detect a change from within a setter', t => {
-	const object = {
-		_x: 0,
-		get x() {
-			return this._x;
-		},
-		set x(value) {
-			this._x = value;
-		}
-	};
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		verify(0);
-
-		proxy.x = 1;
-		verify(2, proxy, 'x', 1, 0);
-	});
-});
-
-test('should detect a change from within a setter when ignoreUnderscores is true', t => {
-	const object = {
-		_x: 0,
-		get x() {
-			return this._x;
-		},
-		set x(value) {
-			this._x = value;
-		}
-	};
-
-	testHelper(t, object, {ignoreUnderscores: true}, (proxy, verify) => {
-		verify(0);
-
-		proxy.x = 1;
-		verify(1, proxy, 'x', 1, 0);
-	});
-});
-
-test('should detect a change from within a nested setter', t => {
-	const object = {
-		z: {
-			_x: 0,
-			get x() {
-				return this._x;
-			},
-			set x(value) {
-				this._x = value;
-			}
-		}
-	};
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		verify(0);
-
-		proxy.z.x = 1;
-		verify(2, proxy, 'z.x', 1, 0);
-	});
-});
-
-test('should detect a change from within a nested setter when ignoreUnderscores is true', t => {
-	const object = {
-		z: {
-			_x: 0,
-			get x() {
-				return this._x;
-			},
-			set x(value) {
-				this._x = value;
-			}
-		}
-	};
-
-	testHelper(t, object, {ignoreUnderscores: true}, (proxy, verify) => {
-		verify(0);
-
-		proxy.z.x = 1;
-		verify(1, proxy, 'z.x', 1, 0);
-	});
-});
-
-test('the change handler is called after the change is done', t => {
+test('should trigger after after the change is done', t => {
 	const proxy = onChange({x: 0}, () => {
 		t.is(proxy.x, 1);
 	});
@@ -444,7 +51,7 @@ test('the change handler is called after the change is done', t => {
 	proxy.x = 1;
 });
 
-test('the callback should provide the original proxied object, the path to the changed value, the previous value at path, and the new value at path', t => {
+test('should provide the original proxied object, the path to the changed value, the previous value at path, and the new value at path', t => {
 	const object = {
 		x: {
 			y: [
@@ -455,7 +62,7 @@ test('the callback should provide the original proxied object, the path to the c
 		}
 	};
 
-	testHelper(t, object, {}, (proxy, verify, reset, last) => {
+	testRunner(t, object, {}, (proxy, verify, reset, last) => {
 		proxy.x.y[0].z = 1;
 		verify(1, proxy, 'x.y.0.z', 1, 0);
 
@@ -466,31 +73,65 @@ test('the callback should provide the original proxied object, the path to the c
 		verify(3, proxy, 'x.y.0.new', undefined, 1);
 
 		proxy.x.y.push('pushed');
-		verify(4, proxy, 'x.y', [{z: 1}, 'pushed'], [{z: 1}], 'push');
+		verify(4, proxy, 'x.y', [{z: 1}, 'pushed'], [{z: 1}], {
+			name: 'push',
+			args: ['pushed'],
+			result: 2
+		});
 
 		proxy.x.y.pop();
-		verify(5, proxy, 'x.y', [{z: 1}], [{z: 1}, 'pushed'], 'pop');
+		verify(5, proxy, 'x.y', [{z: 1}], [{z: 1}, 'pushed'], {
+			name: 'pop',
+			args: [],
+			result: 'pushed'
+		});
 
 		proxy.x.y.unshift('unshifted');
-		verify(6, proxy, 'x.y', ['unshifted', {z: 1}], [{z: 1}], 'unshift');
+		verify(6, proxy, 'x.y', ['unshifted', {z: 1}], [{z: 1}], {
+			name: 'unshift',
+			args: ['unshifted'],
+			result: 2
+		});
 
 		proxy.x.y.shift();
-		verify(7, proxy, 'x.y', [{z: 1}], ['unshifted', {z: 1}], 'shift');
+		verify(7, proxy, 'x.y', [{z: 1}], ['unshifted', {z: 1}], {
+			name: 'shift',
+			args: [],
+			result: 'unshifted'
+		});
 
 		proxy.x.y = proxy.x.y.concat([{z: 3}, {z: 2}]);
 		verify(8, proxy, 'x.y', [{z: 1}, {z: 3}, {z: 2}], [{z: 1}]);
 
-		proxy.x.y.sort((a, b) => a.z - b.z);
-		verify(9, proxy, 'x.y', [{z: 1}, {z: 2}, {z: 3}], [{z: 1}, {z: 3}, {z: 2}], 'sort');
+		const sorter = (a, b) => a.z - b.z;
+		proxy.x.y.sort(sorter);
+		verify(9, proxy, 'x.y', [{z: 1}, {z: 2}, {z: 3}], [{z: 1}, {z: 3}, {z: 2}], {
+			name: 'sort',
+			args: [sorter],
+			result: [{z: 1}, {z: 2}, {z: 3}]
+		});
 
 		proxy.x.y.reverse();
-		verify(10, proxy, 'x.y', [{z: 3}, {z: 2}, {z: 1}], [{z: 1}, {z: 2}, {z: 3}], 'reverse');
+		verify(10, proxy, 'x.y', [{z: 3}, {z: 2}, {z: 1}], [{z: 1}, {z: 2}, {z: 3}], {
+			name: 'reverse',
+			args: [],
+			result: [{z: 3}, {z: 2}, {z: 1}]
+		});
 
-		proxy.x.y.forEach(item => item.z++);
-		verify(11, proxy, 'x.y', [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}], 'forEach');
+		const forEachFunc = item => item.z++;
+		proxy.x.y.forEach(forEachFunc); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		verify(11, proxy, 'x.y', [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}], {
+			name: 'forEach',
+			args: [forEachFunc],
+			result: undefined
+		});
 
 		proxy.x.y.splice(1, 2);
-		verify(12, proxy, 'x.y', [{z: 4}], [{z: 4}, {z: 3}, {z: 2}], 'splice');
+		verify(12, proxy, 'x.y', [{z: 4}], [{z: 4}, {z: 3}, {z: 2}], {
+			name: 'splice',
+			args: [1, 2],
+			result: [{z: 3}, {z: 2}]
+		});
 
 		let unproxied = onChange.target(proxy);
 
@@ -517,7 +158,7 @@ test('the callback should provide the original proxied object, the path to the c
 	});
 });
 
-test('the callback should provide the original proxied object, the path to the changed value, the previous value at path, and the new value at path when pathAsArray is true', t => {
+test('should provide the original proxied object, the path to the changed value, the previous value at path, and the new value at path when pathAsArray is true', t => {
 	const object = {
 		x: {
 			y: [
@@ -528,7 +169,7 @@ test('the callback should provide the original proxied object, the path to the c
 		}
 	};
 
-	testHelper(t, object, {pathAsArray: true}, (proxy, verify, reset, last) => {
+	testRunner(t, object, {pathAsArray: true}, (proxy, verify, reset, last) => {
 		proxy.x.y[0].z = 1;
 		verify(1, proxy, ['x', 'y', '0', 'z'], 1, 0);
 
@@ -539,31 +180,65 @@ test('the callback should provide the original proxied object, the path to the c
 		verify(3, proxy, ['x', 'y', '0', 'new'], undefined, 1);
 
 		proxy.x.y.push('pushed');
-		verify(4, proxy, ['x', 'y'], [{z: 1}, 'pushed'], [{z: 1}], 'push');
+		verify(4, proxy, ['x', 'y'], [{z: 1}, 'pushed'], [{z: 1}], {
+			name: 'push',
+			args: ['pushed'],
+			result: 2
+		});
 
 		proxy.x.y.pop();
-		verify(5, proxy, ['x', 'y'], [{z: 1}], [{z: 1}, 'pushed'], 'pop');
+		verify(5, proxy, ['x', 'y'], [{z: 1}], [{z: 1}, 'pushed'], {
+			name: 'pop',
+			args: [],
+			result: 'pushed'
+		});
 
 		proxy.x.y.unshift('unshifted');
-		verify(6, proxy, ['x', 'y'], ['unshifted', {z: 1}], [{z: 1}], 'unshift');
+		verify(6, proxy, ['x', 'y'], ['unshifted', {z: 1}], [{z: 1}], {
+			name: 'unshift',
+			args: ['unshifted'],
+			result: 2
+		});
 
 		proxy.x.y.shift();
-		verify(7, proxy, ['x', 'y'], [{z: 1}], ['unshifted', {z: 1}], 'shift');
+		verify(7, proxy, ['x', 'y'], [{z: 1}], ['unshifted', {z: 1}], {
+			name: 'shift',
+			args: [],
+			result: 'unshifted'
+		});
 
 		proxy.x.y = proxy.x.y.concat([{z: 3}, {z: 2}]);
 		verify(8, proxy, ['x', 'y'], [{z: 1}, {z: 3}, {z: 2}], [{z: 1}]);
 
-		proxy.x.y.sort((a, b) => a.z - b.z);
-		verify(9, proxy, ['x', 'y'], [{z: 1}, {z: 2}, {z: 3}], [{z: 1}, {z: 3}, {z: 2}], 'sort');
+		const sorter = (a, b) => a.z - b.z;
+		proxy.x.y.sort(sorter);
+		verify(9, proxy, ['x', 'y'], [{z: 1}, {z: 2}, {z: 3}], [{z: 1}, {z: 3}, {z: 2}], {
+			name: 'sort',
+			args: [sorter],
+			result: [{z: 1}, {z: 2}, {z: 3}]
+		});
 
 		proxy.x.y.reverse();
-		verify(10, proxy, ['x', 'y'], [{z: 3}, {z: 2}, {z: 1}], [{z: 1}, {z: 2}, {z: 3}], 'reverse');
+		verify(10, proxy, ['x', 'y'], [{z: 3}, {z: 2}, {z: 1}], [{z: 1}, {z: 2}, {z: 3}], {
+			name: 'reverse',
+			args: [],
+			result: [{z: 3}, {z: 2}, {z: 1}]
+		});
 
-		proxy.x.y.forEach(item => item.z++);
-		verify(11, proxy, ['x', 'y'], [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}], 'forEach');
+		const forEachFunc = item => item.z++;
+		proxy.x.y.forEach(forEachFunc); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		verify(11, proxy, ['x', 'y'], [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}], {
+			name: 'forEach',
+			args: [forEachFunc],
+			result: undefined
+		});
 
 		proxy.x.y.splice(1, 2);
-		verify(12, proxy, ['x', 'y'], [{z: 4}], [{z: 4}, {z: 3}, {z: 2}], 'splice');
+		verify(12, proxy, ['x', 'y'], [{z: 4}], [{z: 4}, {z: 3}, {z: 2}], {
+			name: 'splice',
+			args: [1, 2],
+			result: [{z: 3}, {z: 2}]
+		});
 
 		let unproxied = onChange.target(proxy);
 
@@ -590,7 +265,7 @@ test('the callback should provide the original proxied object, the path to the c
 	});
 });
 
-test('the callback should not get called when methods are called that don’t mutate the proxied item', t => {
+test('should not trigger when methods are called that don’t mutate the proxied item', t => {
 	const object = [
 		{
 			y: 1
@@ -603,7 +278,7 @@ test('the callback should not get called when methods are called that don’t mu
 		}
 	];
 
-	testHelper(t, object, {}, (proxy, verify) => {
+	testRunner(t, object, {}, (proxy, verify) => {
 		proxy.map(item => item.y);
 		verify(0);
 
@@ -618,7 +293,7 @@ test('the callback should not get called when methods are called that don’t mu
 	});
 });
 
-test('the callback should return a raw value when apply traps are triggered', t => {
+test('should return a raw value when apply traps are triggered', t => {
 	const object = {
 		x: {
 			y: [{
@@ -627,16 +302,20 @@ test('the callback should return a raw value when apply traps are triggered', t 
 		}
 	};
 
-	testHelper(t, object, {}, (proxy, verify, reset, last) => {
+	testRunner(t, object, {}, (proxy, verify, reset, last) => {
 		proxy.x.y.push('pushed');
-		verify(1, proxy, 'x.y', [{z: 0}, 'pushed'], [{z: 0}], 'push');
+		verify(1, proxy, 'x.y', [{z: 0}, 'pushed'], [{z: 0}], {
+			name: 'push',
+			args: ['pushed'],
+			result: 2
+		});
 
 		last.value.pop();
 		t.is(last.count, 1);
 	});
 });
 
-test('the callback should return a raw value when apply traps are triggered and pathAsArray is true', t => {
+test('should return a raw value when apply traps are triggered and pathAsArray is true', t => {
 	const object = {
 		x: {
 			y: [{
@@ -645,192 +324,16 @@ test('the callback should return a raw value when apply traps are triggered and 
 		}
 	};
 
-	testHelper(t, object, {pathAsArray: true}, (proxy, verify, reset, last) => {
+	testRunner(t, object, {pathAsArray: true}, (proxy, verify, reset, last) => {
 		proxy.x.y.push('pushed');
-		verify(1, proxy, ['x', 'y'], [{z: 0}, 'pushed'], [{z: 0}], 'push');
+		verify(1, proxy, ['x', 'y'], [{z: 0}, 'pushed'], [{z: 0}], {
+			name: 'push',
+			args: ['pushed'],
+			result: 2
+		});
 
 		last.value.pop();
 		t.is(last.count, 1);
-	});
-});
-
-test('should trigger the callback when a Symbol is used as the key and ignoreSymbols is not set', t => {
-	const object = {
-		x: {
-			y: [{
-				z: 0
-			}]
-		}
-	};
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		const SYMBOL = Symbol('test');
-		const SYMBOL2 = Symbol('test2');
-
-		proxy[SYMBOL] = true;
-		verify(1, proxy, 'Symbol(test)', true, undefined);
-
-		Object.defineProperty(proxy, SYMBOL2, {
-			value: true,
-			configurable: true,
-			writable: true,
-			enumerable: false
-		});
-		verify(2, proxy, 'Symbol(test2)', true, undefined);
-
-		delete proxy[SYMBOL2];
-		verify(3, proxy, 'Symbol(test2)', undefined, true);
-
-		proxy.z = true;
-		verify(4, proxy, 'z', true, undefined);
-	});
-});
-
-test('the callback should trigger when a Symbol is used as the key and ignoreSymbols is not set and pathAsArray is true', t => {
-	const object = {
-		x: {
-			y: [{
-				z: 0
-			}]
-		}
-	};
-
-	testHelper(t, object, {pathAsArray: true}, (proxy, verify) => {
-		const SYMBOL = Symbol('test');
-		const SYMBOL2 = Symbol('test2');
-
-		proxy[SYMBOL] = true;
-		verify(1, proxy, [SYMBOL], true, undefined);
-
-		Object.defineProperty(proxy, SYMBOL2, {
-			value: true,
-			configurable: true,
-			writable: true,
-			enumerable: false
-		});
-		verify(2, proxy, [SYMBOL2], true, undefined);
-
-		delete proxy[SYMBOL2];
-		verify(3, proxy, [SYMBOL2], undefined, true);
-
-		proxy.z = true;
-		verify(4, proxy, ['z'], true, undefined);
-	});
-});
-
-test('should not trigger the callback when a Symbol is used as the key and ignoreSymbols is true', t => {
-	const object = {
-		x: {
-			y: [{
-				z: 0
-			}]
-		}
-	};
-
-	testHelper(t, object, {ignoreSymbols: true}, (proxy, verify) => {
-		const SYMBOL = Symbol('test');
-		const SYMBOL2 = Symbol('test2');
-		const object2 = {
-			c: 2
-		};
-
-		proxy[SYMBOL] = object2;
-		verify(0);
-
-		t.is(proxy[SYMBOL], object2);
-
-		proxy[SYMBOL].c = 3;
-		verify(0);
-
-		Object.defineProperty(proxy, SYMBOL2, {
-			value: true,
-			configurable: true,
-			writable: true,
-			enumerable: false
-		});
-		verify(0);
-
-		delete proxy[SYMBOL2];
-		verify(0);
-
-		proxy.z = true;
-		verify(1, proxy, 'z', true, undefined);
-	});
-});
-
-test('should not trigger the callback when a key is used that is in ignoreKeys', t => {
-	const object = {
-		x: {
-			y: [{
-				z: 0
-			}]
-		}
-	};
-
-	testHelper(t, object, {ignoreKeys: ['a', 'b']}, (proxy, verify) => {
-		const object2 = {
-			c: 2
-		};
-
-		proxy.a = object2;
-		verify(0);
-
-		t.is(proxy.a, object2);
-
-		proxy.a.c = 3;
-		verify(0);
-
-		Object.defineProperty(proxy, 'b', {
-			value: true,
-			configurable: true,
-			writable: true,
-			enumerable: false
-		});
-		verify(0);
-
-		delete proxy.b;
-		verify(0);
-
-		proxy.z = true;
-		verify(1, proxy, 'z', true, undefined);
-	});
-});
-
-test('should not trigger the callback when a key with an underscore is used and ignoreUnderscores is true', t => {
-	const object = {
-		x: {
-			y: [{
-				z: 0
-			}]
-		}
-	};
-
-	testHelper(t, object, {ignoreUnderscores: true}, (proxy, verify) => {
-		const object2 = {
-			c: 2
-		};
-
-		proxy._a = object2;
-		verify(0);
-
-		t.is(proxy._a, object2);
-
-		proxy._a.c = 3;
-		verify(0);
-
-		Object.defineProperty(proxy, '_b', {
-			value: true,
-			configurable: true,
-			writable: true,
-			enumerable: false
-		});
-		verify(0);
-
-		delete proxy._b;
-		verify(0);
-
-		proxy.z = true;
-		verify(1, proxy, 'z', true, undefined);
 	});
 });
 
@@ -843,7 +346,7 @@ test('should not call the callback for nested items of an object if isShallow is
 		}
 	};
 
-	testHelper(t, object, {isShallow: true}, (proxy, verify) => {
+	testRunner(t, object, {isShallow: true}, (proxy, verify) => {
 		proxy.a = 1;
 		verify(1, proxy, 'a', 1, undefined);
 
@@ -855,42 +358,6 @@ test('should not call the callback for nested items of an object if isShallow is
 
 		proxy.a = 2;
 		verify(2, proxy, 'a', 2, 1);
-	});
-});
-
-test('should not call the callback for nested items of an array if isShallow is true', t => {
-	const array = [{z: 0}];
-
-	testHelper(t, array, {isShallow: true}, (proxy, verify) => {
-		proxy[0].z = 1;
-		verify(0);
-
-		proxy.unshift('a');
-		verify(1, proxy, '', ['a', {z: 1}], [{z: 1}], 'unshift');
-	});
-});
-
-test('should call the callback for items returned from a handled method on array', t => {
-	const array = [{z: 0}, {z: 1}];
-
-	testHelper(t, array, {}, (proxy, verify) => {
-		const returned = proxy.concat([]);
-		verify(0);
-
-		returned[0].z = 3;
-		verify(1, proxy, '0.z', 3, 0);
-	});
-});
-
-test('should call the callback for items returned from a non-handled method on array', t => {
-	const array = [{z: 0}, {z: 1}];
-
-	testHelper(t, array, {}, (proxy, verify) => {
-		const returned = proxy.map(item => item);
-		verify(0);
-
-		returned[0].z = 3;
-		verify(1, proxy, '0.z', 3, 0);
 	});
 });
 
@@ -1074,12 +541,13 @@ test('should be able to mutate itself in an object', t => {
 		method
 	};
 
-	testHelper(t, object, {}, (proxy, verify) => {
+	testRunner(t, object, {}, (proxy, verify) => {
 		proxy.method(proxy);
-		verify(1, proxy, '', {x: 1, method}, {
-			x: 0,
-			method
-		}, 'method');
+		verify(1, proxy, '', {x: 1, method}, {x: 0, method}, {
+			name: 'method',
+			args: [proxy],
+			result: undefined
+		});
 	});
 });
 
@@ -1094,11 +562,13 @@ test('should be able to mutate itself in a class', t => {
 		}
 	}
 
-	testHelper(t, new TestClass(), {}, (proxy, verify) => {
+	testRunner(t, new TestClass(), {}, (proxy, verify) => {
 		proxy.method();
-		verify(1, proxy, '', new TestClass(1), {
-			x: 0
-		}, 'method');
+		verify(1, proxy, '', new TestClass(1), {x: 0}, {
+			name: 'method',
+			args: [],
+			result: undefined
+		});
 	});
 });
 
@@ -1111,7 +581,7 @@ test('should not trigger after unsubscribe is called', t => {
 		}
 	};
 
-	testHelper(t, object, {}, (proxy, verify, reset) => {
+	testRunner(t, object, {}, (proxy, verify, reset) => {
 		proxy.z = true;
 		verify(1, proxy, 'z', true, undefined);
 
@@ -1142,7 +612,7 @@ test('should trigger if a new property is set to undefined', t => {
 		x: true
 	};
 
-	testHelper(t, object, {}, (proxy, verify) => {
+	testRunner(t, object, {}, (proxy, verify) => {
 		proxy.z = undefined;
 		verify(1, proxy, 'z', undefined, undefined);
 	});
@@ -1155,7 +625,7 @@ test('should NOT trigger if defining a property fails', t => {
 
 	Object.freeze(object);
 
-	testHelper(t, object, {}, (proxy, verify) => {
+	testRunner(t, object, {}, (proxy, verify) => {
 		t.throws(() => {
 			Object.defineProperty(proxy, 'y', {
 				configurable: false,
@@ -1183,7 +653,7 @@ test('should NOT trigger if defining a property that is already set', t => {
 		value: 2
 	});
 
-	testHelper(t, object, {}, (proxy, verify) => {
+	testRunner(t, object, {}, (proxy, verify) => {
 		t.not(proxy.x, 3);
 		t.not(proxy.y, 3);
 
@@ -1212,7 +682,7 @@ test('should NOT trigger if setting a property fails', t => {
 
 	Object.freeze(object);
 
-	testHelper(t, object, {}, (proxy, verify) => {
+	testRunner(t, object, {}, (proxy, verify) => {
 		proxy.x = false;
 
 		verify(0, undefined, undefined, undefined, undefined);
@@ -1226,396 +696,45 @@ test('should NOT trigger if deleting a property fails', t => {
 
 	Object.freeze(object);
 
-	testHelper(t, object, {}, (proxy, verify) => {
+	testRunner(t, object, {}, (proxy, verify) => {
 		delete proxy.x;
 
 		verify(0);
 	});
 });
 
-test('should only execute once if map is called within callback', t => {
-	let count = 0;
-
-	const object = {
-		arr: [],
-		foo: true
-	};
-
-	const proxy = onChange(object, function () {
-		count++;
-		this.arr.map(item => item);
-	});
-
-	proxy.arr.unshift('value');
-
-	t.is(count, 1);
-});
-
-test('should return an array iterator when array[Symbol.iterator] is called', t => {
-	const array = [{a: 1}, {a: 2}];
-
-	testHelper(t, array, {}, (proxy, verify) => {
-		for (const entry of proxy[Symbol.iterator]()) {
-			entry.a++;
-		}
-
-		verify(2, proxy, '1.a', 3, 2);
-	});
-});
-
-test('should return an array iterator when array.keys is called', t => {
-	const array = [{a: 1}, {a: 2}];
-
-	testHelper(t, array, {}, (proxy, verify) => {
-		for (const key of proxy.keys()) {
-			proxy[key].a++;
-		}
-
-		verify(2, proxy, '1.a', 3, 2);
-	});
-});
-
-test('should return an array iterator when array.entries is called', t => {
-	const array = [{a: 1}, {a: 2}];
-
-	testHelper(t, array, {}, (proxy, verify) => {
-		for (const entry of proxy.entries()) {
-			entry[1].a++;
-		}
-
-		verify(2, proxy, '1.a', 3, 2);
-	});
-});
-
-test('should return an array iterator when array.values is called', t => {
-	const array = [{a: 1}, {a: 2}];
-
-	testHelper(t, array, {}, (proxy, verify) => {
-		for (const entry of proxy.values()) {
-			entry.a++;
-		}
-
-		verify(2, proxy, '1.a', 3, 2);
-	});
-});
-
-test('should handle shallow changes to Sets', t => {
-	const object = {a: 0};
-	const set = new Set();
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy.a = set;
-		t.true(proxy.a instanceof Set);
-		verify(1, proxy, 'a', set, 0);
-
-		let clone = new Set(set);
-		proxy.a.add(32);
-		verify(2, proxy, 'a', set, clone, 'add');
-
-		clone = new Set(set);
-		proxy.a.add(64);
-		verify(3, proxy, 'a', set, clone, 'add');
-
-		clone = new Set(set);
-		proxy.a.delete(32);
-		verify(4, proxy, 'a', set, clone, 'delete');
-
-		proxy.a.delete(32);
-		verify(4, proxy, 'a', set, clone, 'delete');
-
-		clone = new Set(set);
-		proxy.a.clear();
-		verify(5, proxy, 'a', set, clone, 'clear');
-	});
-});
-
-test('should return an iterator when Set[Symbol.iterator] is called', t => {
-	const set = new Set([{a: 1}, {a: 2}]);
-
-	testHelper(t, set, {pathAsArray: true}, (proxy, verify) => {
-		for (const entry of proxy[Symbol.iterator]()) {
-			entry.a++;
-		}
-
-		verify(2, proxy, [{a: 3}, 'a'], 3, 2);
-	});
-});
-
-test('should return an iterator when Set.keys is called', t => {
-	const set = new Set([{a: 1}, {a: 2}]);
-
-	testHelper(t, set, {pathAsArray: true}, (proxy, verify) => {
-		for (const key of proxy.keys()) {
-			key.a++;
-		}
-
-		verify(2, proxy, [{a: 3}, 'a'], 3, 2);
-	});
-});
-
-test('should return an iterator when Set.entries is called', t => {
-	const set = new Set([{a: 1}, {a: 2}]);
-
-	testHelper(t, set, {pathAsArray: true}, (proxy, verify) => {
-		for (const entry of proxy.entries()) {
-			entry[1].a++;
-		}
-
-		verify(2, proxy, [{a: 3}, 'a'], 3, 2);
-	});
-});
-
-test('should return an iterator when Set.values is called', t => {
-	const set = new Set([{a: 1}, {a: 2}]);
-
-	testHelper(t, set, {pathAsArray: true}, (proxy, verify) => {
-		for (const entry of proxy.values()) {
-			entry.a++;
-		}
-
-		verify(2, proxy, [{a: 3}, 'a'], 3, 2);
-	});
-});
-
-test('should handle shallow changes to WeakSets', t => {
-	const object = {a: 0};
-	const set = new WeakSet();
-	const setObject = {x: 2};
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy.a = set;
-		t.true(proxy.a instanceof WeakSet);
-		verify(1, proxy, 'a', set, 0);
-
-		proxy.a.add(setObject);
-		verify(2, proxy, 'a', set, undefined, 'add');
-
-		proxy.a.delete(setObject);
-		verify(3, proxy, 'a', set, undefined, 'delete');
-
-		proxy.a.delete(setObject);
-		verify(3, proxy, 'a', set, undefined, 'delete');
-	});
-});
-
-test('should return an iterator when Map[Symbol.iterator] is called', t => {
-	const object = {a: 1};
-	const map = new Map();
-	map.set(object, 1);
-
-	testHelper(t, map, {pathAsArray: true}, (proxy, verify) => {
-		for (const entry of proxy[Symbol.iterator]()) {
-			entry[0].a++;
-		}
-
-		verify(1, proxy, [object, 'a'], 2, 1);
-	});
-});
-
-test('should return an iterator when Map.keys is called', t => {
-	const object = {a: 1};
-	const map = new Map();
-	map.set(object, 1);
-
-	testHelper(t, map, {pathAsArray: true}, (proxy, verify) => {
-		for (const key of proxy.keys()) {
-			key.a++;
-		}
-
-		verify(1, proxy, [object, 'a'], 2, 1);
-	});
-});
-
-test('should return an iterator when Map.entries is called', t => {
-	const object = {};
-	const map = new Map();
-	map.set(object, {y: 1});
-
-	testHelper(t, map, {pathAsArray: true}, (proxy, verify) => {
-		for (const entry of proxy.entries()) {
-			entry[1].y++;
-		}
-
-		verify(1, proxy, [object, 'y'], 2, 1);
-	});
-});
-
-test('should return an iterator when Map.values is called', t => {
-	const object = {};
-	const map = new Map();
-	map.set(object, {y: 1});
-
-	testHelper(t, map, {pathAsArray: true}, (proxy, verify) => {
-		for (const value of proxy.values()) {
-			value.y++;
-		}
-
-		verify(1, proxy, [object, 'y'], 2, 1);
-	});
-});
-
-test('should handle shallow changes to Maps', t => {
-	const object = {a: 0};
-	const map = new Map();
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy.a = map;
-		t.true(proxy.a instanceof Map);
-		verify(1, proxy, 'a', map, 0);
-
-		let clone = new Map(map);
-		proxy.a.set(32, true);
-		verify(2, proxy, 'a', map, clone, 'set');
-
-		clone = new Map(map);
-		proxy.a.delete(32);
-		verify(3, proxy, 'a', map, clone, 'delete');
-
-		proxy.a.delete(32);
-		verify(3, proxy, 'a', map, clone, 'delete');
-	});
-});
-
-test('should handle shallow changes to WeakMaps', t => {
-	const object = {a: 0};
-	const map = new WeakMap();
-	const setObject = {x: 2};
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy.a = map;
-		t.true(proxy.a instanceof WeakMap);
-		verify(1, proxy, 'a', map, 0);
-
-		proxy.a.set(setObject, true);
-		verify(2, proxy, 'a', map, undefined, 'set');
-
-		proxy.a.delete(setObject);
-		verify(3, proxy, 'a', map, undefined, 'delete');
-
-		proxy.a.delete(32);
-		verify(3, proxy, 'a', map, undefined, 'delete');
-	});
-});
-
 test('should handle changes in nested apply traps', t => {
 	const object = [{a: [{x: 1}]}];
 
-	testHelper(t, object, {}, (proxy, verify) => {
-		proxy.forEach(item => {
+	testRunner(t, object, {}, (proxy, verify) => {
+		let forEachFunc = item => {
 			item.a = item.a.map(subItem => {
 				return {x: subItem.x + 1};
 			});
+		};
+
+		proxy.forEach(forEachFunc); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+
+		verify(1, proxy, '', object, [{a: [{x: 1}]}], {
+			name: 'forEach',
+			args: [forEachFunc],
+			result: undefined
 		});
 
-		verify(1, proxy, '', object, [{a: [{x: 1}]}], 'forEach');
-
-		proxy.forEach(item => {
+		forEachFunc = item => {
 			item.a.forEach(subItem => {
 				subItem.x++;
 			});
-		});
-
-		verify(2, proxy, '', object, [{a: [{x: 2}]}], 'forEach');
-	});
-});
-
-test('should handle changes to dates within apply trap', t => {
-	const object = [{a: new Date('1/1/2001')}];
-
-	testHelper(t, object, {}, (proxy, verify) => {
-		const clone = new Date(object[0].a);
-
-		proxy.forEach(item => {
-			item.a.setSeconds(32);
-		});
-
-		verify(1, proxy, '', object, [{a: clone}], 'forEach');
-	});
-});
-
-test('should not execute for changes on a detached object if ignoreDetached is true', t => {
-	const object = {
-		foo: {
-			z: {
-				a: 1
-			}
-		}
-	};
-
-	testHelper(t, object, {ignoreDetached: true}, (proxy, verify, reset) => {
-		proxy.foo.z.a = 2;
-		verify(1, proxy, 'foo.z.a', 2, 1);
-
-		const detached = proxy.foo;
-		const detachedNested = proxy.foo.z;
-
-		proxy.foo = {
-			z: 3
 		};
-		verify(2, proxy, 'foo', {z: 3}, {z: {a: 2}});
 
-		reset();
+		proxy.forEach(forEachFunc); // eslint-disable-line unicorn/no-fn-reference-in-iterator
 
-		t.not(detachedNested, detached.z);
-		t.deepEqual(detachedNested, detached.z);
-		detached.z = 4;
-		verify(0);
-	});
-});
-
-test('should not execute for changes on a detached array if ignoreDetached is true', t => {
-	const object = {
-		foo: [{
-			z: 1
-		}]
-	};
-
-	testHelper(t, object, {ignoreDetached: true}, (proxy, verify, reset) => {
-		proxy.foo[0].z = 2;
-		verify(1, proxy, 'foo.0.z', 2, 1);
-
-		const detached = proxy.foo;
-		const detachedNested = proxy.foo[0];
-
-		proxy.foo = {
-			z: 3
-		};
-		verify(2, proxy, 'foo', {z: 3}, [{z: 2}]);
-
-		reset();
-
-		t.not(detachedNested, detached[0]);
-		t.deepEqual(detachedNested, detached[0]);
-
-		detached[0].z = 4;
-		verify(0);
-
-		detached.forEach((value, index) => {
-			detached[index].z++;
+		verify(2, proxy, '', object, [{a: [{x: 2}]}], {
+			name: 'forEach',
+			args: [forEachFunc],
+			result: undefined
 		});
-		verify(0);
 	});
-});
-
-test('should unwrap proxies passed to immutable methods on array', t => {
-	const item = {a: 1};
-	const object = {
-		b: item,
-		c: []
-	};
-
-	const proxy = onChange(object, () => {
-	});
-
-	proxy.c.push(proxy.b);
-
-	t.is(proxy.c[0], proxy.b);
-	t.is(proxy.c.indexOf(item), 0);
-	t.is(proxy.c.indexOf(proxy.c[0]), 0);
-
-	proxy.c[1] = proxy.b;
-
-	t.is(proxy.c[1], proxy.b);
 });
 
 test('should not wrap a proxied object in another proxy', t => {
@@ -1630,40 +749,4 @@ test('should not wrap a proxied object in another proxy', t => {
 	});
 
 	t.is(proxy.b, proxy.c);
-});
-
-test('should trigger multiple changes when details specifies a method', t => {
-	const object = {
-		a: [{b: 1}, {b: 2}, {b: 3}]
-	};
-
-	testHelper(t, object, {details: ['forEach']}, (proxy, verify) => {
-		verify(0);
-
-		proxy.a.forEach(item => {
-			item.b++;
-		});
-		verify(3, proxy, 'a.2.b', 4, 3);
-
-		proxy.a.map(item => item.b++);
-		verify(4, proxy, 'a', [{b: 3}, {b: 4}, {b: 5}], [{b: 2}, {b: 3}, {b: 4}], 'map');
-	});
-});
-
-test('should trigger multiple changes when details is true', t => {
-	const object = {
-		a: [{b: 1}, {b: 2}, {b: 3}]
-	};
-
-	testHelper(t, object, {details: true}, (proxy, verify) => {
-		verify(0);
-
-		proxy.a.forEach(item => {
-			item.b++;
-		});
-		verify(3, proxy, 'a.2.b', 4, 3);
-
-		proxy.a.map(item => item.b++);
-		verify(6, proxy, 'a.2.b', 5, 4);
-	});
 });
