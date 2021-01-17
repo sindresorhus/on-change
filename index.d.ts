@@ -92,6 +92,13 @@ declare namespace onChange {
 		@default false
 		*/
 		ignoreDetached?: boolean;
+
+		/**
+		Trigger callbacks for each change within specified method calls or all method calls.
+
+		@default false
+		 */
+		details?: boolean | string[];
 	}
 }
 

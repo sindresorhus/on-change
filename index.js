@@ -16,7 +16,8 @@ const defaultOptions = {
 	pathAsArray: false,
 	ignoreSymbols: false,
 	ignoreUnderscores: false,
-	ignoreDetached: false
+	ignoreDetached: false,
+	details: false
 };
 
 const onChange = (object, onChange, options = {}) => {
@@ -25,7 +26,7 @@ const onChange = (object, onChange, options = {}) => {
 		...options
 	};
 	const proxyTarget = Symbol('ProxyTarget');
-	const {equals, isShallow, ignoreDetached} = options;
+	const {equals, isShallow, ignoreDetached, details} = options;
 	const cache = new Cache(equals);
 	const smartClone = new SmartClone();
 
@@ -151,7 +152,11 @@ const onChange = (object, onChange, options = {}) => {
 				return Reflect.apply(target, thisProxyTarget, argumentsList);
 			}
 
-			if (SmartClone.isHandledType(thisProxyTarget)) {
+			if (
+				(details === false ||
+					(details !== true && !details.includes(target.name))) &&
+				SmartClone.isHandledType(thisProxyTarget)
+			) {
 				const applyPath = path.initial(cache.getPath(target));
 				const isHandledMethod = SmartClone.isHandledMethod(thisProxyTarget, target.name);
 

@@ -179,6 +179,13 @@ Default: `false`
 
 Ignore changes to objects that become detached from the watched object.
 
+##### details
+
+Type: `boolean|string[]`\
+Default: `false`
+
+Trigger callbacks for each change within specified method calls or all method calls.
+
 <br/>
 
 ### onChange.target(object)
