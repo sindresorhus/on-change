@@ -47,15 +47,15 @@ test('should handle changes to dates within apply trap', t => {
 	testRunner(t, object, {}, (proxy, verify) => {
 		const clone = new Date(object[0].a);
 
-		const forEachFunc = item => {
+		const forEachCallback = item => {
 			item.a.setSeconds(32);
 		};
 
-		proxy.forEach(forEachFunc); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
 
 		verify(1, proxy, '', object, [{a: clone}], {
 			name: 'forEach',
-			args: [forEachFunc],
+			args: [forEachCallback],
 			result: undefined
 		});
 	});

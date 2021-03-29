@@ -157,7 +157,7 @@ const onChange = (object, onChange, options = {}) => {
 					(details !== true && !details.includes(target.name))) &&
 				SmartClone.isHandledType(thisProxyTarget)
 			) {
-				const applyPath = path.initial(cache.getPath(target));
+				let applyPath = path.initial(cache.getPath(target));
 				const isHandledMethod = SmartClone.isHandledMethod(thisProxyTarget, target.name);
 
 				smartClone.start(thisProxyTarget, applyPath, argumentsList);
@@ -174,6 +174,9 @@ const onChange = (object, onChange, options = {}) => {
 				const clone = smartClone.stop();
 
 				if (SmartClone.isHandledType(result) && isHandledMethod) {
+					if (thisArg instanceof Map && target.name === 'get') {
+						applyPath = path.concat(applyPath, argumentsList[0]);
+					}
 					result = cache.getProxy(result, applyPath, handler);
 				}
 

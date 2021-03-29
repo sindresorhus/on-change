@@ -118,11 +118,11 @@ test('should provide the original proxied object, the path to the changed value,
 			result: [{z: 3}, {z: 2}, {z: 1}]
 		});
 
-		const forEachFunc = item => item.z++;
-		proxy.x.y.forEach(forEachFunc); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		const forEachCallback = item => item.z++;
+		proxy.x.y.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
 		verify(11, proxy, 'x.y', [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}], {
 			name: 'forEach',
-			args: [forEachFunc],
+			args: [forEachCallback],
 			result: undefined
 		});
 
@@ -225,11 +225,11 @@ test('should provide the original proxied object, the path to the changed value,
 			result: [{z: 3}, {z: 2}, {z: 1}]
 		});
 
-		const forEachFunc = item => item.z++;
-		proxy.x.y.forEach(forEachFunc); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		const forEachCallback = item => item.z++;
+		proxy.x.y.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
 		verify(11, proxy, ['x', 'y'], [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}], {
 			name: 'forEach',
-			args: [forEachFunc],
+			args: [forEachCallback],
 			result: undefined
 		});
 
@@ -707,31 +707,31 @@ test('should handle changes in nested apply traps', t => {
 	const object = [{a: [{x: 1}]}];
 
 	testRunner(t, object, {}, (proxy, verify) => {
-		let forEachFunc = item => {
+		let forEachCallback = item => {
 			item.a = item.a.map(subItem => {
 				return {x: subItem.x + 1};
 			});
 		};
 
-		proxy.forEach(forEachFunc); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
 
 		verify(1, proxy, '', object, [{a: [{x: 1}]}], {
 			name: 'forEach',
-			args: [forEachFunc],
+			args: [forEachCallback],
 			result: undefined
 		});
 
-		forEachFunc = item => {
+		forEachCallback = item => {
 			item.a.forEach(subItem => {
 				subItem.x++;
 			});
 		};
 
-		proxy.forEach(forEachFunc); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
 
 		verify(2, proxy, '', object, [{a: [{x: 2}]}], {
 			name: 'forEach',
-			args: [forEachFunc],
+			args: [forEachCallback],
 			result: undefined
 		});
 	});

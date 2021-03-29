@@ -170,7 +170,7 @@ Setting properties with an underscore as the first character won't trigger the c
 Type: `boolean`\
 Default: `false`
 
-The path will be provided as an array of keys instead of a delimited string.
+The path will be provided as an array of keys instead of a delimited string. Recommended when working with Sets, Maps, or property keys that are Symbols.
 
 ##### ignoreDetached
 

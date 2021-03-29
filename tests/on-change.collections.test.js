@@ -54,6 +54,152 @@ test('should handle shallow changes to Sets', t => {
 	});
 });
 
+test('should NOT trigger when set.has is called', t => {
+	const object = {a: 2};
+	const set = new Set([{a: 1}, object]);
+
+	testRunner(t, set, {pathAsArray: true}, (proxy, verify) => {
+		t.true(proxy.has(object));
+
+		verify(0);
+
+		t.false(proxy.has({}));
+
+		verify(0);
+	});
+});
+
+test('should return a number for set.size', t => {
+	const set = new Set([{a: 1}, {a: 2}]);
+
+	testRunner(t, set, {pathAsArray: true}, (proxy, verify) => {
+		t.is(proxy.size, 2);
+
+		verify(0);
+	});
+});
+
+test('should trigger when set.add is called', t => {
+	const set = new Set([{a: 1}, {a: 2}]);
+
+	testRunner(t, set, {pathAsArray: true}, (proxy, verify) => {
+		proxy.add({b: 2});
+
+		verify(
+			1,
+			proxy,
+			[],
+			new Set([{a: 1}, {a: 2}, {b: 2}]),
+			new Set([{a: 1}, {a: 2}]),
+			{
+				args: [{b: 2}],
+				name: 'add',
+				result: new Set([{a: 1}, {a: 2}, {b: 2}])
+			}
+			);
+	});
+});
+
+test('should trigger when set.clear is called', t => {
+	const set = new Set([{a: 1}, {a: 2}]);
+
+	testRunner(t, set, {pathAsArray: true}, (proxy, verify) => {
+		proxy.clear();
+
+		verify(
+			1,
+			proxy,
+			[],
+			new Set(),
+			new Set([{a: 1}, {a: 2}]),
+			{
+				args: [],
+				name: 'clear',
+				result: undefined
+			}
+			);
+	});
+});
+
+test('should NOT trigger when set.clear is called on empty set', t => {
+	const set = new Set();
+
+	testRunner(t, set, {pathAsArray: true}, (proxy, verify) => {
+		proxy.clear();
+
+		verify(0);
+	});
+});
+
+test('should NOT trigger when set.delete is called on an empty set', t => {
+	const object = {a: 2};
+	const set = new Set();
+
+	testRunner(t, set, {pathAsArray: true}, (proxy, verify) => {
+		proxy.delete(object);
+
+		verify(0);
+	});
+});
+
+test('should trigger when set.delete is called', t => {
+	const object = {a: 2};
+	const set = new Set([{a: 1}, object]);
+
+	testRunner(t, set, {pathAsArray: true}, (proxy, verify) => {
+		proxy.delete(object);
+
+		verify(
+			1,
+			proxy,
+			[],
+			new Set([{a: 1}]),
+			new Set([{a: 1}, object]),
+			{
+				args: [object],
+				name: 'delete',
+				result: true
+			}
+			);
+	});
+});
+
+test('should trigger when a change happens in set.forEach', t => {
+	const set = new Set([{a: 1}, {a: 2}]);
+
+	testRunner(t, set, {pathAsArray: true}, (proxy, verify) => {
+		const forEachCallback = entry => {
+			entry.a++;
+		};
+		proxy.forEach(forEachCallback);
+
+		verify(
+			1,
+			proxy,
+			[],
+			new Set([{a: 2}, {a: 3}]),
+			new Set([{a: 1}, {a: 2}]),
+			{
+				args: [forEachCallback],
+				name: 'forEach',
+				result: undefined
+			}
+		);
+	});
+});
+
+test('should handle the spread operator on Sets', t => {
+	const set = new Set([{a: 1}, {a: 2}]);
+
+	testRunner(t, set, {pathAsArray: true}, (proxy, verify) => {
+		const array = [...proxy];
+
+		verify(0);
+
+		t.deepEqual(array, [{a: 1}, {a: 2}]);
+	});
+});
+
 test('should return an iterator when Set[Symbol.iterator] is called', t => {
 	const set = new Set([{a: 1}, {a: 2}]);
 
@@ -166,6 +312,89 @@ test('should handle shallow changes to Maps', t => {
 			args: [32],
 			result: true
 		});
+	});
+});
+
+test('should NOT trigger when map.has is called', t => {
+	const object = {a: 0};
+	const map = new Map();
+	map.set(object, 1);
+
+	testRunner(t, map, {}, (proxy, verify) => {
+		t.true(proxy.has(object));
+		verify(0);
+		t.false(proxy.has({}));
+		verify(0);
+
+	});
+});
+
+test('should return a number for map.size', t => {
+	const object = {a: 0};
+	const map = new Map();
+	map.set(object, 1);
+
+	testRunner(t, map, {}, (proxy, verify) => {
+		t.is(proxy.size, 1);
+		verify(0);
+	});
+});
+
+test('should trigger when a value returned from map.get is modified', t => {
+	const object = {a: 0};
+	const value = {b: 0};
+	const map = new Map();
+	map.set(object, value);
+
+	testRunner(t, map, {pathAsArray: true}, (proxy, verify) => {
+		const wrappedValue = proxy.get(object);
+
+		wrappedValue.b++;
+
+		verify(1, proxy, [object, 'b'], 1, 0);
+
+	});
+});
+
+test('should trigger when a value is modified in map.forEach', t => {
+	const object = {a: 0};
+	const value = {b: 0};
+	const map = new Map();
+	map.set(object, value);
+
+	const earlyClone = new Map();
+	earlyClone.set(object, { ...value });
+
+	testRunner(t, map, {pathAsArray: true}, (proxy, verify) => {
+		const forEachCallback = value => value.b++;
+		proxy.forEach(forEachCallback);
+
+		const lateClone = new Map(proxy);
+
+		verify(1, proxy, [], lateClone, earlyClone, {
+			args: [forEachCallback],
+			name: 'forEach',
+			result: undefined
+		});
+	});
+});
+
+test('should trigger when map.clear is called', t => {
+	const object = {a: 0};
+	const map = new Map();
+	map.set(object, 1);
+
+	testRunner(t, map, {pathAsArray: true}, (proxy, verify) => {
+		const clone = new Map(map);
+
+		proxy.clear();
+
+		verify(1, proxy, [], new Map(), clone, {
+			args: [],
+			name: 'clear',
+			result: undefined
+		});
+
 	});
 });
 
