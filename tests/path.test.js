@@ -215,3 +215,15 @@ test('walk should call the callback for each key in an array', t => {
 
 	t.is(count, 3);
 });
+
+test('path.get should return a value at the path', t => {
+	t.is(path.get({a: {b: [5]}}, 'a.b.0'), 5);
+});
+
+test('path.get should return a value at the path (array)', t => {
+	t.is(path.get({a: {b: [5]}}, ['a', 'b', 0]), 5);
+});
+
+test('path.get should return undefined if the path does not exist', t => {
+	t.is(path.get({a: {b: [5]}}, ['a', 'b', 1, 'z']), undefined);
+});
