@@ -96,7 +96,7 @@ test('should trigger when set.add is called', t => {
 				name: 'add',
 				result: new Set([{a: 1}, {a: 2}, {b: 2}])
 			}
-			);
+		);
 	});
 });
 
@@ -117,7 +117,7 @@ test('should trigger when set.clear is called', t => {
 				name: 'clear',
 				result: undefined
 			}
-			);
+		);
 	});
 });
 
@@ -160,7 +160,7 @@ test('should trigger when set.delete is called', t => {
 				name: 'delete',
 				result: true
 			}
-			);
+		);
 	});
 });
 
@@ -171,7 +171,8 @@ test('should trigger when a change happens in set.forEach', t => {
 		const forEachCallback = entry => {
 			entry.a++;
 		};
-		proxy.forEach(forEachCallback);
+
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
 
 		verify(
 			1,
@@ -325,7 +326,6 @@ test('should NOT trigger when map.has is called', t => {
 		verify(0);
 		t.false(proxy.has({}));
 		verify(0);
-
 	});
 });
 
@@ -352,7 +352,6 @@ test('should trigger when a value returned from map.get is modified', t => {
 		wrappedValue.b++;
 
 		verify(1, proxy, [object, 'b'], 1, 0);
-
 	});
 });
 
@@ -363,11 +362,11 @@ test('should trigger when a value is modified in map.forEach', t => {
 	map.set(object, value);
 
 	const earlyClone = new Map();
-	earlyClone.set(object, { ...value });
+	earlyClone.set(object, {...value});
 
 	testRunner(t, map, {pathAsArray: true}, (proxy, verify) => {
 		const forEachCallback = value => value.b++;
-		proxy.forEach(forEachCallback);
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
 
 		const lateClone = new Map(proxy);
 
@@ -394,7 +393,6 @@ test('should trigger when map.clear is called', t => {
 			name: 'clear',
 			result: undefined
 		});
-
 	});
 });
 

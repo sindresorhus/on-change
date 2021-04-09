@@ -8,7 +8,7 @@ const isIterator = require('./lib/is-iterator');
 const wrapIterator = require('./lib/wrap-iterator');
 const ignoreProperty = require('./lib/ignore-property');
 const Cache = require('./lib/cache');
-const SmartClone = require('./lib/smart-clone');
+const SmartClone = require('./lib/smart-clone/smart-clone.js');
 
 const defaultOptions = {
 	equals: Object.is,
@@ -28,7 +28,15 @@ const onChange = (object, onChange, options = {}) => {
 	const proxyTarget = Symbol('ProxyTarget');
 	const {equals, isShallow, ignoreDetached, details} = options;
 	const cache = new Cache(equals);
-	const smartClone = new SmartClone();
+	const hasOnValidate = typeof options.onValidate === 'function';
+	const smartClone = new SmartClone(hasOnValidate);
+
+	// eslint-disable-next-line max-params
+	const validate = (target, property, value, previous, applyData) => {
+		return !hasOnValidate ||
+			smartClone.isCloning ||
+			options.onValidate(path.concat(cache.getPath(target), property), value, previous, applyData) === true;
+	};
 
 	const handleChangeOnTarget = (target, property, value, previous) => {
 		if (
@@ -49,11 +57,9 @@ const onChange = (object, onChange, options = {}) => {
 	};
 
 	const getProxyTarget = value => {
-		if (value) {
-			return value[proxyTarget] || value;
-		}
-
-		return value;
+		return value ?
+			(value[proxyTarget] || value) :
+			value;
 	};
 
 	const prepareValue = (value, target, property, basePath) => {
@@ -104,26 +110,35 @@ const onChange = (object, onChange, options = {}) => {
 
 			const reflectTarget = target[proxyTarget] || target;
 			const previous = reflectTarget[property];
-			const hasProperty = property in target;
 
-			if (cache.setProperty(reflectTarget, property, value, receiver, previous)) {
-				if (!equals(previous, value) || !hasProperty) {
-					handleChangeOnTarget(target, property, value, previous);
-				}
+			if (equals(previous, value) && property in target) {
+				return true;
+			}
+
+			const isValid = validate(target, property, value, previous);
+
+			if (
+				isValid &&
+				cache.setProperty(reflectTarget, property, value, receiver, previous)
+			) {
+				handleChangeOnTarget(target, property, target[property], previous);
 
 				return true;
 			}
 
-			return false;
+			return !isValid;
 		},
 
 		defineProperty(target, property, descriptor) {
 			if (!cache.isSameDescriptor(descriptor, target, property)) {
-				if (!cache.defineProperty(target, property, descriptor)) {
-					return false;
-				}
+				const previous = target[property];
 
-				handleChangeOnTarget(target, property, descriptor.value);
+				if (
+					validate(target, property, descriptor.value, previous) &&
+					cache.defineProperty(target, property, descriptor, previous)
+				) {
+					handleChangeOnTarget(target, property, descriptor.value, previous);
+				}
 			}
 
 			return true;
@@ -136,7 +151,10 @@ const onChange = (object, onChange, options = {}) => {
 
 			const previous = Reflect.get(target, property);
 
-			if (cache.deleteProperty(target, property, previous)) {
+			if (
+				validate(target, property, undefined, previous) &&
+				cache.deleteProperty(target, property, previous)
+			) {
 				handleChangeOnTarget(target, property, undefined, previous);
 
 				return true;
@@ -170,13 +188,14 @@ const onChange = (object, onChange, options = {}) => {
 						argumentsList
 				);
 
-				const isChanged = smartClone.isChanged(thisProxyTarget, equals, argumentsList);
-				const clone = smartClone.stop();
+				const isChanged = smartClone.isChanged(thisProxyTarget, equals);
+				const previous = smartClone.stop();
 
 				if (SmartClone.isHandledType(result) && isHandledMethod) {
 					if (thisArg instanceof Map && target.name === 'get') {
 						applyPath = path.concat(applyPath, argumentsList[0]);
 					}
+
 					result = cache.getProxy(result, applyPath, handler);
 				}
 
@@ -186,11 +205,17 @@ const onChange = (object, onChange, options = {}) => {
 						args: argumentsList,
 						result
 					};
+					const changePath = smartClone.isCloning ?
+						path.initial(applyPath) :
+						applyPath;
+					const property = smartClone.isCloning ?
+						path.last(applyPath) :
+						'';
 
-					if (smartClone.isCloning) {
-						handleChange(path.initial(applyPath), path.last(applyPath), thisProxyTarget, clone, applyData);
+					if (validate(path.get(object, changePath), property, thisProxyTarget, previous, applyData)) {
+						handleChange(changePath, property, thisProxyTarget, previous, applyData);
 					} else {
-						handleChange(applyPath, '', thisProxyTarget, clone, applyData);
+						smartClone.undo(thisProxyTarget);
 					}
 				}
 
@@ -211,10 +236,14 @@ const onChange = (object, onChange, options = {}) => {
 	const proxy = cache.getProxy(object, options.pathAsArray ? [] : '', handler);
 	onChange = onChange.bind(proxy);
 
+	if (hasOnValidate) {
+		options.onValidate = options.onValidate.bind(proxy);
+	}
+
 	return proxy;
 };
 
-onChange.target = proxy => proxy[TARGET] || proxy;
+onChange.target = proxy => (proxy && proxy[TARGET]) || proxy;
 onChange.unsubscribe = proxy => proxy[UNSUBSCRIBE] || proxy;
 
 module.exports = onChange;

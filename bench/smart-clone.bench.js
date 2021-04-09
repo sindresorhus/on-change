@@ -1,7 +1,7 @@
 /* globals suite benchmark */
 'use strict';
 
-const SmartClone = require('../lib/smart-clone');
+const SmartClone = require('../lib/smart-clone/smart-clone.js');
 const {benchSettings} = require('karma-webpack-bundle');
 let temporaryTarget;
 

@@ -2,7 +2,6 @@ const onChange = require('..');
 const displayValue = require('display-value');
 const test = require('ava');
 const {testRunner, setOnChange} = require('./helpers/test-runner');
-const {dates} = require('./helpers/data-types');
 const {testValues} = require('./helpers/data-types');
 
 setOnChange(onChange);
