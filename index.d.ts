@@ -7,7 +7,7 @@ declare namespace onChange {
 
 		@example
 		```
-		import onChange = require('on-change');
+		const onChange = require('on-change');
 
 		const object = {
 			a: {
@@ -36,7 +36,7 @@ declare namespace onChange {
 
 		@example
 		 ```
-		import onChange = require('on-change');
+		const onChange = require('on-change');
 
 		const object = {
 			a: {
@@ -99,6 +99,47 @@ declare namespace onChange {
 		@default false
 		 */
 		details?: boolean | string[];
+
+		/**
+		The function receives the same arguments and context as the [onChange callback](#onchange). The function is called whenever a change is attempted. Returning true will allow the change to be made and the onChange callback to execute, returning anything else will prevent the change from being made and the onChange callback will not trigger.
+
+		@example
+		 ```
+		const onChange = require('on-change');
+
+		const object = {a: 0};
+		let i = 0;
+		const watchedObject = onChange(object, () => {
+			console.log('Object changed:', ++i);
+		}, {onValidate: () => false});
+
+		watchedObject.a = true;
+		// watchedObject.a still equals 0
+		```
+		 */
+		onValidate?: (
+			this: unknown,
+			path: string,
+			value: unknown,
+			previousValue: unknown,
+			applyData: ApplyData
+		) => boolean;
+
+	}
+
+	interface ApplyData {
+		/**
+		The name of the method that produced the change.
+		 */
+		name: string;
+		/**
+		The arguments provided to the method that produced the change.
+		 */
+		args: any[];
+		/**
+		The result returned from the method that produced the change.
+		 */
+		result: any;
 	}
 }
 
@@ -108,11 +149,12 @@ declare const onChange: {
 
 	@param object - Object to watch for changes.
 	@param onChange - Function that gets called anytime the object changes.
+	@param [options] - Options for altering the behavior of onChange.
 	@returns A version of `object` that is watched. It's the exact same object, just with some `Proxy` traps.
 
 	@example
 	```
-	import onChange = require('on-change');
+	const onChange = require('on-change');
 
 	const object = {
 		foo: false,
@@ -126,13 +168,13 @@ declare const onChange: {
 	};
 
 	let i = 0;
-	const watchedObject = onChange(object, function (path, value, previousValue, name) {
+	const watchedObject = onChange(object, function (path, value, previousValue, applyData) {
 		console.log('Object changed:', ++i);
 		console.log('this:', this);
 		console.log('path:', path);
 		console.log('value:', value);
 		console.log('previousValue:', previousValue);
-		console.log('name:', name);
+		console.log('applyData:', applyData);
 	});
 
 	watchedObject.foo = true;
@@ -150,7 +192,7 @@ declare const onChange: {
 	//=> 'path: "foo"'
 	//=> 'value: true'
 	//=> 'previousValue: false'
-	//=> 'name: undefined'
+	//=> 'applyData: undefined'
 
 	watchedObject.a.b[0].c = true;
 	//=> 'Object changed: 2'
@@ -167,7 +209,7 @@ declare const onChange: {
 	//=> 'path: "a.b.0.c"'
 	//=> 'value: true'
 	//=> 'previousValue: false'
-	//=> 'name: undefined'
+	//=> 'applyData: undefined'
 
 	watchedObject.a.b.push(3);
 	//=> 'Object changed: 3'
@@ -185,7 +227,11 @@ declare const onChange: {
 	//=> 'path: "a.b"'
 	//=> 'value: [{c: true}, 3]'
 	//=> 'previousValue: [{c: true}]'
-	//=> 'name: "push"'
+	//=> 'applyData: {
+	//       name: "push",
+	//       args: [3],
+	//       result: 2,
+	//   }'
 
 	// Access the original object
 	onChange.target(watchedObject).foo = false;
@@ -204,7 +250,7 @@ declare const onChange: {
 			path: string,
 			value: unknown,
 			previousValue: unknown,
-			name: string
+			applyData: onChange.ApplyData
 		) => void,
 		options?: onChange.Options & {pathAsArray?: false}
 	): ObjectType;
@@ -217,7 +263,7 @@ declare const onChange: {
 			path: Array<string|symbol>,
 			value: unknown,
 			previousValue: unknown,
-			name: string
+			applyData: onChange.ApplyData
 		) => void,
 		options: onChange.Options & {pathAsArray: true}
 	): ObjectType;

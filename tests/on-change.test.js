@@ -685,7 +685,7 @@ test('should NOT trigger if setting a property fails', t => {
 	testRunner(t, object, {}, (proxy, verify) => {
 		proxy.x = false;
 
-		verify(0, undefined, undefined, undefined, undefined);
+		verify(0);
 	});
 });
 

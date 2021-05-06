@@ -29,13 +29,13 @@ const object = {
 };
 
 let i = 0;
-const watchedObject = onChange(object, function (path, value, previousValue, name) {
+const watchedObject = onChange(object, function (path, value, previousValue, applyData) {
 	console.log('Object changed:', ++i);
 	console.log('this:', this);
 	console.log('path:', path);
 	console.log('value:', value);
 	console.log('previousValue:', previousValue);
-	console.log('name:', name);
+	console.log('applyData:', applyData);
 });
 
 watchedObject.foo = true;
@@ -53,7 +53,7 @@ watchedObject.foo = true;
 //=> 'path: "foo"'
 //=> 'value: true'
 //=> 'previousValue: false'
-//=> 'name: undefined'
+//=> 'applyData: undefined'
 
 watchedObject.a.b[0].c = true;
 //=> 'Object changed: 2'
@@ -70,7 +70,7 @@ watchedObject.a.b[0].c = true;
 //=> 'path: "a.b.0.c"'
 //=> 'value: true'
 //=> 'previousValue: false'
-//=> 'name: undefined'
+//=> 'applyData: undefined'
 
 watchedObject.a.b.push(3);
 //=> 'Object changed: 3'
@@ -88,7 +88,11 @@ watchedObject.a.b.push(3);
 //=> 'path: "a.b"'
 //=> 'value: [{c: true}, 3]'
 //=> 'previousValue: [{c: true}]'
-//=> 'name: "push"'
+//=> 'applyData: {
+//       name: "push",
+//       args: [3],
+//       result: 2,
+//   }'
 
 // Access the original object
 onChange.target(watchedObject).foo = false;
@@ -122,13 +126,15 @@ The function receives four arguments:
 1. A path to the value that was changed. A change to `c` in the above example would return `a.b.0.c`.
 2. The new value at the path.
 3. The previous value at the path. Changes in `WeakSets` and `WeakMaps` will return `undefined`.
-4. The name of the method that produced the change.
+4. An object with the name of the method that produced the change, the args passed to the method, and the result of the method.
 
 The context (this) is set to the original object passed to `onChange` (with Proxy).
 
 #### options
 
 Type: `object`
+
+Options for altering the behavior of onChange.
 
 ##### isShallow
 
