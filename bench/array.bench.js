@@ -4,7 +4,7 @@
 const {benchSettings} = require('karma-webpack-bundle');
 const onChange = require('..');
 
-let temporaryTarget;
+let temporaryTarget; // eslint-disable-line no-unused-vars
 const callback = function () {};
 let array = [];
 let value = 0;
@@ -145,6 +145,6 @@ suite('on-change with array, shift', () => {
 
 suite('on-change with array, toString', () => {
 	commonBench(() => {
-		temporaryTarget = array.toString(); // eslint-disable-line no-unused-vars
+		temporaryTarget = array.toString();
 	});
 });

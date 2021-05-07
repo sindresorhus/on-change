@@ -4,7 +4,7 @@
 const isBuiltin = require('../lib/is-builtin');
 const {benchSettings} = require('karma-webpack-bundle');
 
-let temporaryTarget;
+let temporaryTarget; // eslint-disable-line no-unused-vars
 
 suite('isBuiltin.withMutableMethods', () => {
 	const date = new Date();
@@ -43,6 +43,6 @@ suite('isBuiltin.withoutMutableMethods', () => {
 	}, benchSettings);
 
 	benchmark('number instance', () => {
-		temporaryTarget = isBuiltin.withoutMutableMethods(testNumberInstance); // eslint-disable-line no-unused-vars
+		temporaryTarget = isBuiltin.withoutMutableMethods(testNumberInstance);
 	}, benchSettings);
 });

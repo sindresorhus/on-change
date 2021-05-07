@@ -3,7 +3,7 @@
 
 const path = require('../lib/path');
 const {benchSettings} = require('karma-webpack-bundle');
-let temporaryTarget;
+let temporaryTarget; // eslint-disable-line no-unused-vars
 
 suite('path.after', () => {
 	benchmark('string empty', () => {
@@ -102,7 +102,7 @@ suite('path.walk', () => {
 
 	benchmark('array three keys', () => {
 		path.walk(['a', 'b', 'c'], key => {
-			temporaryTarget = key; // eslint-disable-line no-unused-vars
+			temporaryTarget = key;
 		});
 	}, benchSettings);
 });
