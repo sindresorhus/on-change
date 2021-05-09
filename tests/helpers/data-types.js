@@ -47,7 +47,7 @@ const strings = [
 ];
 
 const dates = [
-	new Date('1/1/2001')
+	new Date('2001-01-01T06:00:00.000Z')
 ];
 
 const sets = [

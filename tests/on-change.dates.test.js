@@ -21,7 +21,7 @@ test('dates', t => {
 		verify(2, proxy, 'a', date, clone, {
 			name: 'setSeconds',
 			args: [32],
-			result: 978328832000
+			result: date.valueOf()
 		});
 
 		clone = new Date(date);
@@ -29,14 +29,14 @@ test('dates', t => {
 		verify(3, proxy, 'a', date, clone, {
 			name: 'setHours',
 			args: [5],
-			result: 978346832000
+			result: date.valueOf()
 		});
 
 		proxy.a.setHours(5);
 		verify(3, proxy, 'a', date, clone, {
 			name: 'setHours',
 			args: [5],
-			result: 978346832000
+			result: date.valueOf()
 		});
 	});
 });
