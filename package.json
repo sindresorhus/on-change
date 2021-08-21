@@ -40,7 +40,7 @@
 	],
 	"devDependencies": {
 		"ava": "^3.13.0",
-		"display-value": "^1.8.1",
+		"display-value": "^1.8.5",
 		"karma-webpack-bundle": "^0.5.3",
 		"powerset": "0.0.1",
 		"tsd": "^0.13.1",
