@@ -1,7 +1,7 @@
 const onChange = require('..');
 const test = require('ava');
 const {testRunner, setOnChange} = require('./helpers/test-runner');
-const {typedArrays} = require('./helpers/data-types.js');
+const {typedArrays} = require('./helpers/data-types');
 
 setOnChange(onChange);
 

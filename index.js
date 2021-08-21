@@ -8,7 +8,7 @@ const isIterator = require('./lib/is-iterator');
 const wrapIterator = require('./lib/wrap-iterator');
 const ignoreProperty = require('./lib/ignore-property');
 const Cache = require('./lib/cache');
-const SmartClone = require('./lib/smart-clone/smart-clone.js');
+const SmartClone = require('./lib/smart-clone/smart-clone');
 
 const defaultOptions = {
 	equals: Object.is,
