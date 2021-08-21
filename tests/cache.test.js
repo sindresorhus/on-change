@@ -1,7 +1,7 @@
-const Cache = require('../lib/cache');
-const test = require('ava');
-const powerset = require('powerset');
-const displayValue = require('display-value');
+import test from 'ava';
+import powerset from 'powerset';
+import displayValue from 'display-value';
+import Cache from '../lib/cache.js';
 
 test('should delete inner WeakMaps when unsubscribe is called', t => {
 	const cache = new Cache();
@@ -22,12 +22,12 @@ test('should delete inner WeakMaps when unsubscribe is called', t => {
 test('should get a proxy and set a path', t => {
 	const cache = new Cache();
 	const object = {
-		a: 1
+		a: 1,
 	};
 	const handlerMock = {
 		get() {
 			return 'proxy';
-		}
+		},
 	};
 	const proxy1 = cache.getProxy(object, '', handlerMock);
 
@@ -57,8 +57,8 @@ test('should get a descriptor', t => {
 	const object = {
 		a: 1,
 		b: {
-			c: 2
-		}
+			c: 2,
+		},
 	};
 	const descriptor1 = cache._getOwnPropertyDescriptor(object, 'a');
 
@@ -107,12 +107,11 @@ test('should get a descriptor', t => {
 const noop1 = () => {};
 const noop2 = function () {};
 
-const keysToObject = value => keys => {
-	return keys.reduce((object, key) => { // eslint-disable-line unicorn/no-reduce
-		object[key] = value;
-		return object;
-	}, {});
-};
+// TODO: Stop using `.reduce` here. Use a `for-of` loop instead.
+const keysToObject = value => keys => keys.reduce((object, key) => { // eslint-disable-line unicorn/no-array-reduce
+	object[key] = value;
+	return object;
+}, {});
 
 const descriptorKeyVariants = powerset(['configurable', 'enumerable', 'writable']);
 const descriptorSet = descriptorKeyVariants.map(keysToObject(true));
@@ -120,14 +119,14 @@ const setterSet = powerset(['get', 'set']).map(keysToObject(noop1));
 const compiledSettings = [];
 const titles = [];
 
-descriptorSet.forEach(descriptorOptions => {
-	setterSet.forEach(setterOptions => {
-		const hasGetterSetter = Object.entries(setterOptions).length !== 0;
+for (const descriptorOptions of descriptorSet) {
+	for (const setterOptions of setterSet) {
+		const hasGetterSetter = Object.entries(setterOptions).length > 0;
 
 		if (!hasGetterSetter || descriptorOptions.writable === undefined) {
 			const settings = {
 				...descriptorOptions,
-				...setterOptions
+				...setterOptions,
 			};
 
 			if (!hasGetterSetter) {
@@ -136,11 +135,11 @@ descriptorSet.forEach(descriptorOptions => {
 
 			compiledSettings.push(settings);
 		}
-	});
-});
+	}
+}
 
-compiledSettings.forEach((settings1, index1) => {
-	compiledSettings.forEach((settings2, index2) => {
+for (const [index1, settings1] of compiledSettings.entries()) {
+	for (const [index2, settings2] of compiledSettings.entries()) {
 		const object = {};
 		const cache = new Cache();
 
@@ -154,7 +153,7 @@ compiledSettings.forEach((settings1, index1) => {
 			if (settings2.get !== undefined) {
 				const settings = {
 					...settings2,
-					get: noop2
+					get: noop2,
 				};
 
 				test(`should return false when isSameDescriptor is comparing ${displayValue(settings1)} and ${displayValue(settings)}`, t => {
@@ -165,7 +164,7 @@ compiledSettings.forEach((settings1, index1) => {
 			if (settings2.set !== undefined) {
 				const settings = {
 					...settings2,
-					set: noop2
+					set: noop2,
 				};
 
 				test(`should return false when isSameDescriptor is comparing ${displayValue(settings1)} and ${displayValue(settings)}`, t => {
@@ -173,11 +172,11 @@ compiledSettings.forEach((settings1, index1) => {
 				});
 			}
 		} else {
-			descriptorKeyVariants.forEach(variant => {
+			for (const variant of descriptorKeyVariants) {
 				if (variant.some(key => !settings2[key])) {
 					const finalSettings = {
 						...keysToObject(false)(variant),
-						...settings2
+						...settings2,
 					};
 					const title = `should return false when isSameDescriptor is comparing ${displayValue(settings1)} and ${displayValue(finalSettings)}`;
 
@@ -189,7 +188,7 @@ compiledSettings.forEach((settings1, index1) => {
 						titles.push(title);
 					}
 				}
-			});
+			}
 		}
-	});
-});
+	}
+}

@@ -1,6 +1,6 @@
-const onChange = require('..');
-const test = require('ava');
-const {testRunner, setOnChange} = require('./helpers/test-runner');
+import test from 'ava';
+import onChange from '../index.js';
+import {testRunner, setOnChange} from './helpers/test-runner.js';
 
 setOnChange(onChange);
 
@@ -11,9 +11,8 @@ test('should provide the same arguments for onValidate as onChange', t => {
 	let validateArgs;
 
 	const onValidate = function () {
-		context = this;
+		context = this; // eslint-disable-line unicorn/no-this-assignment
 		validateArgs = arguments; // eslint-disable-line prefer-rest-params
-
 		return true;
 	};
 
@@ -27,9 +26,9 @@ test('should provide the same arguments for onValidate as onChange', t => {
 
 	t.is(callCount, 1);
 
-	proxy.forEach(item => {
+	for (const item of proxy) {
 		item.x = 3;
-	});
+	}
 
 	t.is(callCount, 2);
 });
@@ -53,7 +52,7 @@ test('should execute when a property is defined and onValidate returns true', t 
 			value: true,
 			configurable: true,
 			writable: true,
-			enumerable: true
+			enumerable: true,
 		});
 		verify(1, proxy, 'x', true);
 	});
@@ -78,11 +77,11 @@ test('should execute when a method is applied and onValidate returns true', t =>
 			item.x = 2;
 		};
 
-		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 		verify(1, proxy, '', [{x: 2}, {x: 2}], [{x: 1}, {x: 3}], {
 			name: 'forEach',
 			args: [forEachCallback],
-			result: undefined
+			result: undefined,
 		});
 	});
 });
@@ -108,7 +107,7 @@ test('should not execute when a property is defined and onValidate returns false
 			value: true,
 			configurable: true,
 			writable: true,
-			enumerable: true
+			enumerable: true,
 		});
 		verify(0);
 
@@ -137,7 +136,7 @@ test('should not execute when a method is applied and onValidate returns false',
 			item.x = 2;
 		};
 
-		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 		verify(0);
 
 		t.is(proxy[0].x, 1);
@@ -163,7 +162,7 @@ test('should not execute when a property is defined to the same value and onVali
 			value: true,
 			configurable: true,
 			writable: true,
-			enumerable: true
+			enumerable: true,
 		});
 		verify(0);
 	});
@@ -184,18 +183,17 @@ test('should not execute when a method is applied without changes and onValidate
 	const onValidate = () => true;
 
 	testRunner(t, object, {onValidate}, (proxy, verify) => {
-		proxy.forEach(item => {
+		for (const item of proxy) {
 			item.x = 1;
-		});
+		}
+
 		verify(0);
 	});
 });
 
 test('should revert deep changes in apply trap when onValidate returns false', t => {
 	const object = [{x: 1}];
-	const onValidate = () => {
-		return false;
-	};
+	const onValidate = () => false;
 
 	testRunner(t, object, {onValidate, pathAsArray: true}, (proxy, verify) => {
 		const forEachCallback = item => {
@@ -203,7 +201,7 @@ test('should revert deep changes in apply trap when onValidate returns false', t
 			item.x.y.z = 2;
 		};
 
-		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 		verify(0);
 
 		t.is(proxy[0].x, 1);
@@ -223,7 +221,7 @@ test('should revert deep changes in nested apply traps when onValidate returns f
 			item.x.push(2);
 		};
 
-		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 		verify(0);
 
 		t.is(validateCount, 1);
@@ -244,7 +242,7 @@ test('should revert deep changes in nested apply traps when onValidate returns f
 			item.x.push(4);
 		};
 
-		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 		verify(0);
 
 		t.is(validateCount, 2);

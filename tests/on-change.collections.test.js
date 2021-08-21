@@ -1,6 +1,6 @@
-const onChange = require('..');
-const test = require('ava');
-const {testRunner, setOnChange} = require('./helpers/test-runner');
+import test from 'ava';
+import onChange from '../index.js';
+import {testRunner, setOnChange} from './helpers/test-runner.js';
 
 setOnChange(onChange);
 
@@ -18,7 +18,7 @@ test('should handle shallow changes to Sets', t => {
 		verify(2, proxy, 'a', set, clone, {
 			name: 'add',
 			args: [32],
-			result: proxy.a
+			result: proxy.a,
 		});
 
 		clone = new Set(set);
@@ -26,7 +26,7 @@ test('should handle shallow changes to Sets', t => {
 		verify(3, proxy, 'a', set, clone, {
 			name: 'add',
 			args: [64],
-			result: proxy.a
+			result: proxy.a,
 		});
 
 		clone = new Set(set);
@@ -34,14 +34,14 @@ test('should handle shallow changes to Sets', t => {
 		verify(4, proxy, 'a', set, clone, {
 			name: 'delete',
 			args: [32],
-			result: true
+			result: true,
 		});
 
 		proxy.a.delete(32);
 		verify(4, proxy, 'a', set, clone, {
 			name: 'delete',
 			args: [32],
-			result: true
+			result: true,
 		});
 
 		clone = new Set(set);
@@ -49,7 +49,7 @@ test('should handle shallow changes to Sets', t => {
 		verify(5, proxy, 'a', set, clone, {
 			name: 'clear',
 			args: [],
-			result: undefined
+			result: undefined,
 		});
 	});
 });
@@ -94,8 +94,8 @@ test('should trigger when set.add is called', t => {
 			{
 				args: [{b: 2}],
 				name: 'add',
-				result: new Set([{a: 1}, {a: 2}, {b: 2}])
-			}
+				result: new Set([{a: 1}, {a: 2}, {b: 2}]),
+			},
 		);
 	});
 });
@@ -115,8 +115,8 @@ test('should trigger when set.clear is called', t => {
 			{
 				args: [],
 				name: 'clear',
-				result: undefined
-			}
+				result: undefined,
+			},
 		);
 	});
 });
@@ -158,8 +158,8 @@ test('should trigger when set.delete is called', t => {
 			{
 				args: [object],
 				name: 'delete',
-				result: true
-			}
+				result: true,
+			},
 		);
 	});
 });
@@ -172,7 +172,7 @@ test('should trigger when a change happens in set.forEach', t => {
 			entry.a++;
 		};
 
-		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 
 		verify(
 			1,
@@ -183,8 +183,8 @@ test('should trigger when a change happens in set.forEach', t => {
 			{
 				args: [forEachCallback],
 				name: 'forEach',
-				result: undefined
-			}
+				result: undefined,
+			},
 		);
 	});
 });
@@ -263,21 +263,21 @@ test('should handle shallow changes to WeakSets', t => {
 		verify(2, proxy, 'a', set, undefined, {
 			name: 'add',
 			args: [setObject],
-			result: set
+			result: set,
 		});
 
 		proxy.a.delete(setObject);
 		verify(3, proxy, 'a', set, undefined, {
 			name: 'delete',
 			args: [setObject],
-			result: true
+			result: true,
 		});
 
 		proxy.a.delete(setObject);
 		verify(3, proxy, 'a', set, undefined, {
 			name: 'delete',
 			args: [setObject],
-			result: true
+			result: true,
 		});
 	});
 });
@@ -296,7 +296,7 @@ test('should handle shallow changes to Maps', t => {
 		verify(2, proxy, 'a', map, clone, {
 			name: 'set',
 			args: [32, true],
-			result: proxy.a
+			result: proxy.a,
 		});
 
 		clone = new Map(map);
@@ -304,14 +304,14 @@ test('should handle shallow changes to Maps', t => {
 		verify(3, proxy, 'a', map, clone, {
 			name: 'delete',
 			args: [32],
-			result: true
+			result: true,
 		});
 
 		proxy.a.delete(32);
 		verify(3, proxy, 'a', map, clone, {
 			name: 'delete',
 			args: [32],
-			result: true
+			result: true,
 		});
 	});
 });
@@ -366,14 +366,14 @@ test('should trigger when a value is modified in map.forEach', t => {
 
 	testRunner(t, map, {pathAsArray: true}, (proxy, verify) => {
 		const forEachCallback = value => value.b++;
-		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 
 		const lateClone = new Map(proxy);
 
 		verify(1, proxy, [], lateClone, earlyClone, {
 			args: [forEachCallback],
 			name: 'forEach',
-			result: undefined
+			result: undefined,
 		});
 	});
 });
@@ -391,7 +391,7 @@ test('should trigger when map.clear is called', t => {
 		verify(1, proxy, [], new Map(), clone, {
 			args: [],
 			name: 'clear',
-			result: undefined
+			result: undefined,
 		});
 	});
 });
@@ -466,21 +466,21 @@ test('should handle shallow changes to WeakMaps', t => {
 		verify(2, proxy, 'a', map, undefined, {
 			name: 'set',
 			args: [setObject, true],
-			result: map
+			result: map,
 		});
 
 		proxy.a.delete(setObject);
 		verify(3, proxy, 'a', map, undefined, {
 			name: 'delete',
 			args: [setObject],
-			result: true
+			result: true,
 		});
 
 		proxy.a.delete(32);
 		verify(3, proxy, 'a', map, undefined, {
 			name: 'delete',
 			args: [setObject],
-			result: true
+			result: true,
 		});
 	});
 });

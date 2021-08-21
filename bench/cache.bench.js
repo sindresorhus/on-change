@@ -1,8 +1,6 @@
 /* globals suite benchmark */
-'use strict';
-
-const Cache = require('../lib/cache');
-const {benchSettings} = require('karma-webpack-bundle');
+import {benchSettings} from 'karma-webpack-bundle.js';
+import Cache from '../lib/cache.js';
 
 let temporaryTarget;
 

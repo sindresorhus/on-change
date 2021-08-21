@@ -1,6 +1,6 @@
-const onChange = require('..');
-const test = require('ava');
-const {testRunner, setOnChange} = require('./helpers/test-runner');
+import test from 'ava';
+import onChange from '../index.js';
+import {testRunner, setOnChange} from './helpers/test-runner.js';
 
 setOnChange(onChange);
 
@@ -8,9 +8,9 @@ test('should not execute for changes on a detached object if ignoreDetached is t
 	const object = {
 		foo: {
 			z: {
-				a: 1
-			}
-		}
+				a: 1,
+			},
+		},
 	};
 
 	testRunner(t, object, {ignoreDetached: true}, (proxy, verify, reset) => {
@@ -21,7 +21,7 @@ test('should not execute for changes on a detached object if ignoreDetached is t
 		const detachedNested = proxy.foo.z;
 
 		proxy.foo = {
-			z: 3
+			z: 3,
 		};
 		verify(2, proxy, 'foo', {z: 3}, {z: {a: 2}});
 
@@ -37,8 +37,8 @@ test('should not execute for changes on a detached object if ignoreDetached is t
 test('should not execute for changes on a detached array if ignoreDetached is true', t => {
 	const object = {
 		foo: [{
-			z: 1
-		}]
+			z: 1,
+		}],
 	};
 
 	testRunner(t, object, {ignoreDetached: true}, (proxy, verify, reset) => {
@@ -49,7 +49,7 @@ test('should not execute for changes on a detached array if ignoreDetached is tr
 		const detachedNested = proxy.foo[0];
 
 		proxy.foo = {
-			z: 3
+			z: 3,
 		};
 		verify(2, proxy, 'foo', {z: 3}, [{z: 2}]);
 
@@ -61,9 +61,10 @@ test('should not execute for changes on a detached array if ignoreDetached is tr
 		detached[0].z = 4;
 		verify(0);
 
-		detached.forEach((value, index) => {
+		for (const index of detached.keys()) {
 			detached[index].z++;
-		});
+		}
+
 		verify(0);
 	});
 });

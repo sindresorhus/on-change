@@ -1,146 +1,145 @@
-declare namespace onChange {
-	interface Options {
-		/**
-		Deep changes will not trigger the callback. Only changes to the immediate properties of the original object.
+export interface Options {
+	/**
+	Deep changes will not trigger the callback. Only changes to the immediate properties of the original object.
 
-		@default false
+	@default false
 
-		@example
-		```
-		const onChange = require('on-change');
+	@example
+	```
+	import onChange from 'on-change';
 
-		const object = {
-			a: {
-				b: false
-			}
-		};
+	const object = {
+		a: {
+			b: false
+		}
+	};
 
-		let i = 0;
-		const watchedObject = onChange(object, () => {
-			console.log('Object changed:', ++i);
-		}, {isShallow: true});
+	let index = 0;
+	const watchedObject = onChange(object, () => {
+		console.log('Object changed:', ++index);
+	}, {isShallow: true});
 
-		watchedObject.a.b = true;
-		// Nothing happens
+	watchedObject.a.b = true;
+	// Nothing happens
 
-		watchedObject.a = true;
-		//=> 'Object changed: 1'
-		```
-		*/
-		isShallow?: boolean;
+	watchedObject.a = true;
+	//=> 'Object changed: 1'
+	```
+	*/
+	readonly isShallow?: boolean;
 
-		/**
-		The function receives two arguments to be compared for equality. Should return `true` if the two values are determined to be equal.
+	/**
+	The function receives two arguments to be compared for equality. Should return `true` if the two values are determined to be equal.
 
-		@default Object.is
+	@default Object.is
 
-		@example
-		 ```
-		const onChange = require('on-change');
+	@example
+	 ```
+	import onChange from 'on-change';
 
-		const object = {
-			a: {
-				b: false
-			}
-		};
+	const object = {
+		a: {
+			b: false
+		}
+	};
 
-		let i = 0;
-		const watchedObject = onChange(object, () => {
-			console.log('Object changed:', ++i);
-		}, {equals: (a, b) => a === b});
+	let index = 0;
+	const watchedObject = onChange(object, () => {
+		console.log('Object changed:', ++index);
+	}, {equals: (a, b) => a === b});
 
-		watchedObject.a.b = 0;
-		// Nothing happens
+	watchedObject.a.b = 0;
+	// Nothing happens
 
-		watchedObject.a = true;
-		//=> 'Object changed: 1'
-		```
-		*/
-		equals?: (a: unknown, b: unknown) => boolean;
+	watchedObject.a = true;
+	//=> 'Object changed: 1'
+	```
+	*/
+	equals?: (a: unknown, b: unknown) => boolean;
 
-		/**
-		Setting properties as `Symbol` won't trigger the callback.
+	/**
+	Setting properties as `Symbol` won't trigger the callback.
 
-		@default false
-		*/
-		ignoreSymbols?: boolean;
+	@default false
+	*/
+	readonly ignoreSymbols?: boolean;
 
-		/**
-		Setting properties in this array won't trigger the callback.
+	/**
+	Setting properties in this array won't trigger the callback.
 
-		@default undefined
-		*/
-		ignoreKeys?: Array<string|symbol>;
+	@default undefined
+	*/
+	readonly ignoreKeys?: ReadonlyArray<string | symbol>;
 
-		/**
-		Setting properties with an underscore as the first character won't trigger the callback.
+	/**
+	Setting properties with an underscore as the first character won't trigger the callback.
 
-		@default false
-		*/
-		ignoreUnderscores?: boolean;
+	@default false
+	*/
+	readonly ignoreUnderscores?: boolean;
 
-		/**
-		The path will be provided as an array of keys instead of a delimited string.
+	/**
+	The path will be provided as an array of keys instead of a delimited string.
 
-		@default false
-		*/
-		pathAsArray?: boolean;
+	@default false
+	*/
+	readonly pathAsArray?: boolean;
 
-		/**
-		Ignore changes to objects that become detached from the watched object.
+	/**
+	Ignore changes to objects that become detached from the watched object.
 
-		@default false
-		*/
-		ignoreDetached?: boolean;
+	@default false
+	*/
+	readonly ignoreDetached?: boolean;
 
-		/**
-		Trigger callbacks for each change within specified method calls or all method calls.
+	/**
+	Trigger callbacks for each change within specified method calls or all method calls.
 
-		@default false
-		 */
-		details?: boolean | string[];
+	@default false
+	 */
+	readonly details?: boolean | readonly string[];
 
-		/**
-		The function receives the same arguments and context as the [onChange callback](#onchange). The function is called whenever a change is attempted. Returning true will allow the change to be made and the onChange callback to execute, returning anything else will prevent the change from being made and the onChange callback will not trigger.
+	/**
+	The function receives the same arguments and context as the [onChange callback](#onchange). The function is called whenever a change is attempted. Returning true will allow the change to be made and the onChange callback to execute, returning anything else will prevent the change from being made and the onChange callback will not trigger.
 
-		@example
-		 ```
-		const onChange = require('on-change');
+	@example
+	 ```
+	import onChange from 'on-change';
 
-		const object = {a: 0};
-		let i = 0;
-		const watchedObject = onChange(object, () => {
-			console.log('Object changed:', ++i);
-		}, {onValidate: () => false});
+	const object = {a: 0};
+	let index = 0;
+	const watchedObject = onChange(object, () => {
+		console.log('Object changed:', ++index);
+	}, {onValidate: () => false});
 
-		watchedObject.a = true;
-		// watchedObject.a still equals 0
-		```
-		 */
-		onValidate?: (
-			this: unknown,
-			path: string,
-			value: unknown,
-			previousValue: unknown,
-			applyData: ApplyData
-		) => boolean;
+	watchedObject.a = true;
+	// watchedObject.a still equals 0
+	```
+	 */
+	onValidate?: (
+		this: unknown,
+		path: string,
+		value: unknown,
+		previousValue: unknown,
+		applyData: ApplyData
+	) => boolean;
+}
 
-	}
+export interface ApplyData {
+	/**
+	The name of the method that produced the change.
+	*/
+	readonly name: string;
 
-	interface ApplyData {
-		/**
-		The name of the method that produced the change.
-		 */
-		name: string;
-		/**
-		The arguments provided to the method that produced the change.
-		 */
-		args: any[];
-		/**
-		The result returned from the method that produced the change.
-		 */
-		result: any;
-	}
+	/**
+	The arguments provided to the method that produced the change.
+	*/
+	readonly args: unknown[];
+
+	/**
+	The result returned from the method that produced the change.
+	*/
+	readonly result: unknown;
 }
 
 declare const onChange: {
@@ -154,7 +153,7 @@ declare const onChange: {
 
 	@example
 	```
-	const onChange = require('on-change');
+	import onChange from 'on-change';
 
 	const object = {
 		foo: false,
@@ -167,9 +166,9 @@ declare const onChange: {
 		}
 	};
 
-	let i = 0;
+	let index = 0;
 	const watchedObject = onChange(object, function (path, value, previousValue, applyData) {
-		console.log('Object changed:', ++i);
+		console.log('Object changed:', ++index);
 		console.log('this:', this);
 		console.log('path:', path);
 		console.log('value:', value);
@@ -243,36 +242,36 @@ declare const onChange: {
 	// Callback isn't called
 	```
 	*/
-	<ObjectType extends {[key: string]: any}>(
+	<ObjectType extends Record<string, any>>(
 		object: ObjectType,
 		onChange: (
 			this: ObjectType,
 			path: string,
 			value: unknown,
 			previousValue: unknown,
-			applyData: onChange.ApplyData
+			applyData: ApplyData
 		) => void,
-		options?: onChange.Options & {pathAsArray?: false}
+		options?: Options & {pathAsArray?: false}
 	): ObjectType;
 
-	// Overload that returns an Array as path when pathAsArray is true
-	<ObjectType extends {[key: string]: any}>(
+	// Overload that returns an Array as path when `pathAsArray` option is true.
+	<ObjectType extends Record<string, any>>(
 		object: ObjectType,
 		onChange: (
 			this: ObjectType,
-			path: Array<string|symbol>,
+			path: Array<string | symbol>,
 			value: unknown,
 			previousValue: unknown,
-			applyData: onChange.ApplyData
+			applyData: ApplyData
 		) => void,
-		options: onChange.Options & {pathAsArray: true}
+		options: Options & {pathAsArray: true}
 	): ObjectType;
 
 	/**
 	@param object - Object that is already being watched for changes.
 	@returns The original unwatched object.
 	*/
-	target<ObjectType extends {[key: string]: any}>(object: ObjectType): ObjectType; // eslint-disable-line @typescript-eslint/method-signature-style
+	target<ObjectType extends Record<string, any>>(object: ObjectType): ObjectType;
 
 	/**
 	Cancels all future callbacks on a watched object.
@@ -280,7 +279,7 @@ declare const onChange: {
 	@param object - Object that is already being watched for changes.
 	@returns The original unwatched object.
 	*/
-	unsubscribe<ObjectType extends {[key: string]: any}>(object: ObjectType): ObjectType; // eslint-disable-line @typescript-eslint/method-signature-style
+	unsubscribe<ObjectType extends Record<string, any>>(object: ObjectType): ObjectType;
 };
 
-export = onChange;
+export default onChange;

@@ -1,7 +1,7 @@
-const isBuiltin = require('../lib/is-builtin');
-const displayValue = require('display-value');
-const test = require('ava');
-const {
+import displayValue from 'display-value';
+import test from 'ava';
+import {isBuiltinWithMutableMethods, isBuiltinWithoutMutableMethods} from '../lib/is-builtin.js';
+import {
 	difference,
 	booleans,
 	numbers,
@@ -14,34 +14,34 @@ const {
 	maps,
 	weakSets,
 	weakMaps,
-	typedArrays
-} = require('./helpers/data-types');
+	typedArrays,
+} from './helpers/data-types.js';
 
-const withoutMutableMethods = nots.concat(booleans, numbers, strings, regExps);
+const withoutMutableMethods = [...nots, ...booleans, ...numbers, ...strings, ...regExps];
 const singleCollections = [sets[0], maps[0], weakSets[0], weakMaps[0]];
 
-withoutMutableMethods.forEach(value => {
+for (const value of withoutMutableMethods) {
 	test(`.withoutMutableMethods should return true for ${displayValue(value)}`, t => {
-		t.true(isBuiltin.withoutMutableMethods(value));
+		t.true(isBuiltinWithoutMutableMethods(value));
 	});
-});
+}
 
-difference(testValues, withoutMutableMethods.concat(singleCollections)).forEach(value => {
+for (const value of difference(testValues, [...withoutMutableMethods, ...singleCollections])) {
 	test(`.withoutMutableMethods should return false for ${displayValue(value)}`, t => {
-		t.false(isBuiltin.withoutMutableMethods(value));
+		t.false(isBuiltinWithoutMutableMethods(value));
 	});
-});
+}
 
-const withMutableMethods = dates.concat(singleCollections, typedArrays);
+const withMutableMethods = [...dates, ...singleCollections, ...typedArrays];
 
-withMutableMethods.forEach(value => {
+for (const value of withMutableMethods) {
 	test(`withMutableMethods should return true for ${displayValue(value)}`, t => {
-		t.true(isBuiltin.withMutableMethods(value));
+		t.true(isBuiltinWithMutableMethods(value));
 	});
-});
+}
 
-difference(testValues, dates.concat(sets, maps, weakSets, weakMaps, typedArrays)).forEach(value => {
+for (const value of difference(testValues, [...dates, ...sets, ...maps, ...weakSets, ...weakMaps, ...typedArrays])) {
 	test(`withMutableMethods should return false for ${displayValue(value)}`, t => {
-		t.false(isBuiltin.withMutableMethods(value));
+		t.false(isBuiltinWithMutableMethods(value));
 	});
-});
+}

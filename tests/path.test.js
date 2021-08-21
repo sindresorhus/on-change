@@ -1,5 +1,6 @@
-const path = require('../lib/path');
-const test = require('ava');
+/* eslint-disable unicorn/prefer-spread */
+import test from 'ava';
+import path from '../lib/path.js';
 
 test('after should return the remainder of the first path after the second path', t => {
 	t.is(path.after('a.0.b', 'a.0'), 'b');
@@ -166,12 +167,22 @@ test('walk should call the callback for each key', t => {
 	path.walk('a.0.b', key => {
 		count++;
 
-		if (count === 1) {
-			t.is(key, 'a');
-		} else if (count === 2) {
-			t.is(key, '0');
-		} else if (count === 3) {
-			t.is(key, 'b');
+		switch (count) {
+			case 1: {
+				t.is(key, 'a');
+				break;
+			}
+
+			case 2: {
+				t.is(key, '0');
+				break;
+			}
+
+			case 3: {
+				t.is(key, 'b');
+				break;
+			}
+			// No default
 		}
 	});
 
@@ -204,12 +215,22 @@ test('walk should call the callback for each key in an array', t => {
 	path.walk(['a', '0', symbol], key => {
 		count++;
 
-		if (count === 1) {
-			t.is(key, 'a');
-		} else if (count === 2) {
-			t.is(key, '0');
-		} else if (count === 3) {
-			t.is(key, symbol);
+		switch (count) {
+			case 1: {
+				t.is(key, 'a');
+				break;
+			}
+
+			case 2: {
+				t.is(key, '0');
+				break;
+			}
+
+			case 3: {
+				t.is(key, symbol);
+				break;
+			}
+			// No default
 		}
 	});
 

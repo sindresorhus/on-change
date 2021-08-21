@@ -1,25 +1,23 @@
 /* globals suite benchmark */
-'use strict';
-
-const isBuiltin = require('../lib/is-builtin');
-const {benchSettings} = require('karma-webpack-bundle');
+import {benchSettings} from 'karma-webpack-bundle';
+import {isBuiltinWithMutableMethods, isBuiltinWithoutMutableMethods} from '../lib/is-builtin.js';
 
 let temporaryTarget; // eslint-disable-line no-unused-vars
 
-suite('isBuiltin.withMutableMethods', () => {
+suite('isBuiltinWithMutableMethods', () => {
 	const date = new Date();
 	const notDate = 'a';
 
 	benchmark('date', () => {
-		temporaryTarget = isBuiltin.withMutableMethods(date);
+		temporaryTarget = isBuiltinWithMutableMethods(date);
 	}, benchSettings);
 
 	benchmark('not date', () => {
-		temporaryTarget = isBuiltin.withMutableMethods(notDate);
+		temporaryTarget = isBuiltinWithMutableMethods(notDate);
 	}, benchSettings);
 });
 
-suite('isBuiltin.withoutMutableMethods', () => {
+suite('isBuiltinWithoutMutableMethods', () => {
 	const testNaN = Number.NaN;
 	const testRegExp = /as/g;
 	const testString = 'a';
@@ -27,22 +25,22 @@ suite('isBuiltin.withoutMutableMethods', () => {
 	const testNumberInstance = Number(42);
 
 	benchmark('NaN', () => {
-		temporaryTarget = isBuiltin.withoutMutableMethods(testNaN);
+		temporaryTarget = isBuiltinWithoutMutableMethods(testNaN);
 	}, benchSettings);
 
 	benchmark('regexp', () => {
-		temporaryTarget = isBuiltin.withoutMutableMethods(testRegExp);
+		temporaryTarget = isBuiltinWithoutMutableMethods(testRegExp);
 	}, benchSettings);
 
 	benchmark('string', () => {
-		temporaryTarget = isBuiltin.withoutMutableMethods(testString);
+		temporaryTarget = isBuiltinWithoutMutableMethods(testString);
 	}, benchSettings);
 
 	benchmark('number', () => {
-		temporaryTarget = isBuiltin.withoutMutableMethods(testNumber);
+		temporaryTarget = isBuiltinWithoutMutableMethods(testNumber);
 	}, benchSettings);
 
 	benchmark('number instance', () => {
-		temporaryTarget = isBuiltin.withoutMutableMethods(testNumberInstance);
+		temporaryTarget = isBuiltinWithoutMutableMethods(testNumberInstance);
 	}, benchSettings);
 });

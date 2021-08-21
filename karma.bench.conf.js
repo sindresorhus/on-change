@@ -1,3 +1,3 @@
-const {karmaBenchConfig} = require('karma-webpack-bundle');
+import {karmaBenchConfig} from 'karma-webpack-bundle';
 
-module.exports = karmaBenchConfig();
+export default karmaBenchConfig();

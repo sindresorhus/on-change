@@ -1,20 +1,20 @@
 const difference = (a, ...args) => {
-	args.forEach(b => {
+	for (const b of args) {
 		a = a.filter(item => !b.includes(item));
-	});
+	}
 
 	return a;
 };
 
 const booleans = [
 	true,
-	false
+	false,
 ];
 
 const functions = [
 	() => {},
 	function () {},
-	function test() {} // eslint-disable-line func-names
+	function test() {}, // eslint-disable-line func-names
 ];
 
 const numbers = [
@@ -23,51 +23,51 @@ const numbers = [
 	1,
 	12,
 	Number(13),
-	Infinity,
-	-Infinity
+	Number.POSITIVE_INFINITY,
+	Number.NEGATIVE_INFINITY,
 ];
 
 const objects = [
 	{},
 	[],
-	new Promise(() => {})
+	new Promise(() => {}),
 ];
 
 const regExps = [
 	new RegExp('regExp1'), // eslint-disable-line prefer-regex-literals
 	RegExp('regExp2'), // eslint-disable-line unicorn/new-for-builtins, prefer-regex-literals
-	/regExp3/
+	/regExp3/,
 ];
 
 const strings = [
 	String('string2'),
 	'string3',
 	'1',
-	''
+	'',
 ];
 
 const dates = [
-	new Date('2001-01-01T06:00:00.000Z')
+	new Date('2001-01-01T06:00:00.000Z'),
 ];
 
 const sets = [
 	new Set(),
-	new Set(strings)
+	new Set(strings),
 ];
 
 const maps = [
 	new Map(),
-	new Map([[1, 'test']])
+	new Map([[1, 'test']]),
 ];
 
 const weakSets = [
 	new WeakSet(),
-	new WeakSet(dates)
+	new WeakSet(dates),
 ];
 
 const weakMaps = [
 	new WeakMap(),
-	new WeakMap([[strings, regExps]])
+	new WeakMap([[strings, regExps]]),
 ];
 
 const typedArrays = [
@@ -79,27 +79,28 @@ const typedArrays = [
 	new Int32Array([1, 2, 3]),
 	new Uint32Array([1, 2, 3]),
 	new Float32Array([1, 2, 3]),
-	new Float64Array([1, 2, 3])
+	new Float64Array([1, 2, 3]),
 ];
 
 const nots = [undefined, null, Number.NaN];
 
-const testValues = nots.concat(
-	booleans,
-	functions,
-	numbers,
-	objects,
-	regExps,
-	strings,
-	dates,
-	sets,
-	maps,
-	weakSets,
-	weakMaps,
-	typedArrays
-);
+const testValues = [
+	...nots,
+	...booleans,
+	...functions,
+	...numbers,
+	...objects,
+	...regExps,
+	...strings,
+	...dates,
+	...sets,
+	...maps,
+	...weakSets,
+	...weakMaps,
+	...typedArrays,
+];
 
-module.exports = {
+export {
 	difference,
 	booleans,
 	functions,
@@ -114,5 +115,5 @@ module.exports = {
 	maps,
 	weakSets,
 	weakMaps,
-	typedArrays
+	typedArrays,
 };

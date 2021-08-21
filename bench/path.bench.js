@@ -1,8 +1,8 @@
+/* eslint-disable unicorn/prefer-spread */
 /* globals suite benchmark */
-'use strict';
+import {benchSettings} from 'karma-webpack-bundle';
+import path from '../lib/path.js';
 
-const path = require('../lib/path');
-const {benchSettings} = require('karma-webpack-bundle');
 let temporaryTarget; // eslint-disable-line no-unused-vars
 
 suite('path.after', () => {
