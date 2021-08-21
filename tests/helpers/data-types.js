@@ -113,5 +113,6 @@ module.exports = {
 	sets,
 	maps,
 	weakSets,
-	weakMaps
+	weakMaps,
+	typedArrays
 };

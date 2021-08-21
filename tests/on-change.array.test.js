@@ -1,6 +1,7 @@
 const onChange = require('..');
 const test = require('ava');
 const {testRunner, setOnChange} = require('./helpers/test-runner');
+const {typedArrays} = require('./helpers/data-types.js');
 
 setOnChange(onChange);
 
@@ -199,4 +200,16 @@ test('should unwrap proxies passed to immutable methods on array', t => {
 	proxy.c[1] = proxy.b;
 
 	t.is(proxy.c[1], proxy.b);
+});
+
+typedArrays.forEach(typedArray => {
+	test('should return the length of a ' + typedArray.constructor.name, t => {
+		testRunner(t, typedArray, {}, (proxy, verify) => {
+			verify(0);
+
+			t.is(proxy.length, 3);
+
+			verify(0);
+		});
+	});
 });

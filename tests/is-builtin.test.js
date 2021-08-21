@@ -13,7 +13,8 @@ const {
 	sets,
 	maps,
 	weakSets,
-	weakMaps
+	weakMaps,
+	typedArrays
 } = require('./helpers/data-types');
 
 const withoutMutableMethods = nots.concat(booleans, numbers, strings, regExps);
@@ -31,7 +32,7 @@ difference(testValues, withoutMutableMethods.concat(singleCollections)).forEach(
 	});
 });
 
-const withMutableMethods = dates.concat(singleCollections);
+const withMutableMethods = dates.concat(singleCollections, typedArrays);
 
 withMutableMethods.forEach(value => {
 	test(`withMutableMethods should return true for ${displayValue(value)}`, t => {
@@ -39,7 +40,7 @@ withMutableMethods.forEach(value => {
 	});
 });
 
-difference(testValues, dates.concat(sets, maps, weakSets, weakMaps)).forEach(value => {
+difference(testValues, dates.concat(sets, maps, weakSets, weakMaps, typedArrays)).forEach(value => {
 	test(`withMutableMethods should return false for ${displayValue(value)}`, t => {
 		t.false(isBuiltin.withMutableMethods(value));
 	});
