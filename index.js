@@ -146,9 +146,10 @@ const onChange = (object, onChange, options = {}) => {
 			}
 
 			const previous = Reflect.get(target, property);
+			const isValid = validate(target, property, undefined, previous);
 
 			if (
-				validate(target, property, undefined, previous)
+				isValid
 				&& cache.deleteProperty(target, property, previous)
 			) {
 				handleChangeOnTarget(target, property, undefined, previous);
@@ -156,7 +157,7 @@ const onChange = (object, onChange, options = {}) => {
 				return true;
 			}
 
-			return false;
+			return !isValid;
 		},
 
 		apply(target, thisArg, argumentsList) {

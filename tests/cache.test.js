@@ -1,3 +1,4 @@
+/* eslint-disable max-depth */
 import test from 'ava';
 import powerset from 'powerset';
 import displayValue from 'display-value';
@@ -107,11 +108,15 @@ test('should get a descriptor', t => {
 const noop1 = () => {};
 const noop2 = function () {};
 
-// TODO: Stop using `.reduce` here. Use a `for-of` loop instead.
-const keysToObject = value => keys => keys.reduce((object, key) => { // eslint-disable-line unicorn/no-array-reduce
-	object[key] = value;
-	return object;
-}, {});
+const keysToObject = value => keys => {
+	const result = {};
+
+	for (const key of keys) {
+		result[key] = value;
+	}
+
+	return result;
+};
 
 const descriptorKeyVariants = powerset(['configurable', 'enumerable', 'writable']);
 const descriptorSet = descriptorKeyVariants.map(keysToObject(true));

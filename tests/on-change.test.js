@@ -683,7 +683,9 @@ test('should NOT trigger if setting a property fails', t => {
 	Object.freeze(object);
 
 	testRunner(t, object, {}, (proxy, verify) => {
-		proxy.x = false;
+		t.throws(() => {
+			proxy.x = false;
+		});
 
 		verify(0);
 	});
@@ -697,7 +699,9 @@ test('should NOT trigger if deleting a property fails', t => {
 	Object.freeze(object);
 
 	testRunner(t, object, {}, (proxy, verify) => {
-		delete proxy.x;
+		t.throws(() => {
+			delete proxy.x;
+		});
 
 		verify(0);
 	});

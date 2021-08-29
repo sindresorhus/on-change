@@ -1,5 +1,5 @@
 /* globals suite benchmark */
-import {benchSettings} from 'karma-webpack-bundle.js';
+import {benchSettings} from 'karma-webpack-bundle';
 import Cache from '../lib/cache.js';
 
 let temporaryTarget;

@@ -17,7 +17,7 @@
 	},
 	"scripts": {
 		"test": "xo && ava && tsd",
-		"bench": "karma start karma.bench.conf.js"
+		"bench": "karma start karma.bench.conf.cjs"
 	},
 	"files": [
 		"index.js",
@@ -41,11 +41,13 @@
 		"listener"
 	],
 	"devDependencies": {
+		"@typescript-eslint/parser": "^4.29.3",
 		"ava": "^3.15.0",
 		"display-value": "^1.8.5",
 		"karma-webpack-bundle": "^1.2.0",
 		"powerset": "0.0.1",
 		"tsd": "^0.17.0",
+		"typescript": "^4.4.2",
 		"xo": "^0.44.0"
 	}
 }
