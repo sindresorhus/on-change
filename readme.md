@@ -15,7 +15,7 @@ $ npm install on-change
 ## Usage
 
 ```js
-const onChange = require('on-change');
+import onChange from 'on-change';
 
 const object = {
 	foo: false,
@@ -28,9 +28,9 @@ const object = {
 	}
 };
 
-let i = 0;
+let index = 0;
 const watchedObject = onChange(object, function (path, value, previousValue, applyData) {
-	console.log('Object changed:', ++i);
+	console.log('Object changed:', ++index);
 	console.log('this:', this);
 	console.log('path:', path);
 	console.log('value:', value);
@@ -198,7 +198,7 @@ Type: `Function`
 
 The function receives the same arguments and context as the [onChange callback](#onchange). The function is called whenever a change is attempted. Returning true will allow the change to be made and the onChange callback to execute, returning anything else will prevent the change from being made and the onChange callback will not trigger.
 
-<br/>
+<br>
 
 ### onChange.target(object)
 

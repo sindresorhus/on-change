@@ -1,8 +1,8 @@
-const onChange = require('..');
-const displayValue = require('display-value');
-const test = require('ava');
-const {testRunner, setOnChange} = require('./helpers/test-runner');
-const {testValues} = require('./helpers/data-types');
+import displayValue from 'display-value';
+import test from 'ava';
+import onChange from '../index.js';
+import {testRunner, setOnChange} from './helpers/test-runner.js';
+import {testValues} from './helpers/data-types.js';
 
 setOnChange(onChange);
 
@@ -22,7 +22,7 @@ for (const [index1, value1] of testValues.entries()) {
 			test(`should NOT detect value changes when reset to ${displayValue(value1)} ${tag}`, t => {
 				const object = {
 					a: value1,
-					b: [1, 2, value1]
+					b: [1, 2, value1],
 				};
 
 				testRunner(t, object, {}, (proxy, verify) => {
@@ -45,7 +45,7 @@ for (const [index1, value1] of testValues.entries()) {
 			test(`should detect value changes from ${displayValue(value1)} to ${displayValue(value2)} ${tag}`, t => {
 				const object = {
 					a: value1,
-					b: [1, 2, value1]
+					b: [1, 2, value1],
 				};
 
 				testRunner(t, object, {}, (proxy, verify) => {
@@ -75,7 +75,7 @@ for (const [index1, value1] of testValues.entries()) {
 			test(`should detect value changes from ${displayValue(value1)} to ${displayValue(value2)} when pathAsArray is true ${tag}`, t => {
 				const object = {
 					a: value1,
-					b: [1, 2, value1]
+					b: [1, 2, value1],
 				};
 
 				testRunner(t, object, {pathAsArray: true}, (proxy, verify) => {

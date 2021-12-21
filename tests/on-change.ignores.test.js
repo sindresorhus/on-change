@@ -1,6 +1,6 @@
-const onChange = require('..');
-const test = require('ava');
-const {testRunner, setOnChange} = require('./helpers/test-runner');
+import test from 'ava';
+import onChange from '../index.js';
+import {testRunner, setOnChange} from './helpers/test-runner.js';
 
 setOnChange(onChange);
 
@@ -8,9 +8,9 @@ test('should trigger the callback when a Symbol is used as the key and ignoreSym
 	const object = {
 		x: {
 			y: [{
-				z: 0
-			}]
-		}
+				z: 0,
+			}],
+		},
 	};
 
 	testRunner(t, object, {}, (proxy, verify) => {
@@ -24,7 +24,7 @@ test('should trigger the callback when a Symbol is used as the key and ignoreSym
 			value: true,
 			configurable: true,
 			writable: true,
-			enumerable: false
+			enumerable: false,
 		});
 		verify(2, proxy, 'Symbol(test2)', true, undefined);
 
@@ -40,9 +40,9 @@ test('the callback should trigger when a Symbol is used as the key and ignoreSym
 	const object = {
 		x: {
 			y: [{
-				z: 0
-			}]
-		}
+				z: 0,
+			}],
+		},
 	};
 
 	testRunner(t, object, {pathAsArray: true}, (proxy, verify) => {
@@ -56,7 +56,7 @@ test('the callback should trigger when a Symbol is used as the key and ignoreSym
 			value: true,
 			configurable: true,
 			writable: true,
-			enumerable: false
+			enumerable: false,
 		});
 		verify(2, proxy, [SYMBOL2], true, undefined);
 
@@ -72,16 +72,16 @@ test('should not trigger the callback when a Symbol is used as the key and ignor
 	const object = {
 		x: {
 			y: [{
-				z: 0
-			}]
-		}
+				z: 0,
+			}],
+		},
 	};
 
 	testRunner(t, object, {ignoreSymbols: true}, (proxy, verify) => {
 		const SYMBOL = Symbol('test');
 		const SYMBOL2 = Symbol('test2');
 		const object2 = {
-			c: 2
+			c: 2,
 		};
 
 		proxy[SYMBOL] = object2;
@@ -96,7 +96,7 @@ test('should not trigger the callback when a Symbol is used as the key and ignor
 			value: true,
 			configurable: true,
 			writable: true,
-			enumerable: false
+			enumerable: false,
 		});
 		verify(0);
 
@@ -112,14 +112,14 @@ test('should not trigger the callback when a key is used that is in ignoreKeys',
 	const object = {
 		x: {
 			y: [{
-				z: 0
-			}]
-		}
+				z: 0,
+			}],
+		},
 	};
 
 	testRunner(t, object, {ignoreKeys: ['a', 'b']}, (proxy, verify) => {
 		const object2 = {
-			c: 2
+			c: 2,
 		};
 
 		proxy.a = object2;
@@ -134,7 +134,7 @@ test('should not trigger the callback when a key is used that is in ignoreKeys',
 			value: true,
 			configurable: true,
 			writable: true,
-			enumerable: false
+			enumerable: false,
 		});
 		verify(0);
 
@@ -150,14 +150,14 @@ test('should not trigger the callback when a key with an underscore is used and 
 	const object = {
 		x: {
 			y: [{
-				z: 0
-			}]
-		}
+				z: 0,
+			}],
+		},
 	};
 
 	testRunner(t, object, {ignoreUnderscores: true}, (proxy, verify) => {
 		const object2 = {
-			c: 2
+			c: 2,
 		};
 
 		proxy._a = object2;
@@ -172,7 +172,7 @@ test('should not trigger the callback when a key with an underscore is used and 
 			value: true,
 			configurable: true,
 			writable: true,
-			enumerable: false
+			enumerable: false,
 		});
 		verify(0);
 

@@ -1,6 +1,7 @@
-const onChange = require('..');
-const test = require('ava');
-const {testRunner, setOnChange} = require('./helpers/test-runner');
+import test from 'ava';
+import onChange from '../index.js';
+import {testRunner, setOnChange} from './helpers/test-runner.js';
+import {typedArrays} from './helpers/data-types.js';
 
 setOnChange(onChange);
 
@@ -30,7 +31,7 @@ test('should trigger once when an array is sorted with an array as the main obje
 		verify(1, proxy, '', [1, 2, 3], [2, 3, 1], {
 			name: 'sort',
 			args: [],
-			result: proxy
+			result: proxy,
 		}, [1, 2, 3]);
 	});
 });
@@ -43,7 +44,7 @@ test('should trigger once when an array is popped with an array as the main obje
 		verify(1, proxy, '', [2, 3], [2, 3, 1], {
 			name: 'pop',
 			args: [],
-			result: 1
+			result: 1,
 		}, [2, 3]);
 	});
 });
@@ -56,7 +57,7 @@ test('should trigger once when an array is reversed with an array as the main ob
 		verify(1, proxy, '', [1, 3, 2], [2, 3, 1], {
 			name: 'reverse',
 			args: [],
-			result: proxy
+			result: proxy,
 		}, [1, 3, 2]);
 	});
 });
@@ -69,7 +70,7 @@ test('should trigger once when an array is spliced with an array as the main obj
 		verify(1, proxy, '', [2, 'a', 'b', 1], [2, 3, 1], {
 			name: 'splice',
 			args: [1, 1, 'a', 'b'],
-			result: [3]
+			result: [3],
 		}, [2, 'a', 'b', 1]);
 	});
 });
@@ -85,7 +86,7 @@ test('should not call the callback for nested items of an array if isShallow is 
 		verify(1, proxy, '', ['a', {z: 1}], [{z: 1}], {
 			name: 'unshift',
 			args: ['a'],
-			result: 2
+			result: 2,
 		});
 	});
 });
@@ -94,7 +95,7 @@ test('should call the callback for items returned from a handled method on array
 	const array = [{z: 0}, {z: 1}];
 
 	testRunner(t, array, {}, (proxy, verify) => {
-		const returned = proxy.concat([]);
+		const returned = [...proxy];
 		verify(0);
 
 		returned[0].z = 3;
@@ -119,7 +120,7 @@ test('should only execute once if map is called within callback', t => {
 
 	const object = {
 		arr: [],
-		foo: true
+		foo: true,
 	};
 
 	const proxy = onChange(object, function () {
@@ -184,11 +185,10 @@ test('should unwrap proxies passed to immutable methods on array', t => {
 	const item = {a: 1};
 	const object = {
 		b: item,
-		c: []
+		c: [],
 	};
 
-	const proxy = onChange(object, () => {
-	});
+	const proxy = onChange(object, () => {});
 
 	proxy.c.push(proxy.b);
 
@@ -200,3 +200,15 @@ test('should unwrap proxies passed to immutable methods on array', t => {
 
 	t.is(proxy.c[1], proxy.b);
 });
+
+for (const typedArray of typedArrays) {
+	test('should return the length of a ' + typedArray.constructor.name, t => {
+		testRunner(t, typedArray, {}, (proxy, verify) => {
+			verify(0);
+
+			t.is(proxy.length, 3);
+
+			verify(0);
+		});
+	});
+}

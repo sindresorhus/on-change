@@ -1,6 +1,6 @@
-const onChange = require('..');
-const test = require('ava');
-const {testRunner, setOnChange} = require('./helpers/test-runner');
+import test from 'ava';
+import onChange from '../index.js';
+import {testRunner, setOnChange} from './helpers/test-runner.js';
 
 setOnChange(onChange);
 
@@ -10,12 +10,12 @@ test('invariants', t => {
 	Object.defineProperty(object, 'nonWritable', {
 		configurable: false,
 		writable: false,
-		value: {a: true}
+		value: {a: true},
 	});
 	// eslint-disable-next-line accessor-pairs
 	Object.defineProperty(object, 'nonReadable', {
 		configurable: false,
-		set: () => {} // No-Op setter
+		set: () => {}, // No-Op setter
 	});
 	Object.defineProperty(object, 'useAccessor', {
 		configurable: false,
@@ -24,7 +24,7 @@ test('invariants', t => {
 		},
 		get() {
 			return this._useAccessor;
-		}
+		},
 	});
 
 	let callCount = 0;
@@ -61,7 +61,7 @@ test('should invalidate cached descriptors when a property is defined', t => {
 	Object.defineProperty(proxy, 'a', {
 		configurable: true,
 		writable: true,
-		value: value1
+		value: value1,
 	});
 
 	t.is(callCount, 1);
@@ -70,7 +70,7 @@ test('should invalidate cached descriptors when a property is defined', t => {
 	Object.defineProperty(proxy, 'a', {
 		configurable: true,
 		writable: true,
-		value: value1
+		value: value1,
 	});
 
 	t.is(callCount, 1);
@@ -79,7 +79,7 @@ test('should invalidate cached descriptors when a property is defined', t => {
 	Object.defineProperty(proxy, 'a', {
 		configurable: false,
 		writable: true,
-		value: value2
+		value: value2,
 	});
 
 	t.is(callCount, 2);
@@ -89,7 +89,7 @@ test('should invalidate cached descriptors when a property is defined', t => {
 	Object.defineProperty(proxy, 'a', {
 		configurable: false,
 		writable: true,
-		value: value2
+		value: value2,
 	});
 
 	t.is(callCount, 2);
@@ -105,7 +105,7 @@ test('should detect a change from within a setter', t => {
 		},
 		set x(value) {
 			this._x = value;
-		}
+		},
 	};
 
 	testRunner(t, object, {}, (proxy, verify) => {
@@ -124,7 +124,7 @@ test('should detect a change from within a setter when ignoreUnderscores is true
 		},
 		set x(value) {
 			this._x = value;
-		}
+		},
 	};
 
 	testRunner(t, object, {ignoreUnderscores: true}, (proxy, verify) => {
@@ -144,8 +144,8 @@ test('should detect a change from within a nested setter', t => {
 			},
 			set x(value) {
 				this._x = value;
-			}
-		}
+			},
+		},
 	};
 
 	testRunner(t, object, {}, (proxy, verify) => {
@@ -165,8 +165,8 @@ test('should detect a change from within a nested setter when ignoreUnderscores 
 			},
 			set x(value) {
 				this._x = value;
-			}
-		}
+			},
+		},
 	};
 
 	testRunner(t, object, {ignoreUnderscores: true}, (proxy, verify) => {

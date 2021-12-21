@@ -1,6 +1,6 @@
-const onChange = require('..');
-const test = require('ava');
-const {testRunner, setOnChange} = require('./helpers/test-runner');
+import test from 'ava';
+import onChange from '../index.js';
+import {testRunner, setOnChange} from './helpers/test-runner.js';
 
 setOnChange(onChange);
 
@@ -10,9 +10,9 @@ test('main', t => {
 		bar: {
 			a: {
 				b: 0,
-				c: [1, 2]
-			}
-		}
+				c: [1, 2],
+			},
+		},
 	};
 
 	let callCount = 0;
@@ -26,7 +26,7 @@ test('main', t => {
 	t.is(callCount, 1);
 
 	Object.defineProperty(proxy, 'newProp', {
-		value: '🦄'
+		value: '🦄',
 	});
 	t.is(callCount, 2);
 
@@ -56,10 +56,10 @@ test('should provide the original proxied object, the path to the changed value,
 		x: {
 			y: [
 				{
-					z: 0
-				}
-			]
-		}
+					z: 0,
+				},
+			],
+		},
 	};
 
 	testRunner(t, object, {}, (proxy, verify, reset, last) => {
@@ -76,31 +76,31 @@ test('should provide the original proxied object, the path to the changed value,
 		verify(4, proxy, 'x.y', [{z: 1}, 'pushed'], [{z: 1}], {
 			name: 'push',
 			args: ['pushed'],
-			result: 2
+			result: 2,
 		});
 
 		proxy.x.y.pop();
 		verify(5, proxy, 'x.y', [{z: 1}], [{z: 1}, 'pushed'], {
 			name: 'pop',
 			args: [],
-			result: 'pushed'
+			result: 'pushed',
 		});
 
 		proxy.x.y.unshift('unshifted');
 		verify(6, proxy, 'x.y', ['unshifted', {z: 1}], [{z: 1}], {
 			name: 'unshift',
 			args: ['unshifted'],
-			result: 2
+			result: 2,
 		});
 
 		proxy.x.y.shift();
 		verify(7, proxy, 'x.y', [{z: 1}], ['unshifted', {z: 1}], {
 			name: 'shift',
 			args: [],
-			result: 'unshifted'
+			result: 'unshifted',
 		});
 
-		proxy.x.y = proxy.x.y.concat([{z: 3}, {z: 2}]);
+		proxy.x.y = [...proxy.x.y, {z: 3}, {z: 2}];
 		verify(8, proxy, 'x.y', [{z: 1}, {z: 3}, {z: 2}], [{z: 1}]);
 
 		const sorter = (a, b) => a.z - b.z;
@@ -108,29 +108,29 @@ test('should provide the original proxied object, the path to the changed value,
 		verify(9, proxy, 'x.y', [{z: 1}, {z: 2}, {z: 3}], [{z: 1}, {z: 3}, {z: 2}], {
 			name: 'sort',
 			args: [sorter],
-			result: [{z: 1}, {z: 2}, {z: 3}]
+			result: [{z: 1}, {z: 2}, {z: 3}],
 		});
 
 		proxy.x.y.reverse();
 		verify(10, proxy, 'x.y', [{z: 3}, {z: 2}, {z: 1}], [{z: 1}, {z: 2}, {z: 3}], {
 			name: 'reverse',
 			args: [],
-			result: [{z: 3}, {z: 2}, {z: 1}]
+			result: [{z: 3}, {z: 2}, {z: 1}],
 		});
 
 		const forEachCallback = item => item.z++;
-		proxy.x.y.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.x.y.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 		verify(11, proxy, 'x.y', [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}], {
 			name: 'forEach',
 			args: [forEachCallback],
-			result: undefined
+			result: undefined,
 		});
 
 		proxy.x.y.splice(1, 2);
 		verify(12, proxy, 'x.y', [{z: 4}], [{z: 4}, {z: 3}, {z: 2}], {
 			name: 'splice',
 			args: [1, 2],
-			result: [{z: 3}, {z: 2}]
+			result: [{z: 3}, {z: 2}],
 		});
 
 		let unproxied = onChange.target(proxy);
@@ -163,10 +163,10 @@ test('should provide the original proxied object, the path to the changed value,
 		x: {
 			y: [
 				{
-					z: 0
-				}
-			]
-		}
+					z: 0,
+				},
+			],
+		},
 	};
 
 	testRunner(t, object, {pathAsArray: true}, (proxy, verify, reset, last) => {
@@ -183,31 +183,31 @@ test('should provide the original proxied object, the path to the changed value,
 		verify(4, proxy, ['x', 'y'], [{z: 1}, 'pushed'], [{z: 1}], {
 			name: 'push',
 			args: ['pushed'],
-			result: 2
+			result: 2,
 		});
 
 		proxy.x.y.pop();
 		verify(5, proxy, ['x', 'y'], [{z: 1}], [{z: 1}, 'pushed'], {
 			name: 'pop',
 			args: [],
-			result: 'pushed'
+			result: 'pushed',
 		});
 
 		proxy.x.y.unshift('unshifted');
 		verify(6, proxy, ['x', 'y'], ['unshifted', {z: 1}], [{z: 1}], {
 			name: 'unshift',
 			args: ['unshifted'],
-			result: 2
+			result: 2,
 		});
 
 		proxy.x.y.shift();
 		verify(7, proxy, ['x', 'y'], [{z: 1}], ['unshifted', {z: 1}], {
 			name: 'shift',
 			args: [],
-			result: 'unshifted'
+			result: 'unshifted',
 		});
 
-		proxy.x.y = proxy.x.y.concat([{z: 3}, {z: 2}]);
+		proxy.x.y = [...proxy.x.y, {z: 3}, {z: 2}];
 		verify(8, proxy, ['x', 'y'], [{z: 1}, {z: 3}, {z: 2}], [{z: 1}]);
 
 		const sorter = (a, b) => a.z - b.z;
@@ -215,29 +215,29 @@ test('should provide the original proxied object, the path to the changed value,
 		verify(9, proxy, ['x', 'y'], [{z: 1}, {z: 2}, {z: 3}], [{z: 1}, {z: 3}, {z: 2}], {
 			name: 'sort',
 			args: [sorter],
-			result: [{z: 1}, {z: 2}, {z: 3}]
+			result: [{z: 1}, {z: 2}, {z: 3}],
 		});
 
 		proxy.x.y.reverse();
 		verify(10, proxy, ['x', 'y'], [{z: 3}, {z: 2}, {z: 1}], [{z: 1}, {z: 2}, {z: 3}], {
 			name: 'reverse',
 			args: [],
-			result: [{z: 3}, {z: 2}, {z: 1}]
+			result: [{z: 3}, {z: 2}, {z: 1}],
 		});
 
 		const forEachCallback = item => item.z++;
-		proxy.x.y.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.x.y.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 		verify(11, proxy, ['x', 'y'], [{z: 4}, {z: 3}, {z: 2}], [{z: 3}, {z: 2}, {z: 1}], {
 			name: 'forEach',
 			args: [forEachCallback],
-			result: undefined
+			result: undefined,
 		});
 
 		proxy.x.y.splice(1, 2);
 		verify(12, proxy, ['x', 'y'], [{z: 4}], [{z: 4}, {z: 3}, {z: 2}], {
 			name: 'splice',
 			args: [1, 2],
-			result: [{z: 3}, {z: 2}]
+			result: [{z: 3}, {z: 2}],
 		});
 
 		let unproxied = onChange.target(proxy);
@@ -268,21 +268,21 @@ test('should provide the original proxied object, the path to the changed value,
 test('should not trigger when methods are called that don’t mutate the proxied item', t => {
 	const object = [
 		{
-			y: 1
+			y: 1,
 		},
 		{
-			y: 2
+			y: 2,
 		},
 		{
-			y: 3
-		}
+			y: 3,
+		},
 	];
 
 	testRunner(t, object, {}, (proxy, verify) => {
 		proxy.map(item => item.y);
 		verify(0);
 
-		proxy.reduce((result, item) => { // eslint-disable-line unicorn/no-reduce
+		proxy.reduce((result, item) => { // eslint-disable-line unicorn/no-array-reduce
 			result.push(item.y);
 			return result;
 		}, []);
@@ -297,9 +297,9 @@ test('should return a raw value when apply traps are triggered', t => {
 	const object = {
 		x: {
 			y: [{
-				z: 0
-			}]
-		}
+				z: 0,
+			}],
+		},
 	};
 
 	testRunner(t, object, {}, (proxy, verify, reset, last) => {
@@ -307,7 +307,7 @@ test('should return a raw value when apply traps are triggered', t => {
 		verify(1, proxy, 'x.y', [{z: 0}, 'pushed'], [{z: 0}], {
 			name: 'push',
 			args: ['pushed'],
-			result: 2
+			result: 2,
 		});
 
 		last.value.pop();
@@ -319,9 +319,9 @@ test('should return a raw value when apply traps are triggered and pathAsArray i
 	const object = {
 		x: {
 			y: [{
-				z: 0
-			}]
-		}
+				z: 0,
+			}],
+		},
 	};
 
 	testRunner(t, object, {pathAsArray: true}, (proxy, verify, reset, last) => {
@@ -329,7 +329,7 @@ test('should return a raw value when apply traps are triggered and pathAsArray i
 		verify(1, proxy, ['x', 'y'], [{z: 0}, 'pushed'], [{z: 0}], {
 			name: 'push',
 			args: ['pushed'],
-			result: 2
+			result: 2,
 		});
 
 		last.value.pop();
@@ -341,9 +341,9 @@ test('should not call the callback for nested items of an object if isShallow is
 	const object = {
 		x: {
 			y: [{
-				z: 0
-			}]
-		}
+				z: 0,
+			}],
+		},
 	};
 
 	testRunner(t, object, {isShallow: true}, (proxy, verify) => {
@@ -366,19 +366,19 @@ test('should allow nested proxied objects', t => {
 		x: {
 			y: [
 				{
-					z: 0
-				}
-			]
-		}
+					z: 0,
+				},
+			],
+		},
 	};
 	const object2 = {
 		a: {
 			b: [
 				{
-					c: 0
-				}
-			]
-		}
+					c: 0,
+				},
+			],
+		},
 	};
 
 	let callCount1 = 0;
@@ -394,14 +394,14 @@ test('should allow nested proxied objects', t => {
 	let returnedValue2;
 
 	const proxy1 = onChange(object1, function (path, value, previous) {
-		returnedObject1 = this;
+		returnedObject1 = this; // eslint-disable-line unicorn/no-this-assignment
 		returnedPath1 = path;
 		returnedValue1 = value;
 		returnedPrevious1 = previous;
 		callCount1++;
 	});
 	const proxy2 = onChange(object2, function (path, value, previous) {
-		returnedObject2 = this;
+		returnedObject2 = this; // eslint-disable-line unicorn/no-this-assignment
 		returnedPath2 = path;
 		returnedValue2 = value;
 		returnedPrevious2 = previous;
@@ -451,19 +451,19 @@ test('should allow nested proxied objects when pathAsArray is true', t => {
 		x: {
 			y: [
 				{
-					z: 0
-				}
-			]
-		}
+					z: 0,
+				},
+			],
+		},
 	};
 	const object2 = {
 		a: {
 			b: [
 				{
-					c: 0
-				}
-			]
-		}
+					c: 0,
+				},
+			],
+		},
 	};
 
 	let callCount1 = 0;
@@ -479,14 +479,14 @@ test('should allow nested proxied objects when pathAsArray is true', t => {
 	let returnedValue2;
 
 	const proxy1 = onChange(object1, function (path, value, previous) {
-		returnedObject1 = this;
+		returnedObject1 = this; // eslint-disable-line unicorn/no-this-assignment
 		returnedPath1 = path;
 		returnedValue1 = value;
 		returnedPrevious1 = previous;
 		callCount1++;
 	}, {pathAsArray: true});
 	const proxy2 = onChange(object2, function (path, value, previous) {
-		returnedObject2 = this;
+		returnedObject2 = this; // eslint-disable-line unicorn/no-this-assignment
 		returnedPath2 = path;
 		returnedValue2 = value;
 		returnedPrevious2 = previous;
@@ -538,7 +538,7 @@ test('should be able to mutate itself in an object', t => {
 
 	const object = {
 		x: 0,
-		method
+		method,
 	};
 
 	testRunner(t, object, {}, (proxy, verify) => {
@@ -546,7 +546,7 @@ test('should be able to mutate itself in an object', t => {
 		verify(1, proxy, '', {x: 1, method}, {x: 0, method}, {
 			name: 'method',
 			args: [proxy],
-			result: undefined
+			result: undefined,
 		});
 	});
 });
@@ -567,7 +567,7 @@ test('should be able to mutate itself in a class', t => {
 		verify(1, proxy, '', new TestClass(1), {x: 0}, {
 			name: 'method',
 			args: [],
-			result: undefined
+			result: undefined,
 		});
 	});
 });
@@ -576,9 +576,9 @@ test('should not trigger after unsubscribe is called', t => {
 	const object = {
 		x: {
 			y: [{
-				z: 0
-			}]
-		}
+				z: 0,
+			}],
+		},
 	};
 
 	testRunner(t, object, {}, (proxy, verify, reset) => {
@@ -609,7 +609,7 @@ test('should not trigger after unsubscribe is called', t => {
 
 test('should trigger if a new property is set to undefined', t => {
 	const object = {
-		x: true
+		x: true,
 	};
 
 	testRunner(t, object, {}, (proxy, verify) => {
@@ -620,7 +620,7 @@ test('should trigger if a new property is set to undefined', t => {
 
 test('should NOT trigger if defining a property fails', t => {
 	const object = {
-		x: true
+		x: true,
 	};
 
 	Object.freeze(object);
@@ -630,7 +630,7 @@ test('should NOT trigger if defining a property fails', t => {
 			Object.defineProperty(proxy, 'y', {
 				configurable: false,
 				writable: false,
-				value: false
+				value: false,
 			});
 		});
 
@@ -645,12 +645,12 @@ test('should NOT trigger if defining a property that is already set', t => {
 		configurable: true,
 		enumerable: true,
 		writable: true,
-		value: 1
+		value: 1,
 	});
 
 	Object.defineProperty(object, 'y', {
 		configurable: true,
-		value: 2
+		value: 2,
 	});
 
 	testRunner(t, object, {}, (proxy, verify) => {
@@ -661,7 +661,7 @@ test('should NOT trigger if defining a property that is already set', t => {
 			configurable: true,
 			enumerable: true,
 			writable: true,
-			value: 1
+			value: 1,
 		});
 		verify(0);
 
@@ -669,7 +669,7 @@ test('should NOT trigger if defining a property that is already set', t => {
 			configurable: true,
 			enumerable: false,
 			writable: false,
-			value: 2
+			value: 2,
 		});
 		verify(0);
 	});
@@ -677,13 +677,15 @@ test('should NOT trigger if defining a property that is already set', t => {
 
 test('should NOT trigger if setting a property fails', t => {
 	const object = {
-		x: true
+		x: true,
 	};
 
 	Object.freeze(object);
 
 	testRunner(t, object, {}, (proxy, verify) => {
-		proxy.x = false;
+		t.throws(() => {
+			proxy.x = false;
+		});
 
 		verify(0);
 	});
@@ -691,13 +693,15 @@ test('should NOT trigger if setting a property fails', t => {
 
 test('should NOT trigger if deleting a property fails', t => {
 	const object = {
-		x: true
+		x: true,
 	};
 
 	Object.freeze(object);
 
 	testRunner(t, object, {}, (proxy, verify) => {
-		delete proxy.x;
+		t.throws(() => {
+			delete proxy.x;
+		});
 
 		verify(0);
 	});
@@ -708,31 +712,29 @@ test('should handle changes in nested apply traps', t => {
 
 	testRunner(t, object, {}, (proxy, verify) => {
 		let forEachCallback = item => {
-			item.a = item.a.map(subItem => {
-				return {x: subItem.x + 1};
-			});
+			item.a = item.a.map(subItem => ({x: subItem.x + 1}));
 		};
 
-		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 
 		verify(1, proxy, '', object, [{a: [{x: 1}]}], {
 			name: 'forEach',
 			args: [forEachCallback],
-			result: undefined
+			result: undefined,
 		});
 
 		forEachCallback = item => {
-			item.a.forEach(subItem => {
+			for (const subItem of item.a) {
 				subItem.x++;
-			});
+			}
 		};
 
-		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 
 		verify(2, proxy, '', object, [{a: [{x: 2}]}], {
 			name: 'forEach',
 			args: [forEachCallback],
-			result: undefined
+			result: undefined,
 		});
 	});
 });
@@ -742,11 +744,10 @@ test('should not wrap a proxied object in another proxy', t => {
 		b: {a: 1},
 		get c() {
 			return this.b;
-		}
+		},
 	};
 
-	const proxy = onChange(object, () => {
-	});
+	const proxy = onChange(object, () => {});
 
 	t.is(proxy.b, proxy.c);
 });

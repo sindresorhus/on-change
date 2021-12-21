@@ -1,13 +1,13 @@
-const onChange = require('..');
-const test = require('ava');
-const {testRunner, setOnChange} = require('./helpers/test-runner');
-const {dates} = require('./helpers/data-types');
+import test from 'ava';
+import onChange from '../index.js';
+import {testRunner, setOnChange} from './helpers/test-runner.js';
+import {dates} from './helpers/data-types.js';
 
 setOnChange(onChange);
 
 test('dates', t => {
 	const object = {
-		a: 0
+		a: 0,
 	};
 	const date = dates[0];
 
@@ -21,7 +21,7 @@ test('dates', t => {
 		verify(2, proxy, 'a', date, clone, {
 			name: 'setSeconds',
 			args: [32],
-			result: date.valueOf()
+			result: date.valueOf(),
 		});
 
 		clone = new Date(date);
@@ -29,14 +29,14 @@ test('dates', t => {
 		verify(3, proxy, 'a', date, clone, {
 			name: 'setHours',
 			args: [5],
-			result: date.valueOf()
+			result: date.valueOf(),
 		});
 
 		proxy.a.setHours(5);
 		verify(3, proxy, 'a', date, clone, {
 			name: 'setHours',
 			args: [5],
-			result: date.valueOf()
+			result: date.valueOf(),
 		});
 	});
 });
@@ -51,12 +51,12 @@ test('should handle changes to dates within apply trap', t => {
 			item.a.setSeconds(32);
 		};
 
-		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-fn-reference-in-iterator
+		proxy.forEach(forEachCallback); // eslint-disable-line unicorn/no-array-callback-reference, unicorn/no-array-for-each
 
 		verify(1, proxy, '', object, [{a: clone}], {
 			name: 'forEach',
 			args: [forEachCallback],
-			result: undefined
+			result: undefined,
 		});
 	});
 });

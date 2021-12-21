@@ -1,35 +1,31 @@
 /* globals suite benchmark */
-'use strict';
-
-const {benchSettings} = require('karma-webpack-bundle');
-const onChange = require('..');
+import {benchSettings} from 'karma-webpack-bundle';
+import onChange from '../index.js';
 
 let temporaryTarget; // eslint-disable-line no-unused-vars
 const callback = function () {};
 let array = [];
 let value = 0;
 
-const buildSettings = before => {
-	return {
-		...benchSettings,
-		onStart: before,
-		onCycle: before
-	};
-};
+const buildSettings = before => ({
+	...benchSettings,
+	onStart: before,
+	onCycle: before,
+});
 
 const sizes = [{
 	size: 10,
-	name: 'small'
+	name: 'small',
 }, {
-	size: 100000,
-	name: 'large'
+	size: 100_000,
+	name: 'large',
 }];
 
 const commonBench = bench => {
-	sizes.forEach((option, index) => {
-		const separator = (index === sizes.length - 1) ?
-			'' :
-			'     ' + '_'.repeat(20 - option.name.length);
+	for (const [index, option] of sizes.entries()) {
+		const separator = (index === sizes.length - 1)
+			? ''
+			: '     ' + '_'.repeat(20 - option.name.length);
 
 		benchmark(`(${option.name}) no options`, bench, buildSettings(() => {
 			array = onChange(buildArray(option.size), callback);
@@ -50,10 +46,10 @@ const commonBench = bench => {
 		benchmark(`(${option.name}) native ${separator}`, bench, buildSettings(() => {
 			array = buildArray(option.size);
 		}));
-	});
+	}
 };
 
-const buildArray = length => new Array(length)
+const buildArray = length => Array.from({length})
 	.fill(0)
 	.map((value, index) => ({a: index}));
 
