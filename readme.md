@@ -8,8 +8,8 @@ Uses the [`Proxy` API](https://developer.mozilla.org/en-US/docs/Web/JavaScript/R
 
 ## Install
 
-```
-$ npm install on-change
+```sh
+npm install on-change
 ```
 
 ## Usage

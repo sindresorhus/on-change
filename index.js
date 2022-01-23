@@ -234,7 +234,7 @@ const onChange = (object, onChange, options = {}) => {
 	onChange = onChange.bind(proxy);
 
 	if (hasOnValidate) {
-		options.onValidate = options.onValidate.bind(proxy); // eslint-disable-line unicorn/prefer-prototype-methods
+		options.onValidate = options.onValidate.bind(proxy);
 	}
 
 	return proxy;
