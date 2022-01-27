@@ -62,14 +62,14 @@ const commonBench = bench => {
 };
 
 const buildObject = length => {
-	let prop;
+	let property;
 	const object = {
-		subObj: {a: 0},
+		childObject: {a: 0},
 	};
 
 	for (let index = 0; index < length; index++) {
-		prop = String.fromCharCode((index % 26) + 97);
-		object[prop.repeat(Math.ceil((index + 1) / 26))] = 0;
+		property = String.fromCodePoint((index % 26) + 97);
+		object[property.repeat(Math.ceil((index + 1) / 26))] = 0;
 	}
 
 	return object;
@@ -103,7 +103,7 @@ suite('on-change with object, read', () => {
 
 suite('on-change with object, read nested', () => {
 	commonBench(() => {
-		temporaryTarget = object.subObj.a;
+		temporaryTarget = object.childObject.a;
 	});
 });
 
@@ -115,7 +115,7 @@ suite('on-change with object, write', () => {
 
 suite('on-change with object, write nested', () => {
 	commonBench(() => {
-		object.subObj.a = value++;
+		object.childObject.a = value++;
 	});
 });
 
