@@ -484,3 +484,21 @@ test('should handle shallow changes to WeakMaps', t => {
 		});
 	});
 });
+
+test('should handle changes to typed arrays', t => {
+	const array = new Uint8Array([1, 2]);
+	class Foo {
+		obj = {a: array};
+
+		update() {
+			this.obj.a[1] = 3;
+		}
+	}
+	const object = new Foo();
+
+	testRunner(t, object, {}, (proxy, _verify) => {
+		t.true(proxy.obj.a instanceof Uint8Array);
+		proxy.update();
+		t.is(proxy.obj.a[1], 3);
+	});
+});
