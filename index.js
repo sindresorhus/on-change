@@ -125,6 +125,10 @@ const onChange = (object, onChange, options = {}) => {
 			return !isValid;
 		},
 
+		has(target, property) {
+			return Reflect.has(target, property);
+		},
+
 		defineProperty(target, property, descriptor) {
 			if (!cache.isSameDescriptor(descriptor, target, property)) {
 				const previous = target[property];
