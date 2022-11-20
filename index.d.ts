@@ -254,7 +254,7 @@ declare const onChange: {
 		options?: Options & {pathAsArray?: false}
 	): ObjectType;
 
-	// Overload that returns a String Array as path when `ignoreSymbols` and `pathAsArray` options are true.
+	// Overload that returns a string array as path when `ignoreSymbols` and `pathAsArray` options are true.
 	<ObjectType extends Record<string, any>>(
 		object: ObjectType,
 		onChange: (
@@ -267,7 +267,7 @@ declare const onChange: {
 		options: Options & {ignoreSymbols: true; pathAsArray: true}
 	): ObjectType;
 
-	// Overload that returns an Array as path when `pathAsArray` option is true.
+	// Overload that returns an array as path when `pathAsArray` option is true.
 	<ObjectType extends Record<string, any>>(
 		object: ObjectType,
 		onChange: (
