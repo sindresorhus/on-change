@@ -259,12 +259,12 @@ declare const onChange: {
 		object: ObjectType,
 		onChange: (
 			this: ObjectType,
-			path: Array<string>,
+			path: string[],
 			value: unknown,
 			previousValue: unknown,
 			applyData: ApplyData
 		) => void,
-		options: Options & {ignoreSymbols: true, pathAsArray: true}
+		options: Options & {ignoreSymbols: true; pathAsArray: true}
 	): ObjectType;
 
 	// Overload that returns an Array as path when `pathAsArray` option is true.
