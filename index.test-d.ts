@@ -57,3 +57,14 @@ const watchedObjectPathAsString = onChange(object, function (path) {
 expectType<typeof object>(watchedObjectPathAsString);
 
 watchedObjectPathAsString.foo = true;
+
+const watchedObjectPathAsStringArray = onChange(object, function (path) {
+	expectType<typeof object>(this);
+	expectType<string[]>(path);
+}, {
+	ignoreSymbols: true,
+	pathAsArray: true,
+});
+expectType<typeof object>(watchedObjectPathAsStringArray);
+
+watchedObjectPathAsStringArray.foo = true;
