@@ -2,6 +2,7 @@
 import {TARGET, UNSUBSCRIBE} from './lib/constants.js';
 import {isBuiltinWithMutableMethods, isBuiltinWithoutMutableMethods} from './lib/is-builtin.js';
 import path from './lib/path.js';
+import isArray from './lib/is-array.js';
 import isSymbol from './lib/is-symbol.js';
 import isIterator from './lib/is-iterator.js';
 import wrapIterator from './lib/wrap-iterator.js';
@@ -83,7 +84,7 @@ const onChange = (object, onChange, options = {}) => {
 		// and the path can get longer and longer until we reach a memory limit.
 		const childPath = path.concat(basePath, property);
 		const existingPath = cache.getPath(value);
-		if (existingPath && childPath.startsWith(existingPath)) {
+		if (existingPath && !isArray(childPath) && !isSymbol(childPath) && childPath.toString().startsWith(existingPath.toString())) {
 			// We are on the same object tree, but deeper
 			// We use the parent path
 			return cache.getProxy(value, existingPath, handler, proxyTarget);
