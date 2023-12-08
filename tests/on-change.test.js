@@ -751,3 +751,35 @@ test('should not wrap a proxied object in another proxy', t => {
 
 	t.is(proxy.b, proxy.c);
 });
+
+test('path should be the shorter one in the same object for circular references', t => {
+	const layer1 = {group: null, val: 0};
+	const layer2 = {group: null, val: 0};
+	const layer3 = {group: null, val: 0};
+	const group = {
+		layers: [layer1, layer2, layer3],
+		val: 0,
+	};
+	layer1.group = group;
+	layer2.group = group;
+	layer3.group = group;
+
+	let resultPath = null;
+
+	const proxy = onChange(group, path => {
+		resultPath = path;
+	});
+
+	proxy.layers[0].val = 11;
+	t.is(resultPath, 'layers.0.val');
+
+	proxy.layers[0].group.val = 22;
+	t.is(resultPath, 'layers.0.group.val');
+
+	proxy.layers[0].group.layers[0].val = 33;
+	t.is(resultPath, 'layers.0.val');
+
+	proxy.layers[1].group.layers[0].group.layers[1].group.layers[1].group.layers[2].val = 33;
+	t.is(resultPath, 'layers.2.val');
+});
+
