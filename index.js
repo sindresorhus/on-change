@@ -74,7 +74,22 @@ const onChange = (object, onChange, options = {}) => {
 			basePath = cache.getPath(target);
 		}
 
-		return cache.getProxy(value, path.concat(basePath, property), handler, proxyTarget);
+		// Check circular references
+		// If the value already has a corresponding path/proxy,
+		// And if the path corresponds to one of the parent of the current value
+		// Then we are on a circular case, where the child is pointing to his parent.
+		// => in this case we return the proxy object with the shortest path.
+		// Otherwise we can fell into an infinite loop, 
+		// and the path can get longer and longer until we reach a memory limit.
+		const childPath = path.concat(basePath, property);
+		const existingPath = cache.getPath(value);
+		if (existingPath && childPath.startsWith(existingPath)) {
+			// We are on the same object tree, but deeper
+			// We use the parent path
+			return cache.getProxy(value, existingPath, handler, proxyTarget);
+		}
+		// else
+		return cache.getProxy(value, childPath, handler, proxyTarget);
 	};
 
 	const handler = {
