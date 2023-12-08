@@ -1,4 +1,4 @@
-export interface Options {
+export type Options = {
 	/**
 	Deep changes will not trigger the callback. Only changes to the immediate properties of the original object.
 
@@ -123,9 +123,9 @@ export interface Options {
 		previousValue: unknown,
 		applyData: ApplyData
 	) => boolean;
-}
+};
 
-export interface ApplyData {
+export type ApplyData = {
 	/**
 	The name of the method that produced the change.
 	*/
@@ -140,7 +140,7 @@ export interface ApplyData {
 	The result returned from the method that produced the change.
 	*/
 	readonly result: unknown;
-}
+};
 
 declare const onChange: {
 	/**

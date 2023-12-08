@@ -198,8 +198,6 @@ Type: `Function`
 
 The function receives the same arguments and context as the [onChange callback](#onchange). The function is called whenever a change is attempted. Returning true will allow the change to be made and the onChange callback to execute, returning anything else will prevent the change from being made and the onChange callback will not trigger.
 
-<br>
-
 ### onChange.target(object)
 
 Returns the original unwatched object.

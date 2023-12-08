@@ -55,7 +55,7 @@ const onChange = (object, onChange, options = {}) => {
 	};
 
 	const getProxyTarget = value => value
-		? (value[proxyTarget] || value)
+		? (value[proxyTarget] ?? value)
 		: value;
 
 	const prepareValue = (value, target, property, basePath) => {
@@ -104,7 +104,7 @@ const onChange = (object, onChange, options = {}) => {
 		set(target, property, value, receiver) {
 			value = getProxyTarget(value);
 
-			const reflectTarget = target[proxyTarget] || target;
+			const reflectTarget = target[proxyTarget] ?? target;
 			const previous = reflectTarget[property];
 
 			if (equals(previous, value) && property in target) {
@@ -161,7 +161,7 @@ const onChange = (object, onChange, options = {}) => {
 		},
 
 		apply(target, thisArg, argumentsList) {
-			const thisProxyTarget = thisArg[proxyTarget] || thisArg;
+			const thisProxyTarget = thisArg[proxyTarget] ?? thisArg;
 
 			if (cache.isUnsubscribed) {
 				return Reflect.apply(target, thisProxyTarget, argumentsList);
@@ -240,7 +240,7 @@ const onChange = (object, onChange, options = {}) => {
 	return proxy;
 };
 
-onChange.target = proxy => (proxy && proxy[TARGET]) || proxy;
-onChange.unsubscribe = proxy => proxy[UNSUBSCRIBE] || proxy;
+onChange.target = proxy => proxy?.[TARGET] ?? proxy;
+onChange.unsubscribe = proxy => proxy?.[UNSUBSCRIBE] ?? proxy;
 
 export default onChange;

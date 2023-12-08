@@ -15,7 +15,7 @@ test('invariants', t => {
 	// eslint-disable-next-line accessor-pairs
 	Object.defineProperty(object, 'nonReadable', {
 		configurable: false,
-		set: () => {}, // No-Op setter
+		set() {}, // No-Op setter
 	});
 	Object.defineProperty(object, 'useAccessor', {
 		configurable: false,
