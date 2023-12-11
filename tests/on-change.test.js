@@ -764,7 +764,7 @@ test('path should be the shorter one in the same object for circular references'
 	layer2.group = group;
 	layer3.group = group;
 
-	let resultPath = null;
+	let resultPath;
 
 	const proxy = onChange(group, path => {
 		resultPath = path;
