@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/prefer-spread */
-import {TARGET, UNSUBSCRIBE} from './lib/constants.js';
+import {TARGET, UNSUBSCRIBE, PATH_SEPARATOR} from './lib/constants.js';
 import {isBuiltinWithMutableMethods, isBuiltinWithoutMutableMethods} from './lib/is-builtin.js';
 import path from './lib/path.js';
 import isArray from './lib/is-array.js';
@@ -77,20 +77,45 @@ const onChange = (object, onChange, options = {}) => {
 
 		// Check circular references
 		// If the value already has a corresponding path/proxy,
-		// And if the path corresponds to one of the parent of the current value
+		// And if the path corresponds to one of the parents
 		// Then we are on a circular case, where the child is pointing to his parent.
 		// => in this case we return the proxy object with the shortest path.
-		// Otherwise we can fell into an infinite loop,
-		// and the path can get longer and longer until we reach a memory limit.
 		const childPath = path.concat(basePath, property);
 		const existingPath = cache.getPath(value);
-		if (existingPath && !isArray(childPath) && !isSymbol(childPath) && childPath.toString().startsWith(existingPath.toString())) {
+		if (existingPath && isSameObjectTree(childPath, existingPath)) {
 			// We are on the same object tree, but deeper
 			// We use the parent path
 			return cache.getProxy(value, existingPath, handler, proxyTarget);
 		}
 
 		return cache.getProxy(value, childPath, handler, proxyTarget);
+	};
+
+	const isSameObjectTree = (childPath, existingPath) => {
+		/* This method returns true if childPath is a subpath of existingPath
+		 * (if childPath starts with existingPath)
+		 * Otherwise, it returns false.
+		 * It also returns false if the 2 paths are identical.
+		 * For example :
+		 *   - childPath    = group.layers.0.parent.layers.0.value
+		 *   - existingPath = group.layers.0.parent
+		 */
+		if (isSymbol(childPath) || childPath.length <= existingPath.length) {
+			return false;
+		}
+
+		if (isArray(existingPath) && existingPath.length === 0) {
+			return false;
+		}
+
+		const childParts = isArray(childPath) ? childPath : childPath.split(PATH_SEPARATOR);
+		const existingParts = isArray(existingPath) ? existingPath : existingPath.split(PATH_SEPARATOR);
+
+		if (childParts.length <= existingParts.length) {
+			return false;
+		}
+
+		return !(existingParts.some((part, index) => part !== childParts[index]));
 	};
 
 	const handler = {

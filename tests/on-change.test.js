@@ -758,13 +758,13 @@ test('path should be the shorter one in the same object for circular references'
 	const layer3 = {group: null, val: 0};
 	const group = {
 		layers: [layer1, layer2, layer3],
-		val: 0,
+		value: 0,
 	};
 	layer1.group = group;
 	layer2.group = group;
 	layer3.group = group;
 
-	let resultPath = null;
+	let resultPath;
 
 	const proxy = onChange(group, path => {
 		resultPath = path;
@@ -781,5 +781,47 @@ test('path should be the shorter one in the same object for circular references'
 
 	proxy.layers[1].group.layers[0].group.layers[1].group.layers[1].group.layers[2].val = 33;
 	t.is(resultPath, 'layers.2.val');
+});
+
+test('Array path should be the shorter one in the same object for circular references', t => {
+	const layer1 = {group: null, val: 0};
+	const layer2 = {group: null, val: 0};
+	const layer3 = {group: null, val: 0};
+	const group = {
+		layers: [layer1, layer2, layer3],
+		value: 0,
+	};
+	layer1.group = group;
+	layer2.group = group;
+	layer3.group = group;
+
+	let resultPath;
+
+	const proxy = onChange(group, path => {
+		resultPath = path;
+	}, {
+		pathAsArray: true,
+	});
+
+	proxy.layers[0].val = 11;
+	t.is(resultPath[0], 'layers');
+	t.is(resultPath[1], '0');
+	t.is(resultPath[2], 'val');
+
+	proxy.layers[0].group.val = 22;
+	t.is(resultPath[0], 'layers');
+	t.is(resultPath[1], '0');
+	t.is(resultPath[2], 'group');
+	t.is(resultPath[3], 'val');
+
+	proxy.layers[0].group.layers[0].val = 33;
+	t.is(resultPath[0], 'layers');
+	t.is(resultPath[1], '0');
+	t.is(resultPath[2], 'val');
+
+	proxy.layers[1].group.layers[0].group.layers[1].group.layers[1].group.layers[2].val = 33;
+	t.is(resultPath[0], 'layers');
+	t.is(resultPath[1], '2');
+	t.is(resultPath[2], 'val');
 });
 
