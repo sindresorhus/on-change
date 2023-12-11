@@ -84,7 +84,7 @@ const onChange = (object, onChange, options = {}) => {
 		// and the path can get longer and longer until we reach a memory limit.
 		const childPath = path.concat(basePath, property);
 		const existingPath = cache.getPath(value);
-		if (existingPath && !isArray(childPath) && !isSymbol(childPath) && childPath.toString().startsWith(existingPath.toString())) {
+		if (existingPath && !isArray(childPath) && !isSymbol(childPath) && childPath.startsWith(existingPath.toString())) {
 			// We are on the same object tree, but deeper
 			// We use the parent path
 			return cache.getProxy(value, existingPath, handler, proxyTarget);
