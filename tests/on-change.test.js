@@ -758,7 +758,7 @@ test('path should be the shorter one in the same object for circular references'
 	const layer3 = {group: null, val: 0};
 	const group = {
 		layers: [layer1, layer2, layer3],
-		val: 0,
+		value: 0,
 	};
 	layer1.group = group;
 	layer2.group = group;
