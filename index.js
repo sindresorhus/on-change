@@ -77,7 +77,7 @@ const onChange = (object, onChange, options = {}) => {
 
 		/*
   		Check for circular references.
-		
+
   		If the value already has a corresponding path/proxy,
 		and if the path corresponds to one of the parents,
 		then we are on a circular case, where the child is pointing to their parent.
