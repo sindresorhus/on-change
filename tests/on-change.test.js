@@ -753,13 +753,15 @@ test('should not wrap a proxied object in another proxy', t => {
 });
 
 test('path should be the shorter one in the same object for circular references', t => {
-	const layer1 = {group: null, val: 0};
-	const layer2 = {group: null, val: 0};
-	const layer3 = {group: null, val: 0};
+	const layer1 = {value: 0};
+	const layer2 = {value: 0};
+	const layer3 = {value: 0};
+
 	const group = {
 		layers: [layer1, layer2, layer3],
 		value: 0,
 	};
+
 	layer1.group = group;
 	layer2.group = group;
 	layer3.group = group;
@@ -770,27 +772,29 @@ test('path should be the shorter one in the same object for circular references'
 		resultPath = path;
 	});
 
-	proxy.layers[0].val = 11;
-	t.is(resultPath, 'layers.0.val');
+	proxy.layers[0].value = 11;
+	t.is(resultPath, 'layers.0.value');
 
-	proxy.layers[0].group.val = 22;
-	t.is(resultPath, 'layers.0.group.val');
+	proxy.layers[0].group.value = 22;
+	t.is(resultPath, 'layers.0.group.value');
 
-	proxy.layers[0].group.layers[0].val = 33;
-	t.is(resultPath, 'layers.0.val');
+	proxy.layers[0].group.layers[0].value = 33;
+	t.is(resultPath, 'layers.0.value');
 
-	proxy.layers[1].group.layers[0].group.layers[1].group.layers[1].group.layers[2].val = 33;
-	t.is(resultPath, 'layers.2.val');
+	proxy.layers[1].group.layers[0].group.layers[1].group.layers[1].group.layers[2].value = 33;
+	t.is(resultPath, 'layers.2.value');
 });
 
-test('Array path should be the shorter one in the same object for circular references', t => {
-	const layer1 = {group: null, val: 0};
-	const layer2 = {group: null, val: 0};
-	const layer3 = {group: null, val: 0};
+test('array path should be the shorter one in the same object for circular references', t => {
+	const layer1 = {value: 0};
+	const layer2 = {value: 0};
+	const layer3 = {value: 0};
+
 	const group = {
 		layers: [layer1, layer2, layer3],
 		value: 0,
 	};
+
 	layer1.group = group;
 	layer2.group = group;
 	layer3.group = group;
@@ -803,25 +807,24 @@ test('Array path should be the shorter one in the same object for circular refer
 		pathAsArray: true,
 	});
 
-	proxy.layers[0].val = 11;
+	proxy.layers[0].value = 11;
 	t.is(resultPath[0], 'layers');
 	t.is(resultPath[1], '0');
-	t.is(resultPath[2], 'val');
+	t.is(resultPath[2], 'value');
 
-	proxy.layers[0].group.val = 22;
+	proxy.layers[0].group.value = 22;
 	t.is(resultPath[0], 'layers');
 	t.is(resultPath[1], '0');
 	t.is(resultPath[2], 'group');
-	t.is(resultPath[3], 'val');
+	t.is(resultPath[3], 'value');
 
-	proxy.layers[0].group.layers[0].val = 33;
+	proxy.layers[0].group.layers[0].value = 33;
 	t.is(resultPath[0], 'layers');
 	t.is(resultPath[1], '0');
-	t.is(resultPath[2], 'val');
+	t.is(resultPath[2], 'value');
 
-	proxy.layers[1].group.layers[0].group.layers[1].group.layers[1].group.layers[2].val = 33;
+	proxy.layers[1].group.layers[0].group.layers[1].group.layers[1].group.layers[2].value = 33;
 	t.is(resultPath[0], 'layers');
 	t.is(resultPath[1], '2');
-	t.is(resultPath[2], 'val');
+	t.is(resultPath[2], 'value');
 });
-
