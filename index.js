@@ -1,7 +1,8 @@
 /* eslint-disable unicorn/prefer-spread */
-import {TARGET, UNSUBSCRIBE} from './lib/constants.js';
+import {TARGET, UNSUBSCRIBE, PATH_SEPARATOR} from './lib/constants.js';
 import {isBuiltinWithMutableMethods, isBuiltinWithoutMutableMethods} from './lib/is-builtin.js';
 import path from './lib/path.js';
+import isArray from './lib/is-array.js';
 import isSymbol from './lib/is-symbol.js';
 import isIterator from './lib/is-iterator.js';
 import wrapIterator from './lib/wrap-iterator.js';
@@ -74,7 +75,52 @@ const onChange = (object, onChange, options = {}) => {
 			basePath = cache.getPath(target);
 		}
 
-		return cache.getProxy(value, path.concat(basePath, property), handler, proxyTarget);
+		/*
+  		Check for circular references.
+
+  		If the value already has a corresponding path/proxy,
+		and if the path corresponds to one of the parents,
+		then we are on a circular case, where the child is pointing to their parent.
+		In this case we return the proxy object with the shortest path.
+  		*/
+		const childPath = path.concat(basePath, property);
+		const existingPath = cache.getPath(value);
+
+		if (existingPath && isSameObjectTree(childPath, existingPath)) {
+			// We are on the same object tree but deeper, so we use the parent path.
+			return cache.getProxy(value, existingPath, handler, proxyTarget);
+		}
+
+		return cache.getProxy(value, childPath, handler, proxyTarget);
+	};
+
+	/*
+	Returns true if `childPath` is a subpath of `existingPath`
+	(if childPath starts with existingPath). Otherwise, it returns false.
+
+ 	It also returns false if the 2 paths are identical.
+
+ 	For example:
+	- childPath    = group.layers.0.parent.layers.0.value
+	- existingPath = group.layers.0.parent
+	*/
+	const isSameObjectTree = (childPath, existingPath) => {
+		if (isSymbol(childPath) || childPath.length <= existingPath.length) {
+			return false;
+		}
+
+		if (isArray(existingPath) && existingPath.length === 0) {
+			return false;
+		}
+
+		const childParts = isArray(childPath) ? childPath : childPath.split(PATH_SEPARATOR);
+		const existingParts = isArray(existingPath) ? existingPath : existingPath.split(PATH_SEPARATOR);
+
+		if (childParts.length <= existingParts.length) {
+			return false;
+		}
+
+		return !(existingParts.some((part, index) => part !== childParts[index]));
 	};
 
 	const handler = {
