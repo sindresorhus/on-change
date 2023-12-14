@@ -75,31 +75,36 @@ const onChange = (object, onChange, options = {}) => {
 			basePath = cache.getPath(target);
 		}
 
-		// Check circular references
-		// If the value already has a corresponding path/proxy,
-		// And if the path corresponds to one of the parents
-		// Then we are on a circular case, where the child is pointing to his parent.
-		// => in this case we return the proxy object with the shortest path.
+		/*
+  		Check for circular references.
+		
+  		If the value already has a corresponding path/proxy,
+		and if the path corresponds to one of the parents,
+		then we are on a circular case, where the child is pointing to their parent.
+		In this case we return the proxy object with the shortest path.
+  		*/
 		const childPath = path.concat(basePath, property);
 		const existingPath = cache.getPath(value);
+
 		if (existingPath && isSameObjectTree(childPath, existingPath)) {
-			// We are on the same object tree, but deeper
-			// We use the parent path
+			// We are on the same object tree but deeper, so we use the parent path.
 			return cache.getProxy(value, existingPath, handler, proxyTarget);
 		}
 
 		return cache.getProxy(value, childPath, handler, proxyTarget);
 	};
 
+	/*
+	Returns true if `childPath` is a subpath of `existingPath`
+	(if childPath starts with existingPath). Otherwise, it returns false.
+
+ 	It also returns false if the 2 paths are identical.
+
+ 	For example:
+	- childPath    = group.layers.0.parent.layers.0.value
+	- existingPath = group.layers.0.parent
+	*/
 	const isSameObjectTree = (childPath, existingPath) => {
-		/* This method returns true if childPath is a subpath of existingPath
-		 * (if childPath starts with existingPath)
-		 * Otherwise, it returns false.
-		 * It also returns false if the 2 paths are identical.
-		 * For example :
-		 *   - childPath    = group.layers.0.parent.layers.0.value
-		 *   - existingPath = group.layers.0.parent
-		 */
 		if (isSymbol(childPath) || childPath.length <= existingPath.length) {
 			return false;
 		}
