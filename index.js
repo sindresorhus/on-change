@@ -48,7 +48,7 @@ const onChange = (object, onChange, options = {}) => {
 
 	// eslint-disable-next-line max-params
 	const handleChange = (changePath, property, value, previous, applyData) => {
-		if (smartClone.isCloning) {
+		if (smartClone.isCloning && smartClone.isPartOfClone(changePath)) {
 			smartClone.update(changePath, property, previous);
 		} else {
 			onChange(path.concat(changePath, property), value, previous, applyData);

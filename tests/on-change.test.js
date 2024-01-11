@@ -828,3 +828,53 @@ test('array path should be the shorter one in the same object for circular refer
 	t.is(resultPath[1], '2');
 	t.is(resultPath[2], 'value');
 });
+
+test('should trigger when methods are called that mutate unrelated area of proxy when pathAsArray is false', t => {
+	const object = {
+		a: [
+			{
+				quantity: 1
+			}
+		],
+		b: {
+			c: {
+				quantity: 8,
+			},
+		}
+	};
+
+	testRunner(t, object, {pathAsArray: false}, (proxy, verify) => {
+		proxy.a.forEach(() => {
+			proxy.b.c = {
+				quantity: 3,
+			};
+		});
+
+		verify(1, proxy, 'b.c', { quantity: 3 }, { quantity: 8 });
+	});
+});
+
+test('should trigger when methods are called that mutate unrelated area of proxy when pathAsArray is true', t => {
+	const object = {
+		a: [
+			{
+				quantity: 1
+			}
+		],
+		b: {
+			c: {
+				quantity: 8,
+			},
+		}
+	};
+
+	testRunner(t, object, {pathAsArray: true}, (proxy, verify) => {
+		proxy.a.forEach(() => {
+			proxy.b.c = {
+				quantity: 3,
+			};
+		});
+
+		verify(1, proxy, ['b', 'c'], { quantity: 3 }, { quantity: 8 });
+	});
+});
