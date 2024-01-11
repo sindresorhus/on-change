@@ -833,24 +833,25 @@ test('should trigger when methods are called that mutate unrelated area of proxy
 	const object = {
 		a: [
 			{
-				quantity: 1
-			}
+				quantity: 1,
+			},
 		],
 		b: {
 			c: {
 				quantity: 8,
 			},
-		}
+		},
 	};
 
 	testRunner(t, object, {pathAsArray: false}, (proxy, verify) => {
+		// eslint-disable-next-line unicorn/no-array-for-each
 		proxy.a.forEach(() => {
 			proxy.b.c = {
 				quantity: 3,
 			};
 		});
 
-		verify(1, proxy, 'b.c', { quantity: 3 }, { quantity: 8 });
+		verify(1, proxy, 'b.c', {quantity: 3}, {quantity: 8});
 	});
 });
 
@@ -858,23 +859,24 @@ test('should trigger when methods are called that mutate unrelated area of proxy
 	const object = {
 		a: [
 			{
-				quantity: 1
-			}
+				quantity: 1,
+			},
 		],
 		b: {
 			c: {
 				quantity: 8,
 			},
-		}
+		},
 	};
 
 	testRunner(t, object, {pathAsArray: true}, (proxy, verify) => {
+		// eslint-disable-next-line unicorn/no-array-for-each
 		proxy.a.forEach(() => {
 			proxy.b.c = {
 				quantity: 3,
 			};
 		});
 
-		verify(1, proxy, ['b', 'c'], { quantity: 3 }, { quantity: 8 });
+		verify(1, proxy, ['b', 'c'], {quantity: 3}, {quantity: 8});
 	});
 });
