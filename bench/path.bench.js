@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/prefer-spread */
 import path from '../lib/path.js';
-import { suite } from "./utils.js";
+import {suite} from './utils.js';
 
 let temporaryTarget; // eslint-disable-line no-unused-vars
 
