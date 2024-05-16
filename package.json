@@ -21,7 +21,7 @@
 	},
 	"scripts": {
 		"test": "xo && ava && tsd",
-		"bench": "karma start karma.bench.conf.cjs"
+		"bench": "node bench/index.bench.js"
 	},
 	"files": [
 		"index.js",
