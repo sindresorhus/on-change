@@ -1,42 +1,37 @@
-/* globals suite benchmark */
-import {benchSettings} from 'karma-webpack-bundle';
 import SmartClone from '../lib/smart-clone/smart-clone.js';
+import {suite} from './utils.js';
 
 let temporaryTarget;
 
-suite('SmartClone', () => {
+await suite('SmartClone', bench => {
 	const array = [1, 2, 3];
 	const smartClone = new SmartClone();
 	smartClone.start();
 
-	benchmark('init', () => {
-		temporaryTarget = new SmartClone();
-	}, benchSettings);
-
-	benchmark('init and start', () => {
-		new SmartClone()
-			.start('a');
-	}, benchSettings);
-
-	benchmark('start, path', () => {
-		new SmartClone()
-			.start(array, 'a');
-	}, benchSettings);
-
-	benchmark('start, no path', () => {
-		new SmartClone()
-			.start('a');
-	}, benchSettings);
-
-	benchmark('update, object', () => {
-		temporaryTarget = new SmartClone();
-		temporaryTarget.start({}, '');
-		temporaryTarget.update('', 'a', 1);
-	}, benchSettings);
-
-	benchmark('update, array', () => {
-		temporaryTarget = new SmartClone();
-		temporaryTarget.start([], '');
-		temporaryTarget.update('', '0', 1);
-	}, benchSettings);
+	bench
+		.add('init', () => {
+			temporaryTarget = new SmartClone();
+		})
+		.add('init and start', () => {
+			new SmartClone()
+				.start('a');
+		})
+		.add('start, path', () => {
+			new SmartClone()
+				.start(array, 'a');
+		})
+		.add('start, no path', () => {
+			new SmartClone()
+				.start('a');
+		})
+		.add('update, object', () => {
+			temporaryTarget = new SmartClone();
+			temporaryTarget.start({}, '');
+			temporaryTarget.update('', 'a', 1);
+		})
+		.add('update, array', () => {
+			temporaryTarget = new SmartClone();
+			temporaryTarget.start([], '');
+			temporaryTarget.update('', '0', 1);
+		});
 });
