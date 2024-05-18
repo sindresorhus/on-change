@@ -21,7 +21,7 @@
 	},
 	"scripts": {
 		"test": "xo && ava && tsd",
-		"bench": "karma start karma.bench.conf.cjs"
+		"bench": "node bench/index.bench.js"
 	},
 	"files": [
 		"index.js",
@@ -47,8 +47,8 @@
 	"devDependencies": {
 		"ava": "^6.0.1",
 		"display-value": "^2.2.0",
-		"karma-webpack-bundle": "^1.3.3",
 		"powerset": "0.0.1",
+		"tinybench": "^2.8.0",
 		"tsd": "^0.29.0",
 		"xo": "^0.56.0"
 	}

@@ -1,17 +1,13 @@
-/* globals suite benchmark */
-import {benchSettings} from 'karma-webpack-bundle';
 import onChange from '../index.js';
+import {suite} from './utils.js';
 
 let temporaryTarget; // eslint-disable-line no-unused-vars
 const callback = function () {};
-let array = [];
 let value = 0;
 
-const buildSettings = before => ({
-	...benchSettings,
-	onStart: before,
-	onCycle: before,
-});
+const buildArray = length => Array.from({length})
+	.fill(0)
+	.map((value, index) => ({a: index}));
 
 const sizes = [{
 	size: 10,
@@ -21,84 +17,93 @@ const sizes = [{
 	name: 'large',
 }];
 
-const commonBench = bench => {
+const commonBench = (bench, objectCallback) => {
 	for (const [index, option] of sizes.entries()) {
 		const separator = (index === sizes.length - 1)
 			? ''
 			: '     ' + '_'.repeat(20 - option.name.length);
 
-		benchmark(`(${option.name}) no options`, bench, buildSettings(() => {
-			array = onChange(buildArray(option.size), callback);
-		}));
+		const taskOptions = options => ({
+			beforeAll() {
+				this.o = onChange(buildArray(option.size), callback, options);
+			},
+			afterAll() {
+				delete this.o;
+			},
+		});
 
-		benchmark(`(${option.name}) isShallow`, bench, buildSettings(() => {
-			array = onChange(buildArray(option.size), callback, {isShallow: true});
-		}));
+		const simpleTaskOptions = {
+			beforeAll() {
+				this.o = buildArray(option.size);
+			},
+			afterAll() {
+				delete this.o;
+			},
+		};
 
-		benchmark(`(${option.name}) pathAsArray`, bench, buildSettings(() => {
-			array = onChange(buildArray(option.size), callback, {pathAsArray: true});
-		}));
-
-		benchmark(`(${option.name}) empty Proxy`, bench, buildSettings(() => {
-			array = new Proxy(buildArray(option.size), {});
-		}));
-
-		benchmark(`(${option.name}) native ${separator}`, bench, buildSettings(() => {
-			array = buildArray(option.size);
-		}));
+		bench
+			.add(`(${option.name}) no options`, function () {
+				objectCallback(this.o);
+			}, taskOptions())
+			.add(`(${option.name}) isShallow`, function () {
+				objectCallback(this.o);
+			}, taskOptions({isShallow: true}))
+			.add(`(${option.name}) pathAsArray`, function () {
+				objectCallback(this.o);
+			}, taskOptions({pathAsArray: true}))
+			.add(`(${option.name}) empty Proxy`, function () {
+				objectCallback(new Proxy(this.o, {}));
+			}, simpleTaskOptions)
+			.add(`(${option.name}) native ${separator}`, function () {
+				objectCallback(this.o);
+			}, simpleTaskOptions);
 	}
 };
 
-const buildArray = length => Array.from({length})
-	.fill(0)
-	.map((value, index) => ({a: index}));
+await suite('on-change init with array', bench => {
+	const array = buildArray(sizes[0].size);
 
-suite('on-change init with array', () => {
-	array = buildArray(sizes[0].size);
-
-	benchmark('new Proxy', () => {
-		temporaryTarget = new Proxy(array, {});
-	}, benchSettings);
-
-	benchmark('no options', () => {
-		onChange(array, callback);
-	}, benchSettings);
-
-	benchmark('pathAsArray', () => {
-		onChange(array, callback, {pathAsArray: true});
-	}, benchSettings);
-
-	benchmark('fat-arrow', () => {
-		onChange(array, () => {});
-	}, benchSettings);
+	bench
+		.add('new Proxy', () => {
+			temporaryTarget = new Proxy(array, {});
+		})
+		.add('no options', () => {
+			onChange(array, callback);
+		})
+		.add('pathAsArray', () => {
+			onChange(array, callback, {pathAsArray: true});
+		})
+		.add('fat-arrow', () => {
+			onChange(array, () => {});
+		});
 });
 
-suite('on-change with array, read', () => {
-	commonBench(() => {
+await suite('on-change with array, read', bench => {
+	commonBench(bench, array => {
 		temporaryTarget = array[3];
 	});
 });
 
-suite('on-change with array, read nested', () => {
-	commonBench(() => {
+await suite('on-change with array, read nested', bench => {
+	commonBench(bench, array => {
 		temporaryTarget = array[3].a;
 	});
 });
 
-suite('on-change with array, write', () => {
-	commonBench(() => {
+await suite('on-change with array, write', bench => {
+	commonBench(bench, array => {
 		array[2] = value++;
 	});
 });
 
-suite('on-change with array, write nested', () => {
-	commonBench(() => {
+await suite('on-change with array, write nested', bench => {
+	commonBench(bench, array => {
 		array[4].a = value++;
 	});
 });
 
-suite('on-change with array, read in apply', () => {
-	commonBench(() => {
+await suite('on-change with array, read in apply', bench => {
+	commonBench(bench, array => {
 		array.some((value, index) => {
 			temporaryTarget = array[index];
 			return true;
@@ -106,8 +111,8 @@ suite('on-change with array, read in apply', () => {
 	});
 });
 
-suite('on-change with array, write in apply', () => {
-	commonBench(() => {
+await suite('on-change with array, write in apply', bench => {
+	commonBench(bench, array => {
 		array.some((value, index) => {
 			array[index] = value++;
 			return true;
@@ -115,32 +120,32 @@ suite('on-change with array, write in apply', () => {
 	});
 });
 
-suite('on-change with array, push', () => {
-	commonBench(() => {
+await suite('on-change with array, push', bench => {
+	commonBench(bench, array => {
 		array.push(0);
 	});
 });
 
-suite('on-change with array, pop', () => {
-	commonBench(() => {
+await suite('on-change with array, pop', bench => {
+	commonBench(bench, array => {
 		array.pop();
 	});
 });
 
-suite('on-change with array, unshift', () => {
-	commonBench(() => {
+await suite('on-change with array, unshift', bench => {
+	commonBench(bench, array => {
 		array.unshift(0);
 	});
 });
 
-suite('on-change with array, shift', () => {
-	commonBench(() => {
+await suite('on-change with array, shift', bench => {
+	commonBench(bench, array => {
 		array.shift();
 	});
 });
 
-suite('on-change with array, toString', () => {
-	commonBench(() => {
+await suite('on-change with array, toString', bench => {
+	commonBench(bench, array => {
 		temporaryTarget = array.toString();
 	});
 });

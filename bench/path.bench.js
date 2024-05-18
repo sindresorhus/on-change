@@ -1,108 +1,95 @@
 /* eslint-disable unicorn/prefer-spread */
-/* globals suite benchmark */
-import {benchSettings} from 'karma-webpack-bundle';
 import path from '../lib/path.js';
+import {suite} from './utils.js';
 
 let temporaryTarget; // eslint-disable-line no-unused-vars
 
-suite('path.after', () => {
-	benchmark('string empty', () => {
-		temporaryTarget = path.after('', '');
-	}, benchSettings);
-
-	benchmark('string', () => {
-		temporaryTarget = path.after('a.b.c', 'a.b');
-	}, benchSettings);
-
-	benchmark('array empty', () => {
-		temporaryTarget = path.after([], []);
-	}, benchSettings);
-
-	benchmark('array', () => {
-		temporaryTarget = path.after(['a', 'b', 'c'], ['a', 'b']);
-	}, benchSettings);
+await suite('path.after', bench => {
+	bench
+		.add('string empty', () => {
+			temporaryTarget = path.after('', '');
+		})
+		.add('string', () => {
+			temporaryTarget = path.after('a.b.c', 'a.b');
+		})
+		.add('array empty', () => {
+			temporaryTarget = path.after([], []);
+		})
+		.add('array', () => {
+			temporaryTarget = path.after(['a', 'b', 'c'], ['a', 'b']);
+		});
 });
 
-suite('path.concat', () => {
+await suite('path.concat', bench => {
 	const symbol = Symbol('test');
 
-	benchmark('string empty', () => {
-		temporaryTarget = path.concat('', '');
-	}, benchSettings);
-
-	benchmark('string', () => {
-		temporaryTarget = path.concat('a.b', 'c');
-	}, benchSettings);
-
-	benchmark('string + Symbol', () => {
-		temporaryTarget = path.concat('a.b', symbol);
-	}, benchSettings);
-
-	benchmark('array empty', () => {
-		temporaryTarget = path.concat([], '');
-	}, benchSettings);
-
-	benchmark('array', () => {
-		temporaryTarget = path.concat(['a', 'b'], 'c');
-	}, benchSettings);
-
-	benchmark('array + Symbol', () => {
-		temporaryTarget = path.concat(['a', 'b'], symbol);
-	}, benchSettings);
+	bench
+		.add('string empty', () => {
+			temporaryTarget = path.concat('', '');
+		})
+		.add('string', () => {
+			temporaryTarget = path.concat('a.b', 'c');
+		})
+		.add('string + Symbol', () => {
+			temporaryTarget = path.concat('a.b', symbol);
+		})
+		.add('array empty', () => {
+			temporaryTarget = path.concat([], '');
+		})
+		.add('array', () => {
+			temporaryTarget = path.concat(['a', 'b'], 'c');
+		})
+		.add('array + Symbol', () => {
+			temporaryTarget = path.concat(['a', 'b'], symbol);
+		});
 });
 
-suite('path.initial', () => {
-	benchmark('string empty', () => {
-		temporaryTarget = path.initial('');
-	}, benchSettings);
-
-	benchmark('string', () => {
-		temporaryTarget = path.initial('a.b.c');
-	}, benchSettings);
-
-	benchmark('array empty', () => {
-		temporaryTarget = path.initial([]);
-	}, benchSettings);
-
-	benchmark('array', () => {
-		temporaryTarget = path.initial(['a', 'b', 'c']);
-	}, benchSettings);
+await suite('path.initial', bench => {
+	bench
+		.add('string empty', () => {
+			temporaryTarget = path.initial('');
+		})
+		.add('string', () => {
+			temporaryTarget = path.initial('a.b.c');
+		})
+		.add('array empty', () => {
+			temporaryTarget = path.initial([]);
+		})
+		.add('array', () => {
+			temporaryTarget = path.initial(['a', 'b', 'c']);
+		});
 });
 
-suite('path.walk', () => {
-	benchmark('string empty', () => {
-		path.walk('', key => {
-			temporaryTarget = key;
+await suite('path.walk', bench => {
+	bench
+		.add('string empty', () => {
+			path.walk('', key => {
+				temporaryTarget = key;
+			});
+		})
+		.add('string single key', () => {
+			path.walk('a', key => {
+				temporaryTarget = key;
+			});
+		})
+		.add('string three key', () => {
+			path.walk('a.b.c', key => {
+				temporaryTarget = key;
+			});
+		})
+		.add('array empty', () => {
+			path.walk([], key => {
+				temporaryTarget = key;
+			});
+		})
+		.add('array single key', () => {
+			path.walk(['a'], key => {
+				temporaryTarget = key;
+			});
+		})
+		.add('array three key', () => {
+			path.walk(['a', 'b', 'c'], key => {
+				temporaryTarget = key;
+			});
 		});
-	}, benchSettings);
-
-	benchmark('string single key', () => {
-		path.walk('a', key => {
-			temporaryTarget = key;
-		});
-	}, benchSettings);
-
-	benchmark('string three keys', () => {
-		path.walk('a.b.c', key => {
-			temporaryTarget = key;
-		});
-	}, benchSettings);
-
-	benchmark('array empty', () => {
-		path.walk([], key => {
-			temporaryTarget = key;
-		});
-	}, benchSettings);
-
-	benchmark('array single key', () => {
-		path.walk(['a'], key => {
-			temporaryTarget = key;
-		});
-	}, benchSettings);
-
-	benchmark('array three keys', () => {
-		path.walk(['a', 'b', 'c'], key => {
-			temporaryTarget = key;
-		});
-	}, benchSettings);
 });

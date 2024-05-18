@@ -1,65 +1,9 @@
-/* globals suite benchmark */
-import {benchSettings} from 'karma-webpack-bundle';
 import onChange from '../index.js';
+import {suite} from './utils.js';
 
 let temporaryTarget; // eslint-disable-line no-unused-vars
 const callback = function () {};
-let object = {};
 let value = 0;
-
-const buildSettings = before => ({
-	...benchSettings,
-	onStart: before,
-	onCycle: before,
-});
-
-const sizes = [{
-	size: 10,
-	name: 'small',
-}, {
-	size: 100_000,
-	name: 'large',
-}];
-
-const commonBench = bench => {
-	for (const [index, option] of sizes.entries()) {
-		const separator = (index === sizes.length - 1)
-			? ''
-			: '     ' + '_'.repeat(20 - option.name.length);
-
-		benchmark(`(${option.name}) no options`, bench, buildSettings(() => {
-			object = onChange(buildObject(option.size), callback);
-		}));
-
-		benchmark(`(${option.name}) isShallow`, bench, buildSettings(() => {
-			object = onChange(buildObject(option.size), callback, {isShallow: true});
-		}));
-
-		benchmark(`(${option.name}) pathAsArray`, bench, buildSettings(() => {
-			object = onChange(buildObject(option.size), callback, {pathAsArray: true});
-		}));
-
-		benchmark(`(${option.name}) ignoreSymbols`, bench, buildSettings(() => {
-			object = onChange(buildObject(option.size), callback, {ignoreSymbols: true});
-		}));
-
-		benchmark(`(${option.name}) ignoreUnderscores`, bench, buildSettings(() => {
-			object = onChange(buildObject(option.size), callback, {ignoreUnderscores: true});
-		}));
-
-		benchmark(`(${option.name}) ignoreDetached`, bench, buildSettings(() => {
-			object = onChange(buildObject(option.size), callback, {ignoreDetached: true});
-		}));
-
-		benchmark(`(${option.name}) empty Proxy`, bench, buildSettings(() => {
-			object = new Proxy(buildObject(option.size), {});
-		}));
-
-		benchmark(`(${option.name}) native ${separator}`, bench, buildSettings(() => {
-			object = buildObject(option.size);
-		}));
-	}
-};
 
 const buildObject = length => {
 	let property;
@@ -75,52 +19,110 @@ const buildObject = length => {
 	return object;
 };
 
-suite('on-change init with object', () => {
-	object = buildObject(sizes[0].size);
+const sizes = [{
+	size: 10,
+	name: 'small',
+}, {
+	size: 100_000,
+	name: 'large',
+}];
 
-	benchmark('new Proxy', () => {
-		temporaryTarget = new Proxy(object, {});
-	}, benchSettings);
+const commonBench = (bench, objectCallback) => {
+	for (const [index, option] of sizes.entries()) {
+		const separator = (index === sizes.length - 1)
+			? ''
+			: '     ' + '_'.repeat(20 - option.name.length);
 
-	benchmark('no options', () => {
-		onChange(object, callback);
-	}, benchSettings);
+		const taskOptions = options => ({
+			beforeAll() {
+				this.o = onChange(buildObject(option.size), callback, options);
+			},
+			afterAll() {
+				delete this.o;
+			},
+		});
 
-	benchmark('pathAsArray', () => {
-		onChange(object, callback, {pathAsArray: true});
-	}, benchSettings);
+		const simpleTaskOptions = {
+			beforeAll() {
+				this.o = buildObject(option.size);
+			},
+			afterAll() {
+				delete this.o;
+			},
+		};
 
-	benchmark('fat-arrow', () => {
-		onChange(object, () => {});
-	}, benchSettings);
+		bench
+			.add(`(${option.name}) no options`, function () {
+				objectCallback(this.o);
+			}, taskOptions())
+			.add(`(${option.name}) isShallow`, function () {
+				objectCallback(this.o);
+			}, taskOptions({isShallow: true}))
+			.add(`(${option.name}) pathAsArray`, function () {
+				objectCallback(this.o);
+			}, taskOptions({pathAsArray: true}))
+			.add(`(${option.name}) ignoreSymbols`, function () {
+				objectCallback(this.o);
+			}, taskOptions({ignoreSymbols: true}))
+			.add(`(${option.name}) ignoreUnderscores`, function () {
+				objectCallback(this.o);
+			}, taskOptions({ignoreUnderscores: true}))
+			.add(`(${option.name}) ignoreDetached`, function () {
+				objectCallback(this.o);
+			}, taskOptions({ignoreDetached: true}))
+			.add(`(${option.name}) empty Proxy`, function () {
+				objectCallback(new Proxy(this.o, {}));
+			}, simpleTaskOptions)
+			.add(`(${option.name}) native ${separator}`, function () {
+				objectCallback(this.o);
+			}, simpleTaskOptions);
+	}
+};
+
+await suite('on-change init with object', bench => {
+	const object = buildObject(sizes[0].size);
+
+	bench
+		.add('new Proxy', () => {
+			temporaryTarget = new Proxy(object, {});
+		})
+		.add('no options', () => {
+			onChange(object, callback);
+		})
+		.add('pathAsArray', () => {
+			onChange(object, callback, {pathAsArray: true});
+		})
+		.add('fat-arrow', () => {
+			onChange(object, () => {});
+		});
 });
 
-suite('on-change with object, read', () => {
-	commonBench(() => {
+await suite('on-change with object, read', bench => {
+	commonBench(bench, object => {
 		temporaryTarget = object.a;
 	});
 });
 
-suite('on-change with object, read nested', () => {
-	commonBench(() => {
+await suite('on-change with object, read nested', bench => {
+	commonBench(bench, object => {
 		temporaryTarget = object.childObject.a;
 	});
 });
 
-suite('on-change with object, write', () => {
-	commonBench(() => {
+await suite('on-change with object, write', bench => {
+	commonBench(bench, object => {
 		object.a = value++;
 	});
 });
 
-suite('on-change with object, write nested', () => {
-	commonBench(() => {
+await suite('on-change with object, write nested', bench => {
+	commonBench(bench, object => {
 		object.childObject.a = value++;
 	});
 });
 
-suite('on-change with object, toString', () => {
-	commonBench(() => {
+await suite('on-change with object, toString', bench => {
+	commonBench(bench, object => {
 		temporaryTarget = object.toString();
 	});
 });
