@@ -179,7 +179,22 @@ const onChange = (object, onChange, options = {}) => {
 					validate(target, property, descriptor.value, previous)
 					&& cache.defineProperty(target, property, descriptor, previous)
 				) {
-					handleChangeOnTarget(target, property, descriptor.value, previous);
+					// For accessor descriptors (getters/setters), descriptor.value is undefined
+					// We need to get the actual value after the property is defined
+					const hasValue = Object.prototype.hasOwnProperty.call(descriptor, 'value');
+					const value = hasValue
+						? descriptor.value
+						: (() => {
+							try {
+								// Read the actual value through the getter
+								return target[property];
+							} catch {
+								// If the getter throws, use undefined
+								return undefined;
+							}
+						})();
+
+					handleChangeOnTarget(target, property, value, previous);
 				}
 			}
 
