@@ -233,7 +233,7 @@ test('should return an iterator when Set.entries is called', t => {
 			entry[1].a++;
 		}
 
-		verify(2, proxy, [{a: 3}, 'a'], 3, 2);
+		verify(4, proxy, [{a: 3}, 'a'], 3, 2);
 	});
 });
 

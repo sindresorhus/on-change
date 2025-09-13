@@ -34,7 +34,7 @@ export type Options = {
 	@default Object.is
 
 	@example
-	 ```
+	```
 	import onChange from 'on-change';
 
 	const object = {
@@ -79,7 +79,7 @@ export type Options = {
 	readonly ignoreUnderscores?: boolean;
 
 	/**
-	The path will be provided as an array of keys instead of a delimited string.
+	The path will be provided as an array of keys instead of a delimited string. Recommended when working with Sets, Maps, or property keys that are Symbols.
 
 	@default false
 	*/
@@ -103,7 +103,7 @@ export type Options = {
 	The function receives the same arguments and context as the [onChange callback](#onchange). The function is called whenever a change is attempted. Returning true will allow the change to be made and the onChange callback to execute, returning anything else will prevent the change from being made and the onChange callback will not trigger.
 
 	@example
-	 ```
+	```
 	import onChange from 'on-change';
 
 	const object = {a: 0};

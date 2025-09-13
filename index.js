@@ -37,12 +37,24 @@ const onChange = (object, onChange, options = {}) => {
 		|| smartClone.isCloning
 		|| options.onValidate(path.concat(cache.getPath(target), property), value, previous, applyData) === true;
 
-	const handleChangeOnTarget = (target, property, value, previous) => {
+	// eslint-disable-next-line max-params
+	const handleChangeOnTarget = (target, property, value, previous, applyData) => {
 		if (
-			!ignoreProperty(cache, options, property)
-			&& !(ignoreDetached && cache.isDetached(target, object))
+			ignoreProperty(cache, options, property)
+			|| (ignoreDetached && cache.isDetached(target, object))
 		) {
-			handleChange(cache.getPath(target), property, value, previous);
+			return;
+		}
+
+		// Determine which paths to notify
+		const pathsToNotify = !smartClone.isCloning
+			&& cache.getAllPaths(target)?.length > 1
+			? cache.getAllPaths(target)
+			: [cache.getPath(target)];
+
+		// Notify all relevant paths
+		for (const changePath of pathsToNotify) {
+			handleChange(changePath, property, value, previous, applyData);
 		}
 	};
 
