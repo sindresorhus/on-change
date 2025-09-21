@@ -250,13 +250,25 @@ const onChange = (object, onChange, options = {}) => {
 
 				smartClone.start(thisProxyTarget, applyPath, argumentsList);
 
-				let result = Reflect.apply(
-					target,
-					smartClone.preferredThisArg(target, thisArg, thisProxyTarget),
-					isHandledMethod
-						? argumentsList.map(argument => getProxyTarget(argument))
-						: argumentsList,
-				);
+				let result;
+				// Special handling for array search methods that need proxy-aware comparison
+				if (isArray(thisProxyTarget) && ['indexOf', 'lastIndexOf', 'includes'].includes(target.name)) {
+					result = performProxyAwareArraySearch({
+						proxyArray: thisProxyTarget,
+						methodName: target.name,
+						searchElement: argumentsList[0],
+						fromIndex: argumentsList[1],
+						getProxyTarget,
+					});
+				} else {
+					result = Reflect.apply(
+						target,
+						smartClone.preferredThisArg(target, thisArg, thisProxyTarget),
+						isHandledMethod
+							? argumentsList.map(argument => getProxyTarget(argument))
+							: argumentsList,
+					);
+				}
 
 				const isChanged = smartClone.isChanged(thisProxyTarget, equals);
 				const previous = smartClone.stop();
@@ -311,6 +323,60 @@ const onChange = (object, onChange, options = {}) => {
 	}
 
 	return proxy;
+};
+
+// Helper function for array search methods that need proxy-aware comparison
+const performProxyAwareArraySearch = options => {
+	const {proxyArray, methodName, searchElement, fromIndex, getProxyTarget} = options;
+	const {length} = proxyArray;
+
+	if (length === 0) {
+		return methodName === 'includes' ? false : -1;
+	}
+
+	// Handle fromIndex parameter with proper defaults and bounds
+	let startIndex;
+	if (methodName === 'lastIndexOf') {
+		startIndex = fromIndex === undefined ? length - 1 : Number(fromIndex) || 0;
+		if (startIndex < 0) {
+			startIndex += length;
+		}
+
+		startIndex = Math.min(startIndex, length - 1);
+	} else {
+		startIndex = fromIndex === undefined ? 0 : Number(fromIndex) || 0;
+		if (startIndex < 0) {
+			startIndex = Math.max(0, length + startIndex);
+		}
+	}
+
+	// Helper to check if elements match (proxy comparison + target fallback)
+	const elementsMatch = (element, search) => {
+		// Fast path: direct proxy comparison (works after filter)
+		if (element === search) {
+			return true;
+		}
+
+		// Fallback: target comparison (works before filter)
+		return getProxyTarget(element) === getProxyTarget(search);
+	};
+
+	// Search with both proxy and target comparison
+	if (methodName === 'lastIndexOf') {
+		for (let index = startIndex; index >= 0; index--) {
+			if (elementsMatch(proxyArray[index], searchElement)) {
+				return index;
+			}
+		}
+	} else {
+		for (let index = startIndex; index < length; index++) {
+			if (elementsMatch(proxyArray[index], searchElement)) {
+				return methodName === 'includes' ? true : index;
+			}
+		}
+	}
+
+	return methodName === 'includes' ? false : -1;
 };
 
 onChange.target = proxy => proxy?.[TARGET] ?? proxy;

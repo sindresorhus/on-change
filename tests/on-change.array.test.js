@@ -201,6 +201,89 @@ test('should unwrap proxies passed to immutable methods on array', t => {
 	t.is(proxy.c[1], proxy.b);
 });
 
+test('indexOf should work correctly after filter and reassignment - issue #106', t => {
+	const object = {a: []};
+	const proxy = onChange(object, () => {});
+
+	proxy.a = [{a: 1}, {a: 2}, {a: 3}];
+
+	// Pre-filter check - should work
+	t.is(proxy.a.indexOf(proxy.a[0]), 0);
+	t.is(proxy.a.indexOf(proxy.a[1]), 1);
+	t.is(proxy.a.indexOf(proxy.a[2]), 2);
+
+	// Store references to original proxy objects
+	const originalFirst = proxy.a[0];
+	const originalSecond = proxy.a[1];
+	const originalThird = proxy.a[2];
+
+	// Filter and reassign (filter returns everything)
+	proxy.a = proxy.a.filter(() => true);
+
+	// Post-filter check - this should work with the fix
+	t.is(proxy.a.indexOf(proxy.a[0]), 0);
+	t.is(proxy.a.indexOf(proxy.a[1]), 1);
+	t.is(proxy.a.indexOf(proxy.a[2]), 2);
+
+	// With the fix, old proxies should still be findable after filter
+	t.is(proxy.a.indexOf(originalFirst), 0);
+	t.is(proxy.a.indexOf(originalSecond), 1);
+	t.is(proxy.a.indexOf(originalThird), 2);
+
+	// Test other search methods as well
+	t.is(proxy.a.lastIndexOf(originalFirst), 0);
+	t.is(proxy.a.lastIndexOf(originalSecond), 1);
+	t.is(proxy.a.lastIndexOf(originalThird), 2);
+
+	t.true(proxy.a.includes(originalFirst));
+	t.true(proxy.a.includes(originalSecond));
+	t.true(proxy.a.includes(originalThird));
+});
+
+test('array search methods should handle edge cases safely - issue #102', t => {
+	const object = {
+		array: [1, 2, 3],
+		nested: {
+			array: [4, 5, 6],
+		},
+	};
+	const proxy = onChange(object, () => {});
+
+	// Test 1: Normal operation
+	t.is(proxy.array.indexOf(2), 1);
+	t.is(proxy.array.lastIndexOf(2), 1);
+	t.true(proxy.array.includes(2));
+
+	// Test 2: After parent deletion (orphaned proxy)
+	const orphanedArray = proxy.nested.array;
+	delete proxy.nested;
+
+	// Should still work on the orphaned proxy
+	t.is(orphanedArray.indexOf(5), 1);
+	t.is(orphanedArray.lastIndexOf(5), 1);
+	t.true(orphanedArray.includes(5));
+
+	// Test 3: Empty array
+	proxy.array = [];
+	t.is(proxy.array.indexOf(1), -1);
+	t.is(proxy.array.lastIndexOf(1), -1);
+	t.false(proxy.array.includes(1));
+
+	// Test 4: Undefined and null elements
+	proxy.array = [undefined, null, 1];
+	t.is(proxy.array.indexOf(undefined), 0);
+	t.is(proxy.array.indexOf(null), 1);
+	t.is(proxy.array.lastIndexOf(undefined), 0);
+	t.true(proxy.array.includes(undefined));
+	t.true(proxy.array.includes(null));
+
+	// Test 5: With negative indices
+	proxy.array = [1, 2, 3, 1];
+	t.is(proxy.array.indexOf(1, -2), 3);
+	t.is(proxy.array.lastIndexOf(1, -2), 0);
+	t.true(proxy.array.includes(1, -1));
+});
+
 for (const typedArray of typedArrays) {
 	test('should return the length of a ' + typedArray.constructor.name, t => {
 		testRunner(t, typedArray, {}, (proxy, verify) => {
