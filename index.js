@@ -135,6 +135,80 @@ const onChange = (object, onChange, options = {}) => {
 		return !(existingParts.some((part, index) => part !== childParts[index]));
 	};
 
+	// Unified handler for SmartClone-based method execution
+	const handleMethodExecution = (target, thisArg, thisProxyTarget, argumentsList) => {
+		// Standard SmartClone path for all handled types including Date
+		let applyPath = path.initial(cache.getPath(target));
+		const isHandledMethod = SmartClone.isHandledMethod(thisProxyTarget, target.name);
+
+		smartClone.start(thisProxyTarget, applyPath, argumentsList);
+
+		let result;
+		// Special handling for array search methods that need proxy-aware comparison
+		if (isArray(thisProxyTarget) && ['indexOf', 'lastIndexOf', 'includes'].includes(target.name)) {
+			result = performProxyAwareArraySearch({
+				proxyArray: thisProxyTarget,
+				methodName: target.name,
+				searchElement: argumentsList[0],
+				fromIndex: argumentsList[1],
+				getProxyTarget,
+			});
+		} else {
+			result = Reflect.apply(
+				target,
+				smartClone.preferredThisArg(target, thisArg, thisProxyTarget),
+				isHandledMethod
+					? argumentsList.map(argument => getProxyTarget(argument))
+					: argumentsList,
+			);
+		}
+
+		const isChanged = smartClone.isChanged(thisProxyTarget, equals);
+		const previous = smartClone.stop();
+
+		if (SmartClone.isHandledType(result) && isHandledMethod) {
+			if (thisArg instanceof Map && target.name === 'get') {
+				applyPath = path.concat(applyPath, argumentsList[0]);
+			}
+
+			result = cache.getProxy(result, applyPath, handler);
+		}
+
+		if (isChanged) {
+			// Provide applyData based on details configuration
+			const shouldProvideApplyData = details === false
+				|| details === true
+				|| (Array.isArray(details) && details.includes(target.name));
+			const applyData = shouldProvideApplyData ? {
+				name: target.name,
+				args: argumentsList,
+				result,
+			} : undefined;
+
+			const changePath = smartClone.isCloning
+				? path.initial(applyPath)
+				: applyPath;
+			const property = smartClone.isCloning
+				? path.last(applyPath)
+				: '';
+
+			if (validate(path.get(object, changePath), property, thisProxyTarget, previous, applyData)) {
+				handleChange(changePath, property, thisProxyTarget, previous, applyData);
+			} else {
+				smartClone.undo(thisProxyTarget);
+			}
+		}
+
+		if (
+			(thisArg instanceof Map || thisArg instanceof Set)
+			&& isIterator(result)
+		) {
+			return wrapIterator(result, target, thisArg, applyPath, prepareValue);
+		}
+
+		return result;
+	};
+
 	const handler = {
 		get(target, property, receiver) {
 			if (isSymbol(property)) {
@@ -240,78 +314,48 @@ const onChange = (object, onChange, options = {}) => {
 				return Reflect.apply(target, thisProxyTarget, argumentsList);
 			}
 
-			if (
-				(details === false
-					|| (details !== true && !details.includes(target.name)))
-				&& SmartClone.isHandledType(thisProxyTarget)
-			) {
-				let applyPath = path.initial(cache.getPath(target));
-				const isHandledMethod = SmartClone.isHandledMethod(thisProxyTarget, target.name);
+			// Check if we should use SmartClone based on details option
+			// Always use SmartClone for iterator methods and other internal methods
+			const isInternalMethod = ['Symbol.iterator', 'values', 'keys', 'entries'].includes(target.name)
+				|| typeof target.name === 'symbol';
+			const shouldUseSmartClone = SmartClone.isHandledType(thisProxyTarget)
+				&& (isInternalMethod
+					|| details === false
+					|| (Array.isArray(details) && !details.includes(target.name)));
 
-				smartClone.start(thisProxyTarget, applyPath, argumentsList);
+			if (shouldUseSmartClone) {
+				return handleMethodExecution(target, thisArg, thisProxyTarget, argumentsList);
+			}
 
-				let result;
-				// Special handling for array search methods that need proxy-aware comparison
-				if (isArray(thisProxyTarget) && ['indexOf', 'lastIndexOf', 'includes'].includes(target.name)) {
-					result = performProxyAwareArraySearch({
-						proxyArray: thisProxyTarget,
-						methodName: target.name,
-						searchElement: argumentsList[0],
-						fromIndex: argumentsList[1],
-						getProxyTarget,
-					});
-				} else {
-					result = Reflect.apply(
-						target,
-						smartClone.preferredThisArg(target, thisArg, thisProxyTarget),
-						isHandledMethod
-							? argumentsList.map(argument => getProxyTarget(argument))
-							: argumentsList,
-					);
-				}
+			// Handle Date mutations when not using SmartClone
+			if (thisProxyTarget instanceof Date && SmartClone.isHandledMethod(thisProxyTarget, target.name)) {
+				const clonedDate = new Date(thisProxyTarget.getTime());
+				const result = Reflect.apply(target, thisProxyTarget, argumentsList);
+				const previousTime = clonedDate.getTime();
+				const currentTime = thisProxyTarget.getTime();
 
-				const isChanged = smartClone.isChanged(thisProxyTarget, equals);
-				const previous = smartClone.stop();
-
-				if (SmartClone.isHandledType(result) && isHandledMethod) {
-					if (thisArg instanceof Map && target.name === 'get') {
-						applyPath = path.concat(applyPath, argumentsList[0]);
-					}
-
-					result = cache.getProxy(result, applyPath, handler);
-				}
-
-				if (isChanged) {
-					const applyData = {
+				if (!equals(previousTime, currentTime)) {
+					const applyPath = cache.getPath(thisProxyTarget);
+					const shouldProvideApplyData = details === true
+						|| (Array.isArray(details) && details.includes(target.name));
+					const applyData = shouldProvideApplyData ? {
 						name: target.name,
 						args: argumentsList,
 						result,
-					};
-					const changePath = smartClone.isCloning
-						? path.initial(applyPath)
-						: applyPath;
-					const property = smartClone.isCloning
-						? path.last(applyPath)
-						: '';
+					} : undefined;
 
-					if (validate(path.get(object, changePath), property, thisProxyTarget, previous, applyData)) {
-						handleChange(changePath, property, thisProxyTarget, previous, applyData);
+					if (validate(path.get(object, applyPath), '', thisProxyTarget, clonedDate, applyData)) {
+						handleChange(applyPath, '', thisProxyTarget, clonedDate, applyData);
 					} else {
-						smartClone.undo(thisProxyTarget);
+						// Undo the change if validation fails
+						thisProxyTarget.setTime(previousTime);
 					}
-				}
-
-				if (
-					(thisArg instanceof Map || thisArg instanceof Set)
-					&& isIterator(result)
-				) {
-					return wrapIterator(result, target, thisArg, applyPath, prepareValue);
 				}
 
 				return result;
 			}
 
-			return Reflect.apply(target, thisArg, argumentsList);
+			return Reflect.apply(target, thisProxyTarget, argumentsList);
 		},
 	};
 
@@ -334,45 +378,30 @@ const performProxyAwareArraySearch = options => {
 		return methodName === 'includes' ? false : -1;
 	}
 
-	// Handle fromIndex parameter with proper defaults and bounds
-	let startIndex;
-	if (methodName === 'lastIndexOf') {
-		startIndex = fromIndex === undefined ? length - 1 : Number(fromIndex) || 0;
-		if (startIndex < 0) {
-			startIndex += length;
-		}
+	// Parse fromIndex according to ECMAScript specification
+	const isLastIndexOf = methodName === 'lastIndexOf';
+	let startIndex = fromIndex === undefined
+		? (isLastIndexOf ? length - 1 : 0)
+		: Math.trunc(Number(fromIndex)) || 0;
 
+	if (startIndex < 0) {
+		startIndex = Math.max(0, length + startIndex);
+	} else if (isLastIndexOf) {
 		startIndex = Math.min(startIndex, length - 1);
-	} else {
-		startIndex = fromIndex === undefined ? 0 : Number(fromIndex) || 0;
-		if (startIndex < 0) {
-			startIndex = Math.max(0, length + startIndex);
-		}
 	}
 
-	// Helper to check if elements match (proxy comparison + target fallback)
-	const elementsMatch = (element, search) => {
-		// Fast path: direct proxy comparison (works after filter)
-		if (element === search) {
-			return true;
-		}
-
-		// Fallback: target comparison (works before filter)
-		return getProxyTarget(element) === getProxyTarget(search);
-	};
+	// Cache the search element's target for efficiency
+	const searchTarget = getProxyTarget(searchElement);
 
 	// Search with both proxy and target comparison
-	if (methodName === 'lastIndexOf') {
-		for (let index = startIndex; index >= 0; index--) {
-			if (elementsMatch(proxyArray[index], searchElement)) {
-				return index;
-			}
-		}
-	} else {
-		for (let index = startIndex; index < length; index++) {
-			if (elementsMatch(proxyArray[index], searchElement)) {
-				return methodName === 'includes' ? true : index;
-			}
+	const searchBackward = methodName === 'lastIndexOf';
+	const endIndex = searchBackward ? -1 : length;
+	const step = searchBackward ? -1 : 1;
+
+	for (let index = startIndex; searchBackward ? index > endIndex : index < endIndex; index += step) {
+		const element = proxyArray[index];
+		if (element === searchElement || getProxyTarget(element) === searchTarget) {
+			return methodName === 'includes' ? true : index;
 		}
 	}
 
