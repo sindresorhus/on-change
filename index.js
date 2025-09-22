@@ -10,6 +10,9 @@ import ignoreProperty from './lib/ignore-property.js';
 import Cache from './lib/cache.js';
 import SmartClone from './lib/smart-clone/smart-clone.js';
 
+// Constant set of iterator method names for efficient lookup
+const ITERATOR_METHOD_NAMES = new Set(['values', 'keys', 'entries']);
+
 const defaultOptions = {
 	equals: Object.is,
 	isShallow: false,
@@ -308,7 +311,8 @@ const onChange = (object, onChange, options = {}) => {
 		},
 
 		apply(target, thisArg, argumentsList) {
-			const thisProxyTarget = thisArg[proxyTarget] ?? thisArg;
+			// Handle case where thisArg is undefined/null (e.g., extracted method calls)
+			const thisProxyTarget = thisArg?.[proxyTarget] ?? thisArg;
 
 			if (cache.isUnsubscribed) {
 				return Reflect.apply(target, thisProxyTarget, argumentsList);
@@ -324,7 +328,7 @@ const onChange = (object, onChange, options = {}) => {
 				if (!isPlainObjectCustomMethod) {
 					// Use SmartClone for internal methods or based on details configuration
 					const isInternalMethod = typeof target.name === 'symbol'
-						|| ['values', 'keys', 'entries'].includes(target.name);
+						|| ITERATOR_METHOD_NAMES.has(target.name);
 
 					const shouldUseSmartClone = isInternalMethod
 						|| details === false
@@ -336,35 +340,40 @@ const onChange = (object, onChange, options = {}) => {
 				}
 			}
 
-			// Handle Date mutations when not using SmartClone
+			// Special handling for Date mutations when details option is used
+			// This allows tracking Date method calls with apply data
 			if (thisProxyTarget instanceof Date && SmartClone.isHandledMethod(thisProxyTarget, target.name)) {
-				const clonedDate = new Date(thisProxyTarget.getTime());
+				const previousTime = thisProxyTarget.getTime();
 				const result = Reflect.apply(target, thisProxyTarget, argumentsList);
-				const previousTime = clonedDate.getTime();
 				const currentTime = thisProxyTarget.getTime();
 
 				if (!equals(previousTime, currentTime)) {
 					const applyPath = cache.getPath(thisProxyTarget);
 					const shouldProvideApplyData = details === true
 						|| (Array.isArray(details) && details.includes(target.name));
-					const applyData = shouldProvideApplyData ? {
-						name: target.name,
-						args: argumentsList,
-						result,
-					} : undefined;
 
-					if (validate(path.get(object, applyPath), '', thisProxyTarget, clonedDate, applyData)) {
-						handleChange(applyPath, '', thisProxyTarget, clonedDate, applyData);
-					} else {
-						// Undo the change if validation fails
-						thisProxyTarget.setTime(previousTime);
+					if (shouldProvideApplyData) {
+						const applyData = {
+							name: target.name,
+							args: argumentsList,
+							result,
+						};
+						const previousDate = new Date(previousTime);
+
+						if (validate(path.get(object, applyPath), '', thisProxyTarget, previousDate, applyData)) {
+							handleChange(applyPath, '', thisProxyTarget, previousDate, applyData);
+						} else {
+							// Undo the change if validation fails
+							thisProxyTarget.setTime(previousTime);
+						}
 					}
 				}
 
 				return result;
 			}
 
-			// Use the proxy (thisArg) as 'this' to ensure property mutations go through proxy traps
+			// For plain object custom methods or when SmartClone is not used,
+			// use the proxy as 'this' to ensure property mutations go through proxy traps
 			return Reflect.apply(target, thisArg, argumentsList);
 		},
 	};

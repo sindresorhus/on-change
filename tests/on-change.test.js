@@ -647,6 +647,73 @@ test('should handle multiple property changes in a single method', t => {
 	t.deepEqual(changes[1], {path: ['b'], value: 1, previous: 2});
 });
 
+test('should handle extracted method calls without crashing - issue #97', t => {
+	class Foo {
+		constructor() {
+			this.value = 0;
+		}
+
+		incrementValue() {
+			this.value++;
+		}
+
+		extractAndCallMethod() {
+			// Extract method from this
+			const extractedMethod = this.incrementValue;
+			// Call extracted method - thisArg will be undefined
+			// This will fail because this.value is undefined, but the proxy should not crash
+			try {
+				extractedMethod();
+			} catch (error) {
+				// Expected: method will fail because 'this' is undefined
+				t.true(error.message.includes('Cannot read properties of undefined'));
+			}
+		}
+
+		extractAndCallWithApply() {
+			const extractedMethod = this.incrementValue;
+			// Call with explicit this using apply
+			extractedMethod.apply(this);
+		}
+
+		safeExtractedCall() {
+			// Extract method and call it in a way that doesn't access this
+			const extractedMethod = () => 'called safely';
+
+			return extractedMethod();
+		}
+	}
+
+	const object = new Foo();
+	let changeCount = 0;
+	const changes = [];
+
+	const proxy = onChange(object, (path, value, previous) => {
+		changeCount++;
+		changes.push({path, value, previous});
+	}, {pathAsArray: true});
+
+	// This should not crash the proxy system itself
+	t.notThrows(() => {
+		proxy.extractAndCallMethod();
+	});
+
+	// This should work and track changes properly
+	t.notThrows(() => {
+		proxy.extractAndCallWithApply();
+	});
+
+	// Safe extracted calls should work
+	t.notThrows(() => {
+		const result = proxy.safeExtractedCall();
+		t.is(result, 'called safely');
+	});
+
+	// Should have tracked the change from extractAndCallWithApply
+	t.is(changeCount, 1);
+	t.deepEqual(changes[0], {path: ['value'], value: 1, previous: 0});
+});
+
 test('should not trigger after unsubscribe is called', t => {
 	const object = {
 		x: {
