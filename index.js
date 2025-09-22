@@ -2,7 +2,7 @@
 import {TARGET, UNSUBSCRIBE, PATH_SEPARATOR} from './lib/constants.js';
 import {isBuiltinWithMutableMethods, isBuiltinWithoutMutableMethods} from './lib/is-builtin.js';
 import path from './lib/path.js';
-import isArray from './lib/is-array.js';
+import isObject from './lib/is-object.js';
 import isSymbol from './lib/is-symbol.js';
 import isIterator from './lib/is-iterator.js';
 import wrapIterator from './lib/wrap-iterator.js';
@@ -121,12 +121,12 @@ const onChange = (object, onChange, options = {}) => {
 			return false;
 		}
 
-		if (isArray(existingPath) && existingPath.length === 0) {
+		if (Array.isArray(existingPath) && existingPath.length === 0) {
 			return false;
 		}
 
-		const childParts = isArray(childPath) ? childPath : childPath.split(PATH_SEPARATOR);
-		const existingParts = isArray(existingPath) ? existingPath : existingPath.split(PATH_SEPARATOR);
+		const childParts = Array.isArray(childPath) ? childPath : childPath.split(PATH_SEPARATOR);
+		const existingParts = Array.isArray(existingPath) ? existingPath : existingPath.split(PATH_SEPARATOR);
 
 		if (childParts.length <= existingParts.length) {
 			return false;
@@ -145,7 +145,7 @@ const onChange = (object, onChange, options = {}) => {
 
 		let result;
 		// Special handling for array search methods that need proxy-aware comparison
-		if (isArray(thisProxyTarget) && ['indexOf', 'lastIndexOf', 'includes'].includes(target.name)) {
+		if (Array.isArray(thisProxyTarget) && ['indexOf', 'lastIndexOf', 'includes'].includes(target.name)) {
 			result = performProxyAwareArraySearch({
 				proxyArray: thisProxyTarget,
 				methodName: target.name,
@@ -314,17 +314,26 @@ const onChange = (object, onChange, options = {}) => {
 				return Reflect.apply(target, thisProxyTarget, argumentsList);
 			}
 
-			// Check if we should use SmartClone based on details option
-			// Always use SmartClone for iterator methods and other internal methods
-			const isInternalMethod = ['Symbol.iterator', 'values', 'keys', 'entries'].includes(target.name)
-				|| typeof target.name === 'symbol';
-			const shouldUseSmartClone = SmartClone.isHandledType(thisProxyTarget)
-				&& (isInternalMethod
-					|| details === false
-					|| (Array.isArray(details) && !details.includes(target.name)));
+			// Check if SmartClone should be used for aggregate change tracking
+			if (SmartClone.isHandledType(thisProxyTarget)) {
+				// Skip SmartClone for custom methods on plain objects to enable property-level tracking
+				// Note: This approach doesn't support private fields (#field) which require the original instance
+				const isPlainObjectCustomMethod = isObject(thisProxyTarget)
+					&& !SmartClone.isHandledMethod(thisProxyTarget, target.name);
 
-			if (shouldUseSmartClone) {
-				return handleMethodExecution(target, thisArg, thisProxyTarget, argumentsList);
+				if (!isPlainObjectCustomMethod) {
+					// Use SmartClone for internal methods or based on details configuration
+					const isInternalMethod = typeof target.name === 'symbol'
+						|| ['values', 'keys', 'entries'].includes(target.name);
+
+					const shouldUseSmartClone = isInternalMethod
+						|| details === false
+						|| (Array.isArray(details) && !details.includes(target.name));
+
+					if (shouldUseSmartClone) {
+						return handleMethodExecution(target, thisArg, thisProxyTarget, argumentsList);
+					}
+				}
 			}
 
 			// Handle Date mutations when not using SmartClone
@@ -355,7 +364,8 @@ const onChange = (object, onChange, options = {}) => {
 				return result;
 			}
 
-			return Reflect.apply(target, thisProxyTarget, argumentsList);
+			// Use the proxy (thisArg) as 'this' to ensure property mutations go through proxy traps
+			return Reflect.apply(target, thisArg, argumentsList);
 		},
 	};
 

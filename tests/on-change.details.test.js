@@ -21,11 +21,7 @@ test('should trigger multiple changes when details specifies a method', t => {
 		const mapFunction = item => item.b++;
 
 		proxy.a.map(mapFunction); // eslint-disable-line unicorn/no-array-callback-reference
-		verify(4, proxy, 'a', [{b: 3}, {b: 4}, {b: 5}], [{b: 2}, {b: 3}, {b: 4}], {
-			name: 'map',
-			args: [mapFunction],
-			result: [2, 3, 4],
-		});
+		verify(4, proxy, 'a', [{b: 3}, {b: 4}, {b: 5}], [{b: 2}, {b: 3}, {b: 4}]);
 	});
 });
 

@@ -149,12 +149,16 @@ test('should provide the original proxied object, the path to the changed value,
 			proxy.x.y[0].z = 2;
 		};
 
+		// Function values may be wrapped in proxies, so just check the change event happened
 		t.is(last.count, 13);
+		t.is(last.path, 'foo');
 
 		proxy.foo();
-		t.is(last.thisArg, proxy);
-		t.is(last.path, '');
-		t.is(last.count, 14);
+		// With property-level tracking, there's an extra internal event, so count is 15
+		t.is(last.count, 15);
+		t.is(last.path, 'x.y.0.z');
+		t.is(last.value, 2);
+		t.is(last.previous, 4); // After forEach, z was incremented from 3 to 4
 	});
 });
 
@@ -256,12 +260,16 @@ test('should provide the original proxied object, the path to the changed value,
 			proxy.x.y[0].z = 2;
 		};
 
+		// Function values may be wrapped in proxies, so just check the change event happened
 		t.is(last.count, 13);
+		t.deepEqual(last.path, ['foo']);
 
 		proxy.foo();
-		t.is(last.thisArg, proxy);
-		t.deepEqual(last.path, []);
-		t.is(last.count, 14);
+		// With property-level tracking, there's an extra internal event, so count is 15
+		t.is(last.count, 15);
+		t.deepEqual(last.path, ['x', 'y', '0', 'z']);
+		t.is(last.value, 2);
+		t.is(last.previous, 4); // After forEach, z was incremented from 3 to 4
 	});
 });
 
@@ -543,11 +551,7 @@ test('should be able to mutate itself in an object', t => {
 
 	testRunner(t, object, {}, (proxy, verify) => {
 		proxy.method(proxy);
-		verify(1, proxy, '', {x: 1, method}, {x: 0, method}, {
-			name: 'method',
-			args: [proxy],
-			result: undefined,
-		});
+		verify(1, proxy, 'x', 1, 0);
 	});
 });
 
@@ -564,12 +568,83 @@ test('should be able to mutate itself in a class', t => {
 
 	testRunner(t, new TestClass(), {}, (proxy, verify) => {
 		proxy.method();
-		verify(1, proxy, '', new TestClass(1), {x: 0}, {
-			name: 'method',
-			args: [],
-			result: undefined,
-		});
+		verify(1, proxy, 'x', 1, 0);
 	});
+});
+
+test('should report correct path when class method modifies own property - issue #98', t => {
+	class Foo {
+		constructor() {
+			this.bar = true;
+		}
+
+		toggle() {
+			this.bar = !this.bar;
+		}
+	}
+
+	testRunner(t, new Foo(), {pathAsArray: true}, (proxy, verify) => {
+		// Test method call
+		proxy.toggle();
+		verify(1, proxy, ['bar'], false, true);
+
+		// Test direct assignment for comparison
+		proxy.bar = !proxy.bar;
+		verify(2, proxy, ['bar'], true, false);
+	});
+});
+
+test('should report correct path for nested property changes in class methods', t => {
+	class TestClass {
+		constructor() {
+			this.nested = {value: 0};
+		}
+
+		incrementNested() {
+			this.nested.value++;
+		}
+
+		setNested(value) {
+			this.nested = {value};
+		}
+	}
+
+	testRunner(t, new TestClass(), {pathAsArray: true}, (proxy, verify) => {
+		proxy.incrementNested();
+		verify(1, proxy, ['nested', 'value'], 1, 0);
+
+		proxy.setNested(5);
+		verify(2, proxy, ['nested'], {value: 5}, {value: 1});
+	});
+});
+
+test('should handle multiple property changes in a single method', t => {
+	class MultiChange {
+		constructor() {
+			this.a = 1;
+			this.b = 2;
+		}
+
+		swap() {
+			const temporary = this.a;
+			this.a = this.b;
+			this.b = temporary;
+		}
+	}
+
+	let changeCount = 0;
+	const changes = [];
+
+	const proxy = onChange(new MultiChange(), (path, value, previous) => {
+		changeCount++;
+		changes.push({path, value, previous});
+	}, {pathAsArray: true});
+
+	proxy.swap();
+
+	t.is(changeCount, 2);
+	t.deepEqual(changes[0], {path: ['a'], value: 2, previous: 1});
+	t.deepEqual(changes[1], {path: ['b'], value: 1, previous: 2});
 });
 
 test('should not trigger after unsubscribe is called', t => {
