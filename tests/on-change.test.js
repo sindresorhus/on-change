@@ -714,6 +714,71 @@ test('should handle extracted method calls without crashing - issue #97', t => {
 	t.deepEqual(changes[0], {path: ['value'], value: 1, previous: 0});
 });
 
+test('should detect underlying field changes in class setters - issue #96', t => {
+	class TestClass {
+		constructor() {
+			this._value = 0;
+			this._state = 'idle';
+		}
+
+		get value() {
+			return this._value;
+		}
+
+		set value(newValue) {
+			this._value = newValue;
+		}
+
+		get config() {
+			return {state: this._state, value: this._value};
+		}
+
+		set config(cfg) {
+			this._state = cfg.state || 'idle';
+			this._value = cfg.value || 0;
+		}
+	}
+
+	testRunner(t, new TestClass(), {pathAsArray: true}, (proxy, verify) => {
+		// Test 1: Simple setter that modifies backing field
+		proxy.value = 5;
+		verify(2, proxy, ['value'], 5, 0);
+
+		// Test 2: Setter that modifies multiple fields
+		proxy.config = {state: 'running', value: 10};
+		verify(5, proxy, ['config'], {state: 'running', value: 10}, {state: 'idle', value: 5});
+	});
+});
+
+test('should detect changes in nested setter methods', t => {
+	class ComplexClass {
+		constructor() {
+			this._x = 0;
+			this._y = 0;
+			this._computed = 0;
+		}
+
+		get point() {
+			return {x: this._x, y: this._y};
+		}
+
+		set point(value) {
+			this._x = value.x;
+			this._y = value.y;
+			this.updateComputed();
+		}
+
+		updateComputed() {
+			this._computed = this._x + this._y;
+		}
+	}
+
+	testRunner(t, new ComplexClass(), {pathAsArray: true}, (proxy, verify) => {
+		proxy.point = {x: 10, y: 20};
+		verify(4, proxy, ['point'], {x: 10, y: 20}, {x: 0, y: 0});
+	});
+});
+
 test('should not trigger after unsubscribe is called', t => {
 	const object = {
 		x: {

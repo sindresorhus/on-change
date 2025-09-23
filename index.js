@@ -23,6 +23,10 @@ const defaultOptions = {
 	details: false,
 };
 
+const shouldProvideApplyData = (details, methodName) => details === false
+	|| details === true
+	|| (Array.isArray(details) && details.includes(methodName));
+
 const onChange = (object, onChange, options = {}) => {
 	options = {
 		...defaultOptions,
@@ -179,10 +183,7 @@ const onChange = (object, onChange, options = {}) => {
 
 		if (isChanged) {
 			// Provide applyData based on details configuration
-			const shouldProvideApplyData = details === false
-				|| details === true
-				|| (Array.isArray(details) && details.includes(target.name));
-			const applyData = shouldProvideApplyData ? {
+			const applyData = shouldProvideApplyData(details, target.name) ? {
 				name: target.name,
 				args: argumentsList,
 				result,
@@ -266,7 +267,7 @@ const onChange = (object, onChange, options = {}) => {
 
 				if (
 					validate(target, property, descriptor.value, previous)
-					&& cache.defineProperty(target, property, descriptor, previous)
+					&& cache.defineProperty(target, property, descriptor)
 				) {
 					// For accessor descriptors (getters/setters), descriptor.value is undefined
 					// We need to get the actual value after the property is defined
@@ -349,10 +350,8 @@ const onChange = (object, onChange, options = {}) => {
 
 				if (!equals(previousTime, currentTime)) {
 					const applyPath = cache.getPath(thisProxyTarget);
-					const shouldProvideApplyData = details === true
-						|| (Array.isArray(details) && details.includes(target.name));
 
-					if (shouldProvideApplyData) {
+					if (shouldProvideApplyData(details, target.name)) {
 						const applyData = {
 							name: target.name,
 							args: argumentsList,
