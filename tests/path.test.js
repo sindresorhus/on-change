@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/prefer-spread */
 import test from 'ava';
-import path from '../lib/path.js';
+import path from '../source/path.js';
 
 test('after should return the remainder of the first path after the second path', t => {
 	t.is(path.after('a.0.b', 'a.0'), 'b');

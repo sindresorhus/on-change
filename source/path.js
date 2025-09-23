@@ -1,10 +1,9 @@
 import {PATH_SEPARATOR} from './constants.js';
-import isArray from './is-array.js';
 import isSymbol from './is-symbol.js';
 
 const path = {
 	after(path, subPath) {
-		if (isArray(path)) {
+		if (Array.isArray(path)) {
 			return path.slice(subPath.length);
 		}
 
@@ -15,7 +14,7 @@ const path = {
 		return path.slice(subPath.length + 1);
 	},
 	concat(path, key) {
-		if (isArray(path)) {
+		if (Array.isArray(path)) {
 			path = [...path];
 
 			if (key) {
@@ -40,7 +39,7 @@ const path = {
 		return path;
 	},
 	initial(path) {
-		if (isArray(path)) {
+		if (Array.isArray(path)) {
 			return path.slice(0, -1);
 		}
 
@@ -57,7 +56,7 @@ const path = {
 		return path.slice(0, index);
 	},
 	last(path) {
-		if (isArray(path)) {
+		if (Array.isArray(path)) {
 			return path.at(-1) ?? '';
 		}
 
@@ -74,7 +73,7 @@ const path = {
 		return path.slice(index + 1);
 	},
 	walk(path, callback) {
-		if (isArray(path)) {
+		if (Array.isArray(path)) {
 			for (const key of path) {
 				callback(key);
 			}
@@ -100,15 +99,13 @@ const path = {
 	},
 	get(object, path) {
 		this.walk(path, key => {
-			if (object) {
-				object = object[key];
-			}
+			object &&= object[key];
 		});
 
 		return object;
 	},
 	isSubPath(path, subPath) {
-		if (isArray(path)) {
+		if (Array.isArray(path)) {
 			if (path.length < subPath.length) {
 				return false;
 			}
@@ -138,7 +135,7 @@ const path = {
 		return false;
 	},
 	isRootPath(path) {
-		if (isArray(path)) {
+		if (Array.isArray(path)) {
 			return path.length === 0;
 		}
 

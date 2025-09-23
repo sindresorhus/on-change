@@ -1,6 +1,6 @@
 import displayValue from 'display-value';
 import test from 'ava';
-import {isBuiltinWithMutableMethods, isBuiltinWithoutMutableMethods} from '../lib/is-builtin.js';
+import {isBuiltinWithMutableMethods, isBuiltinWithoutMutableMethods} from '../source/is-builtin.js';
 import {
 	difference,
 	booleans,

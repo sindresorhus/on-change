@@ -1,5 +1,5 @@
 import test from 'ava';
-import onChange from '../index.js';
+import onChange from '../source/index.js';
 import {testRunner, setOnChange} from './helpers/test-runner.js';
 import {typedArrays} from './helpers/data-types.js';
 

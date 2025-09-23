@@ -12,21 +12,19 @@
 	},
 	"type": "module",
 	"exports": {
-		"types": "./index.d.ts",
-		"default": "./index.js"
+		"types": "./source/index.d.ts",
+		"default": "./source/index.js"
 	},
 	"sideEffects": false,
 	"engines": {
-		"node": ">=18"
+		"node": ">=20"
 	},
 	"scripts": {
-		"test": "xo && ava && tsd",
+		"test": "xo && ava",
 		"bench": "node bench/index.bench.js"
 	},
 	"files": [
-		"index.js",
-		"index.d.ts",
-		"lib"
+		"source"
 	],
 	"keywords": [
 		"on",
@@ -45,11 +43,12 @@
 		"listener"
 	],
 	"devDependencies": {
-		"ava": "^6.0.1",
-		"display-value": "^2.2.0",
+		"ava": "^6.4.1",
+		"display-value": "^3.1.0",
+		"expect-type": "^1.2.2",
 		"powerset": "0.0.1",
-		"tinybench": "^2.8.0",
-		"tsd": "^0.29.0",
-		"xo": "^0.56.0"
+		"tinybench": "^5.0.1",
+		"typescript": "^5.9.2",
+		"xo": "^1.2.2"
 	}
 }

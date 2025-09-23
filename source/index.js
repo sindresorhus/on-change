@@ -1,17 +1,20 @@
 /* eslint-disable unicorn/prefer-spread */
-import {TARGET, UNSUBSCRIBE, PATH_SEPARATOR} from './lib/constants.js';
-import {isBuiltinWithMutableMethods, isBuiltinWithoutMutableMethods} from './lib/is-builtin.js';
-import path from './lib/path.js';
-import isObject from './lib/is-object.js';
-import isSymbol from './lib/is-symbol.js';
-import isIterator from './lib/is-iterator.js';
-import wrapIterator from './lib/wrap-iterator.js';
-import ignoreProperty from './lib/ignore-property.js';
-import Cache from './lib/cache.js';
-import SmartClone from './lib/smart-clone/smart-clone.js';
+import {TARGET, UNSUBSCRIBE, PATH_SEPARATOR} from './constants.js';
+import {isBuiltinWithMutableMethods, isBuiltinWithoutMutableMethods} from './is-builtin.js';
+import path from './path.js';
+import isObject from './is-object.js';
+import isSymbol from './is-symbol.js';
+import isIterator from './is-iterator.js';
+import wrapIterator from './wrap-iterator.js';
+import ignoreProperty from './ignore-property.js';
+import Cache from './cache.js';
+import SmartClone from './smart-clone/smart-clone.js';
 
 // Constant set of iterator method names for efficient lookup
 const ITERATOR_METHOD_NAMES = new Set(['values', 'keys', 'entries']);
+
+// Constant set of array search methods for efficient lookup
+const ARRAY_SEARCH_METHODS = new Set(['indexOf', 'lastIndexOf', 'includes']);
 
 const defaultOptions = {
 	equals: Object.is,
@@ -54,9 +57,9 @@ const onChange = (object, onChange, options = {}) => {
 		}
 
 		// Determine which paths to notify
-		const pathsToNotify = !smartClone.isCloning
-			&& cache.getAllPaths(target)?.length > 1
-			? cache.getAllPaths(target)
+		const allPaths = cache.getAllPaths(target);
+		const pathsToNotify = !smartClone.isCloning && allPaths && allPaths.length > 1
+			? allPaths
 			: [cache.getPath(target)];
 
 		// Notify all relevant paths
@@ -74,9 +77,10 @@ const onChange = (object, onChange, options = {}) => {
 		}
 	};
 
-	const getProxyTarget = value => value
-		? (value[proxyTarget] ?? value)
-		: value;
+	const getProxyTarget = value =>
+		(value !== null && (typeof value === 'object' || typeof value === 'function'))
+			? (value[proxyTarget] ?? value)
+			: value;
 
 	const prepareValue = (value, target, property, basePath) => {
 		if (
@@ -143,7 +147,7 @@ const onChange = (object, onChange, options = {}) => {
 	};
 
 	// Unified handler for SmartClone-based method execution
-	const handleMethodExecution = (target, thisArg, thisProxyTarget, argumentsList) => {
+	const handleMethodExecution = (target, thisArgument, thisProxyTarget, argumentsList) => {
 		// Standard SmartClone path for all handled types including Date
 		let applyPath = path.initial(cache.getPath(target));
 		const isHandledMethod = SmartClone.isHandledMethod(thisProxyTarget, target.name);
@@ -152,7 +156,7 @@ const onChange = (object, onChange, options = {}) => {
 
 		let result;
 		// Special handling for array search methods that need proxy-aware comparison
-		if (Array.isArray(thisProxyTarget) && ['indexOf', 'lastIndexOf', 'includes'].includes(target.name)) {
+		if (Array.isArray(thisProxyTarget) && ARRAY_SEARCH_METHODS.has(target.name)) {
 			result = performProxyAwareArraySearch({
 				proxyArray: thisProxyTarget,
 				methodName: target.name,
@@ -163,7 +167,7 @@ const onChange = (object, onChange, options = {}) => {
 		} else {
 			result = Reflect.apply(
 				target,
-				smartClone.preferredThisArg(target, thisArg, thisProxyTarget),
+				smartClone.preferredThisArg(target, thisArgument, thisProxyTarget),
 				isHandledMethod
 					? argumentsList.map(argument => getProxyTarget(argument))
 					: argumentsList,
@@ -174,7 +178,7 @@ const onChange = (object, onChange, options = {}) => {
 		const previous = smartClone.stop();
 
 		if (SmartClone.isHandledType(result) && isHandledMethod) {
-			if (thisArg instanceof Map && target.name === 'get') {
+			if (thisArgument instanceof Map && target.name === 'get') {
 				applyPath = path.concat(applyPath, argumentsList[0]);
 			}
 
@@ -183,11 +187,13 @@ const onChange = (object, onChange, options = {}) => {
 
 		if (isChanged) {
 			// Provide applyData based on details configuration
-			const applyData = shouldProvideApplyData(details, target.name) ? {
-				name: target.name,
-				args: argumentsList,
-				result,
-			} : undefined;
+			const applyData = shouldProvideApplyData(details, target.name)
+				? {
+					name: target.name,
+					args: argumentsList,
+					result,
+				}
+				: undefined;
 
 			const changePath = smartClone.isCloning
 				? path.initial(applyPath)
@@ -204,10 +210,10 @@ const onChange = (object, onChange, options = {}) => {
 		}
 
 		if (
-			(thisArg instanceof Map || thisArg instanceof Set)
+			(thisArgument instanceof Map || thisArgument instanceof Set)
 			&& isIterator(result)
 		) {
-			return wrapIterator(result, target, thisArg, applyPath, prepareValue);
+			return wrapIterator(result, target, thisArgument, applyPath, prepareValue);
 		}
 
 		return result;
@@ -271,7 +277,7 @@ const onChange = (object, onChange, options = {}) => {
 				) {
 					// For accessor descriptors (getters/setters), descriptor.value is undefined
 					// We need to get the actual value after the property is defined
-					const hasValue = Object.prototype.hasOwnProperty.call(descriptor, 'value');
+					const hasValue = Object.hasOwn(descriptor, 'value');
 					const value = hasValue
 						? descriptor.value
 						: (() => {
@@ -311,9 +317,9 @@ const onChange = (object, onChange, options = {}) => {
 			return !isValid;
 		},
 
-		apply(target, thisArg, argumentsList) {
-			// Handle case where thisArg is undefined/null (e.g., extracted method calls)
-			const thisProxyTarget = thisArg?.[proxyTarget] ?? thisArg;
+		apply(target, thisArgument, argumentsList) {
+			// Handle case where thisArgument is undefined/null (e.g., extracted method calls)
+			const thisProxyTarget = thisArgument?.[proxyTarget] ?? thisArgument;
 
 			if (cache.isUnsubscribed) {
 				return Reflect.apply(target, thisProxyTarget, argumentsList);
@@ -336,7 +342,7 @@ const onChange = (object, onChange, options = {}) => {
 						|| (Array.isArray(details) && !details.includes(target.name));
 
 					if (shouldUseSmartClone) {
-						return handleMethodExecution(target, thisArg, thisProxyTarget, argumentsList);
+						return handleMethodExecution(target, thisArgument, thisProxyTarget, argumentsList);
 					}
 				}
 			}
@@ -373,7 +379,7 @@ const onChange = (object, onChange, options = {}) => {
 
 			// For plain object custom methods or when SmartClone is not used,
 			// use the proxy as 'this' to ensure property mutations go through proxy traps
-			return Reflect.apply(target, thisArg, argumentsList);
+			return Reflect.apply(target, thisArgument, argumentsList);
 		},
 	};
 

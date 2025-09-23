@@ -1,5 +1,5 @@
 import test from 'ava';
-import onChange from '../index.js';
+import onChange from '../source/index.js';
 
 test('multiple reference scenario', t => {
 	const events = [];
@@ -71,7 +71,7 @@ test('three or more references', t => {
 	});
 
 	// Access all three references to register paths
-	// eslint-disable-next-line no-unused-vars
+
 	const _unused = [watchedObject.first, watchedObject.second, watchedObject.third];
 
 	// Modify through one reference
@@ -94,7 +94,7 @@ test('array with duplicate references', t => {
 	});
 
 	// Access all array items to register paths
-	// eslint-disable-next-line no-unused-vars
+
 	const _unused = [watchedArray[0], watchedArray[1], watchedArray[2]];
 
 	// Modify through first index
@@ -120,7 +120,7 @@ test('only fires for accessed paths', t => {
 	});
 
 	// Only access one reference
-	// eslint-disable-next-line no-unused-vars
+
 	const _unused = watchedObject.accessed;
 
 	// Modify the object
@@ -144,7 +144,7 @@ test('works with pathAsArray option', t => {
 	}, {pathAsArray: true});
 
 	// Access both references to register paths
-	// eslint-disable-next-line no-unused-vars
+
 	const _unused = [watchedObject.ref1, watchedObject.ref2];
 
 	// Modify through one reference
@@ -170,7 +170,7 @@ test('deletion operations', t => {
 	});
 
 	// Access both references to register paths
-	// eslint-disable-next-line no-unused-vars
+
 	const _unused = [watchedObject.ref1, watchedObject.ref2];
 
 	// Delete property through one reference
@@ -199,7 +199,7 @@ test('circular references with multiple paths', t => {
 	});
 
 	// Access both references
-	// eslint-disable-next-line no-unused-vars
+
 	const _unused = [watchedObject.ref1, watchedObject.ref2];
 
 	// Modify through circular reference

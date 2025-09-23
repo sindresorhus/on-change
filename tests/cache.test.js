@@ -2,7 +2,7 @@
 import test from 'ava';
 import powerset from 'powerset';
 import displayValue from 'display-value';
-import Cache from '../lib/cache.js';
+import Cache from '../source/cache.js';
 
 test('should delete inner WeakMaps when unsubscribe is called', t => {
 	const cache = new Cache();

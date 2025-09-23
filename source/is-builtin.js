@@ -8,5 +8,8 @@ export function isBuiltinWithMutableMethods(value) {
 }
 
 export function isBuiltinWithoutMutableMethods(value) {
-	return (typeof value === 'object' ? value === null : typeof value !== 'function') || value instanceof RegExp;
+	// Primitives and null → true. Functions → false. RegExp → true.
+	return value === null
+		|| (typeof value !== 'object' && typeof value !== 'function')
+		|| value instanceof RegExp;
 }

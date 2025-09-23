@@ -1,12 +1,15 @@
 export default function isDiffMaps(clone, value) {
+	if (clone === value) {
+		return false;
+	}
+
 	if (clone.size !== value.size) {
 		return true;
 	}
 
-	let bValue;
 	for (const [key, aValue] of clone) {
-		bValue = value.get(key);
-
+		const bValue = value.get(key);
+		// Distinguish missing vs undefined and catch strict inequality
 		if (bValue !== aValue || (bValue === undefined && !value.has(key))) {
 			return true;
 		}

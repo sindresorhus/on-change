@@ -1,15 +1,13 @@
 import displayValue from 'display-value';
 import test from 'ava';
-import onChange from '../index.js';
+import onChange from '../source/index.js';
 import {testRunner, setOnChange} from './helpers/test-runner.js';
 import {testValues} from './helpers/data-types.js';
 
 setOnChange(onChange);
 
 const compare = (t, a, b) => {
-	if (a) {
-		a = onChange.target(a);
-	}
+	a &&= onChange.target(a);
 
 	t.is(a, b);
 };

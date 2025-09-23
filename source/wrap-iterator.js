@@ -1,14 +1,20 @@
 import {TARGET} from './constants.js';
 
+/**
+Wraps an iterator's `next()` so yielded values (or [key, value] pairs) are passed through `prepareValue` with the correct owner and path.
+*/
 // eslint-disable-next-line max-params
 export default function wrapIterator(iterator, target, thisArgument, applyPath, prepareValue) {
-	const originalNext = iterator.next;
+	const originalNext = iterator?.next;
+	if (typeof originalNext !== 'function') {
+		return iterator;
+	}
 
 	if (target.name === 'entries') {
 		iterator.next = function () {
 			const result = originalNext.call(this);
 
-			if (result.done === false) {
+			if (result && result.done === false) {
 				result.value[0] = prepareValue(
 					result.value[0],
 					target,
@@ -31,7 +37,7 @@ export default function wrapIterator(iterator, target, thisArgument, applyPath, 
 		iterator.next = function () {
 			const result = originalNext.call(this);
 
-			if (result.done === false) {
+			if (result && result.done === false) {
 				result.value = prepareValue(
 					result.value,
 					target,
@@ -46,7 +52,7 @@ export default function wrapIterator(iterator, target, thisArgument, applyPath, 
 		iterator.next = function () {
 			const result = originalNext.call(this);
 
-			if (result.done === false) {
+			if (result && result.done === false) {
 				result.value = prepareValue(
 					result.value,
 					target,

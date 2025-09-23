@@ -1,5 +1,5 @@
 import test from 'ava';
-import onChange from '../index.js';
+import onChange from '../source/index.js';
 
 test('defineProperty with accessor descriptor reports correct value from getter', t => {
 	const backing = {x: 1};
