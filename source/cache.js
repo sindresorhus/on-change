@@ -63,7 +63,7 @@ export default class Cache {
 			return target;
 		}
 
-		const reflectTarget = target[proxyTarget];
+		const reflectTarget = proxyTarget === undefined ? undefined : target[proxyTarget];
 		const source = reflectTarget ?? target;
 
 		// Always set the primary path (for backward compatibility)

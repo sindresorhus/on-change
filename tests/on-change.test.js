@@ -1087,3 +1087,36 @@ test('should trigger when methods are called that mutate unrelated area of proxy
 		verify(1, proxy, ['b', 'c'], {quantity: 3}, {quantity: 8});
 	});
 });
+
+test('should handle property named "undefined" - issue #111', t => {
+	const object = onChange({undefined: 'some string'}, (path, value) => {
+		t.is(path, 'test');
+		t.is(value, 123);
+	});
+
+	object.test = 123;
+});
+
+test('should handle property named "null"', t => {
+	const object = onChange({null: 'some string'}, (path, value) => {
+		t.is(path, 'test');
+		t.is(value, 456);
+	});
+
+	object.test = 456;
+});
+
+test('should handle multiple reserved word-like properties', t => {
+	let callCount = 0;
+
+	const object = onChange({
+		undefined: 'value1',
+		null: 'value2',
+		NaN: 'value3',
+	}, () => {
+		callCount++;
+	});
+
+	object.test = 789;
+	t.is(callCount, 1);
+});
