@@ -15,9 +15,10 @@ import {
 	weakSets,
 	weakMaps,
 	typedArrays,
+	arrayBuffers,
 } from './helpers/data-types.js';
 
-const withoutMutableMethods = [...nots, ...booleans, ...numbers, ...strings, ...regExps];
+const withoutMutableMethods = [...nots, ...booleans, ...numbers, ...strings, ...regExps, ...arrayBuffers];
 const singleCollections = [sets[0], maps[0], weakSets[0], weakMaps[0]];
 
 for (const value of withoutMutableMethods) {
