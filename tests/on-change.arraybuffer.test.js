@@ -46,7 +46,7 @@ test('ArrayBuffer in nested object should work', t => {
 	t.is(callCount, 0);
 });
 
-test('ArrayBuffer should be returned as-is (not proxied)', t => {
+test('ArrayBuffer should be returned as-is, not proxied', t => {
 	const buffer = new ArrayBuffer(8);
 	const object = {buffer};
 
