@@ -191,6 +191,7 @@ Type: `boolean|string[]`\
 Default: `false`
 
 Trigger callbacks for each change within specified method calls or all method calls.
+When enabled, mutating array and collection methods will emit per-item paths (for example `selectedFeatures.0`) instead of the collection path. Use `details: ['forEach']` to expand only specific methods.
 
 ##### onValidate
 
