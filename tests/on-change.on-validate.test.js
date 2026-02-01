@@ -143,6 +143,20 @@ test('should not execute when a method is applied and onValidate returns false',
 	});
 });
 
+test('should revert array method changes when onValidate returns false', t => {
+	const array = [];
+	const onValidate = () => false;
+
+	testRunner(t, array, {onValidate, pathAsArray: true}, (proxy, verify) => {
+		proxy.push(1);
+
+		verify(0);
+
+		t.deepEqual(proxy, []);
+		t.is(proxy.length, 0);
+	});
+});
+
 test('should not execute when a property is set to the same value and onValidate returns true', t => {
 	const object = {x: 1};
 	const onValidate = () => true;

@@ -5,4 +5,9 @@ export default class CloneArray extends CloneObject {
 	static isHandledMethod(name) {
 		return HANDLED_ARRAY_METHODS.has(name);
 	}
+
+	undo(object) {
+		super.undo(object);
+		object.length = this.clone.length;
+	}
 }
