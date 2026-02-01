@@ -82,6 +82,11 @@ const typedArrays = [
 	new Float64Array([1, 2, 3]),
 ];
 
+const arrayBuffers = [
+	new ArrayBuffer(8),
+	new SharedArrayBuffer(8),
+];
+
 const nots = [undefined, null, Number.NaN];
 
 const testValues = [
@@ -98,6 +103,7 @@ const testValues = [
 	...weakSets,
 	...weakMaps,
 	...typedArrays,
+	...arrayBuffers,
 ];
 
 export {
@@ -116,4 +122,5 @@ export {
 	weakSets,
 	weakMaps,
 	typedArrays,
+	arrayBuffers,
 };
